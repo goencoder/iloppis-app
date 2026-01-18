@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">iLoppis</string>
+    <string name="app_title">iLoppis</string>
+
+    <!-- Event List Screen -->
+    <string name="search_placeholder">Sök loppis…</string>
+    <string name="filter_all">Alla</string>
+    <string name="filter_open">Öppna</string>
+    <string name="filter_upcoming">Kommande</string>
+    <string name="filter_past">Förflutna</string>
+    <string name="error_prefix">Fel: %1$s</string>
+    <string name="no_events_found">Inga loppisar hittades</string>
+    <string name="location_not_specified">Plats ej angiven</string>
+
+    <!-- Event States -->
+    <string name="state_open">ÖPPEN</string>
+    <string name="state_closed">STÄNGD</string>
+    <string name="state_upcoming">KOMMANDE</string>
+
+    <!-- Event Detail Dialog -->
+    <string name="opening_hours_label">Öppettider: %1$s</string>
+    <string name="select_mode">Välj läge:</string>
+    <string name="button_open_cashier">Öppna kassa</string>
+    <string name="button_ticket_scanner">Biljettskanner</string>
+    <string name="button_cancel">Avbryt</string>
+    <string name="button_back">Tillbaka</string>
+
+    <!-- Code Entry Dialog -->
+    <string name="code_entry_title_cashier">Ange kassakod</string>
+    <string name="code_entry_title_scanner">Ange skannerkod</string>
+    <string name="code_entry_subtitle_cashier">Skriv in din kassakod för att öppna kassan</string>
+    <string name="code_entry_subtitle_scanner">Skriv in din skannerkod för att starta biljettskanning</string>
+    <string name="button_verify_continue">Verifiera och fortsätt</string>
+    <string name="code_separator">-</string>
+    <string name="code_invalid">Ogiltig kod. Kontrollera och försök igen.</string>
+    <string name="code_validating">Verifierar…</string>
+
+    <!-- Cashier Screen -->
+    <string name="cashier_title">Kassa</string>
+    <string name="cashier_loading">Laddar säljare…</string>
+    <string name="cashier_seller_label">Säljarnummer</string>
+    <string name="cashier_price_label">Priser</string>
+    <string name="cashier_items_title">Varor</string>
+    <string name="cashier_no_items">Inga varor tillagda</string>
+    <string name="cashier_clear_all">Rensa alla</string>
+    <string name="cashier_remove_item">Ta bort</string>
+    <string name="cashier_seller_header">Säljare</string>
+    <string name="cashier_price_header">Pris</string>
+    <string name="cashier_total">Totalt</string>
+    <string name="cashier_paid">Betalt</string>
+    <string name="cashier_change">Växel</string>
+    <string name="cashier_button_cash">Kontant</string>
+    <string name="cashier_button_swish">Swish</string>
+
+    <!-- Numeric Keypad -->
+    <string name="keypad_clear">C</string>
+    <string name="keypad_ok">OK</string>
+
+    <!-- Scanner Screen -->
+    <string name="scanner_title">Biljettskanner</string>
+    <string name="scanner_button_scan">Starta skanning</string>
+    <string name="scanner_button_pause">Pausa skanning</string>
+    <string name="scanner_button_manual_entry">Ange kod manuellt</string>
+    <string name="scanner_button_enable_camera">Aktivera kamera</string>
+    <string name="scanner_button_grant_permission">Ge kamerabehörighet</string>
+    <string name="scanner_permission_rationale">Kameran behövs för att skanna QR-koder på biljetter.</string>
+    <string name="scanner_permission_needed">Aktivera kameran för att skanna biljetter</string>
+    <string name="scanner_tap_to_scan">Tryck på knappen för att börja skanna</string>
+    <string name="scanner_paused">Skanning pausad</string>
+    <string name="scanner_preview_icon">📷</string>
+    <string name="scanner_button_close_result">Stäng</string>
+    <plurals name="scanner_offline_banner">
+        <item quantity="one">%1$d skanning väntar på uppladdning</item>
+        <item quantity="other">%1$d skanningar väntar på uppladdning</item>
+    </plurals>
+    <string name="scanner_total_scans_label">Totalt insläppta</string>
+    <string name="scanner_history_title">Senaste skanningar</string>
+    <string name="scanner_history_empty">Inga skanningar ännu</string>
+    <string name="scanner_history_load_more">Ladda fler</string>
+    <string name="scanner_history_show_errors">Visa fel</string>
+
+    <!-- Scanner result sheet -->
+    <string name="scanner_result_title_success">Biljett OK</string>
+    <string name="scanner_result_title_duplicate">Redan skannad</string>
+    <string name="scanner_result_title_invalid">Biljett ogiltig</string>
+    <string name="scanner_result_title_offline">Offline – köad</string>
+    <string name="scanner_result_title_error">Tekniskt fel</string>
+    <string name="scanner_result_message_success">Besökaren är markerad som insläppt.</string>
+    <string name="scanner_result_message_duplicate">Biljetten har redan markerats som insläppt.</string>
+    <string name="scanner_result_message_invalid">Vi kunde inte hitta biljetten. Kontrollera att den hör till detta event.</string>
+    <string name="scanner_result_message_offline">Ingen uppkoppling – skanningen köas och synkas automatiskt senare.</string>
+    <string name="scanner_result_message_error">Något gick fel. Försök igen eller kontrollera uppkopplingen.</string>
+    <string name="scanner_field_ticket_type">Biljettyp: %1$s</string>
+    <string name="scanner_field_email">E-post: %1$s</string>
+    <string name="scanner_field_scanned_at">Skannad: %1$s</string>
+    <string name="scanner_field_valid_window">Giltighet: %1$s</string>
+    <string name="scanner_field_event">Event: %1$s</string>
+
+    <!-- Ticket details dialog -->
+    <string name="scanner_ticket_details_title">Biljettinfo</string>
+    <string name="scanner_field_ticket_type_label">Biljettyp</string>
+    <string name="scanner_field_email_label">Innehavare</string>
+    <string name="scanner_field_status_label">Status</string>
+    <string name="scanner_field_scanned_at_label">Skannad</string>
+    <string name="scanner_field_valid_window_label">Giltig från–till</string>
+    <string name="scanner_field_event_label">Event</string>
+    <string name="scanner_field_ticket_id_label">Biljett-ID</string>
+    <string name="scanner_button_close">Stäng</string>
+
+    <!-- Manual entry dialog -->
+    <string name="scanner_manual_title">Ange biljettkod</string>
+    <string name="scanner_manual_description">Skriv in koden under QR-koden.</string>
+    <string name="scanner_manual_placeholder">Exempel: TKT-123…</string>
+    <string name="scanner_manual_error_empty">Ange en biljettkod.</string>
+    <string name="scanner_manual_error_event">Biljetten hör inte till %1$s.</string>
+    <string name="scanner_manual_error_format">Koden kunde inte tolkas.</string>
+    <string name="scanner_manual_confirm">Verifiera</string>
+    
+    <!-- Group scanning strings -->
+    <string name="scanner_group_no_email">Ingen e-post</string>
+    <string name="scanner_group_unknown_type">Okänd typ</string>
+    <string name="scanner_group_remove_ticket">Ta bort biljett</string>
+    <string name="scanner_group_commit_button">Bekräfta grupp</string>
+
+    <!-- Server Error Dialog -->
+    <string name="dialog_server_error_title">⚠️ Serverproblem</string>
+    <string name="dialog_server_error_message">iLoppis-servern svarar inte. Kassa fungerar i offline-läge.\n\nKöp sparas lokalt och laddas upp automatiskt när problemet är löst.\n\nDetta kräver åtgärd från iLoppis support. Kontakta supporten om problemet kvarstår mer än 10 minuter.\n\nAntal väntande köp: %1$d</string>
+    <string name="dialog_server_error_confirm">OK, jag förstår</string>
+
+    <!-- Invalid Seller Dialog -->
+    <string name="dialog_invalid_seller_title">⚠️ Köp behöver granskas</string>
+    <string name="dialog_invalid_seller_message_intro">Ett tidigare köp kunde inte laddas upp eftersom en eller flera säljare inte är godkända för detta event.</string>
+    <string name="dialog_invalid_seller_purchase_info">Köp: %1$s (%2$s)</string>
+    <string name="dialog_invalid_seller_problem_single">Säljare %1$s inte godkänd</string>
+    <string name="dialog_invalid_seller_problem_multiple">Säljare %1$s ej godkända</string>
+    <plurals name="dialog_invalid_seller_problem_many">
+        <item quantity="one">%1$d säljare ej godkänd</item>
+        <item quantity="other">%1$d säljare ej godkända</item>
+    </plurals>
+    <string name="dialog_invalid_seller_continue_work">Du kan fortsätta registrera nya köp. Granska detta köp när du har tid.</string>
+    <string name="dialog_invalid_seller_review_now">Granska nu</string>
+    <string name="dialog_invalid_seller_continue">Fortsätt</string>
+
+    <!-- Pending Purchases Screen -->
+    <string name="pending_purchases_title">Väntande köp</string>
+    <string name="pending_purchases_empty">Inga väntande köp</string>
+    <plurals name="pending_purchases_item_count">
+        <item quantity="one">%1$d artikel</item>
+        <item quantity="other">%1$d artiklar</item>
+    </plurals>
+    <string name="pending_purchases_button_retry">Försök igen</string>
+    <string name="pending_purchases_button_delete_all">Radera allt</string>
+    <string name="pending_purchases_seller_with_number">Säljare %1$d</string>
+    <string name="pending_purchases_price_kr">%1$d kr</string>
+    <string name="pending_purchases_change_seller">Ändra säljare</string>
+
+    <!-- Change Seller Dialog -->
+    <string name="dialog_change_seller_title">Ändra säljare</string>
+    <string name="dialog_change_seller_current">Nuvarande säljare: %1$d</string>
+    <string name="dialog_change_seller_new_label">Ny säljare</string>
+    <string name="dialog_change_seller_confirm">Ändra</string>
+
+    <!-- Purchase Review Screen -->
+    <string name="review_title">Köp att hantera</string>
+    <string name="review_empty">Inga köp att hantera</string>
+    <string name="review_all_uploaded">Alla köp har laddats upp</string>
+    <string name="review_navigate_arrow">Granska →</string>
+
+    <!-- Detailed Purchase Review Screen -->
+    <string name="detailed_review_title_with_id">Köp %1$s</string>
+    <string name="detailed_review_title_generic">Granska köp</string>
+    <string name="detailed_review_delete_confirmation_title">Radera köp?</string>
+    <string name="detailed_review_delete_confirmation_message">Detta kommer permanent radera köpet. Åtgärden kan inte ångras.</string>
+    <string name="detailed_review_delete_confirm">Radera</string>
+    <string name="detailed_review_button_delete_purchase">Radera köp</string>
+    <string name="detailed_review_button_retry_uploading">Laddar upp…</string>
+    <string name="detailed_review_button_retry">Försök igen</string>
+    <string name="detailed_review_purchase_info">📦 Köp %1$s - %2$s</string>
+    <plurals name="detailed_review_purchase_summary">
+        <item quantity="one">%1$d artikel, %2$d kr</item>
+        <item quantity="other">%1$d artiklar, %2$d kr</item>
+    </plurals>
+    <string name="detailed_review_unsaved_changes">⚠️ Osparade ändringar</string>
+    <string name="detailed_review_items_header">Artiklar</string>
+    <string name="detailed_review_item_number">Artikel %1$d</string>
+    <string name="detailed_review_item_collateral">(följdfel)</string>
+    <string name="detailed_review_seller_with_status">Säljare: %1$d %2$s</string>
+    <string name="detailed_review_price">Pris: %1$d kr</string>
+    <string name="detailed_review_collateral_message">ℹ️ Kan inte laddas upp tillsammans med artikel som har fel</string>
+    <string name="detailed_review_button_change_seller">Ändra säljare</string>
+    <string name="detailed_review_button_remove">Ta bort</string>
+    <string name="detailed_review_not_found">Köpet hittades inte</string>
+
+    <!-- Seller Editor Dialog -->
+    <string name="dialog_seller_editor_title">Ändra säljarnummer</string>
+    <string name="dialog_seller_editor_label">Säljarnummer</string>
+    <string name="dialog_seller_editor_valid_sellers">Giltiga säljare: %1$s</string>
+    <string name="dialog_seller_editor_save">Spara</string>
+
+    <!-- Cashier Screen - Additional -->
+    <string name="cashier_pending_info_title">Utestående köp</string>
+    <string name="cashier_pending_info_message">Siffran visar hur många köp som är sparade lokalt och ännu inte har bekräftats uppladdade till servern. Den ska gå ner när synk lyckas.</string>
+</resources>

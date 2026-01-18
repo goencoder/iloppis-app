@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App -->
+    <string name="app_name">iLoppis</string>
+    <string name="app_title">iLoppis</string>
+
+    <!-- Event List Screen -->
+    <string name="search_placeholder">Search flea market…</string>
+    <string name="filter_all">All</string>
+    <string name="filter_open">Open</string>
+    <string name="filter_upcoming">Upcoming</string>
+    <string name="filter_past">Past</string>
+    <string name="error_prefix">Error: %1$s</string>
+    <string name="no_events_found">No flea markets found</string>
+    <string name="location_not_specified">Location not specified</string>
+
+    <!-- Event States -->
+    <string name="state_open">OPEN</string>
+    <string name="state_closed">CLOSED</string>
+    <string name="state_upcoming">UPCOMING</string>
+
+    <!-- Event Detail Dialog -->
+    <string name="opening_hours_label">Opening hours: %1$s</string>
+    <string name="select_mode">Select mode:</string>
+    <string name="button_open_cashier">Open cashier</string>
+    <string name="button_ticket_scanner">Ticket scanner</string>
+    <string name="button_cancel">Cancel</string>
+    <string name="button_back">Back</string>
+
+    <!-- Code Entry Dialog -->
+    <string name="code_entry_title_cashier">Enter cashier code</string>
+    <string name="code_entry_title_scanner">Enter scanner code</string>
+    <string name="code_entry_subtitle_cashier">Enter your cashier code to open the register</string>
+    <string name="code_entry_subtitle_scanner">Enter your scanner code to start ticket scanning</string>
+    <string name="button_verify_continue">Verify and continue</string>
+    <string name="code_separator">-</string>
+    <string name="code_invalid">Invalid code. Check and try again.</string>
+    <string name="code_validating">Verifying…</string>
+
+    <!-- Cashier Screen -->
+    <string name="cashier_title">Cashier</string>
+    <string name="cashier_loading">Loading sellers…</string>
+    <string name="cashier_seller_label">Seller number</string>
+    <string name="cashier_price_label">Prices</string>
+    <string name="cashier_items_title">Items</string>
+    <string name="cashier_no_items">No items added</string>
+    <string name="cashier_clear_all">Clear all</string>
+    <string name="cashier_remove_item">Remove</string>
+    <string name="cashier_seller_header">Seller</string>
+    <string name="cashier_price_header">Price</string>
+    <string name="cashier_total">Total</string>
+    <string name="cashier_paid">Paid</string>
+    <string name="cashier_change">Change</string>
+    <string name="cashier_button_cash">Cash</string>
+    <string name="cashier_button_swish">Swish</string>
+
+    <!-- Numeric Keypad -->
+    <string name="keypad_clear">C</string>
+    <string name="keypad_ok">OK</string>
+
+    <!-- Scanner Screen -->
+    <string name="scanner_title">Ticket scanner</string>
+    <string name="scanner_button_scan">Start scanning</string>
+    <string name="scanner_button_pause">Pause scanning</string>
+    <string name="scanner_button_manual_entry">Enter code manually</string>
+    <string name="scanner_button_enable_camera">Enable camera</string>
+    <string name="scanner_button_grant_permission">Grant camera permission</string>
+    <string name="scanner_permission_rationale">Camera is needed to scan QR codes on tickets.</string>
+    <string name="scanner_permission_needed">Enable camera to scan tickets</string>
+    <string name="scanner_tap_to_scan">Press the button to start scanning</string>
+    <string name="scanner_paused">Scanning paused</string>
+    <string name="scanner_preview_icon">📷</string>
+    <string name="scanner_button_close_result">Close</string>
+    <plurals name="scanner_offline_banner">
+        <item quantity="one">%1$d scan waiting to upload</item>
+        <item quantity="other">%1$d scans waiting to upload</item>
+    </plurals>
+    <string name="scanner_total_scans_label">Total admitted</string>
+    <string name="scanner_history_title">Recent scans</string>
+    <string name="scanner_history_empty">No scans yet</string>
+    <string name="scanner_history_load_more">Load more</string>
+    <string name="scanner_history_show_errors">Show errors</string>
+
+    <!-- Scanner result sheet -->
+    <string name="scanner_result_title_success">Ticket OK</string>
+    <string name="scanner_result_title_duplicate">Already scanned</string>
+    <string name="scanner_result_title_invalid">Ticket invalid</string>
+    <string name="scanner_result_title_offline">Offline – queued</string>
+    <string name="scanner_result_title_error">Technical error</string>
+    <string name="scanner_result_message_success">The visitor is marked as admitted.</string>
+    <string name="scanner_result_message_duplicate">The ticket has already been marked as admitted.</string>
+    <string name="scanner_result_message_invalid">We could not find the ticket. Check that it belongs to this event.</string>
+    <string name="scanner_result_message_offline">No connection – scan is queued and will sync automatically later.</string>
+    <string name="scanner_result_message_error">Something went wrong. Try again or check your connection.</string>
+    <string name="scanner_field_ticket_type">Ticket type: %1$s</string>
+    <string name="scanner_field_email">Email: %1$s</string>
+    <string name="scanner_field_scanned_at">Scanned: %1$s</string>
+    <string name="scanner_field_valid_window">Validity: %1$s</string>
+    <string name="scanner_field_event">Event: %1$s</string>
+
+    <!-- Ticket details dialog -->
+    <string name="scanner_ticket_details_title">Ticket info</string>
+    <string name="scanner_field_ticket_type_label">Ticket type</string>
+    <string name="scanner_field_email_label">Holder</string>
+    <string name="scanner_field_status_label">Status</string>
+    <string name="scanner_field_scanned_at_label">Scanned</string>
+    <string name="scanner_field_valid_window_label">Valid from–to</string>
+    <string name="scanner_field_event_label">Event</string>
+    <string name="scanner_field_ticket_id_label">Ticket ID</string>
+    <string name="scanner_button_close">Close</string>
+
+    <!-- Manual entry dialog -->
+    <string name="scanner_manual_title">Enter ticket code</string>
+    <string name="scanner_manual_description">Enter the code below the QR code.</string>
+    <string name="scanner_manual_placeholder">Example: TKT-123…</string>
+    <string name="scanner_manual_error_empty">Enter a ticket code.</string>
+    <string name="scanner_manual_error_event">The ticket does not belong to %1$s.</string>
+    <string name="scanner_manual_error_format">Could not parse the code.</string>
+    <string name="scanner_manual_confirm">Verify</string>
+    
+    <!-- Group scanning strings -->
+    <string name="scanner_group_no_email">No email</string>
+    <string name="scanner_group_unknown_type">Unknown type</string>
+    <string name="scanner_group_remove_ticket">Remove ticket</string>
+    <string name="scanner_group_commit_button">Confirm group</string>
+
+    <!-- Server Error Dialog -->
+    <string name="dialog_server_error_title">⚠️ Server problem</string>
+    <string name="dialog_server_error_message">The iLoppis server is not responding. Cashier works in offline mode.\n\nPurchases are saved locally and will upload automatically when the problem is resolved.\n\nThis requires action from iLoppis support. Contact support if the problem persists for more than 10 minutes.\n\nNumber of pending purchases: %1$d</string>
+    <string name="dialog_server_error_confirm">OK, I understand</string>
+
+    <!-- Invalid Seller Dialog -->
+    <string name="dialog_invalid_seller_title">⚠️ Purchase needs review</string>
+    <string name="dialog_invalid_seller_message_intro">A previous purchase could not be uploaded because one or more sellers are not approved for this event.</string>
+    <string name="dialog_invalid_seller_purchase_info">Purchase: %1$s (%2$s)</string>
+    <string name="dialog_invalid_seller_problem_single">Seller %1$s not approved</string>
+    <string name="dialog_invalid_seller_problem_multiple">Sellers %1$s not approved</string>
+    <plurals name="dialog_invalid_seller_problem_many">
+        <item quantity="one">%1$d seller not approved</item>
+        <item quantity="other">%1$d sellers not approved</item>
+    </plurals>
+    <string name="dialog_invalid_seller_continue_work">You can continue registering new purchases. Review this purchase when you have time.</string>
+    <string name="dialog_invalid_seller_review_now">Review now</string>
+    <string name="dialog_invalid_seller_continue">Continue</string>
+
+    <!-- Pending Purchases Screen -->
+    <string name="pending_purchases_title">Pending purchases</string>
+    <string name="pending_purchases_empty">No pending purchases</string>
+    <plurals name="pending_purchases_item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <string name="pending_purchases_button_retry">Try again</string>
+    <string name="pending_purchases_button_delete_all">Delete all</string>
+    <string name="pending_purchases_seller_with_number">Seller %1$d</string>
+    <string name="pending_purchases_price_kr">%1$d kr</string>
+    <string name="pending_purchases_change_seller">Change seller</string>
+
+    <!-- Change Seller Dialog -->
+    <string name="dialog_change_seller_title">Change seller</string>
+    <string name="dialog_change_seller_current">Current seller: %1$d</string>
+    <string name="dialog_change_seller_new_label">New seller</string>
+    <string name="dialog_change_seller_confirm">Change</string>
+
+    <!-- Purchase Review Screen -->
+    <string name="review_title">Purchases to handle</string>
+    <string name="review_empty">No purchases to handle</string>
+    <string name="review_all_uploaded">All purchases have been uploaded</string>
+    <string name="review_navigate_arrow">Review →</string>
+
+    <!-- Detailed Purchase Review Screen -->
+    <string name="detailed_review_title_with_id">Purchase %1$s</string>
+    <string name="detailed_review_title_generic">Review purchase</string>
+    <string name="detailed_review_delete_confirmation_title">Delete purchase?</string>
+    <string name="detailed_review_delete_confirmation_message">This will permanently delete the purchase. The action cannot be undone.</string>
+    <string name="detailed_review_delete_confirm">Delete</string>
+    <string name="detailed_review_button_delete_purchase">Delete purchase</string>
+    <string name="detailed_review_button_retry_uploading">Uploading…</string>
+    <string name="detailed_review_button_retry">Try again</string>
+    <string name="detailed_review_purchase_info">📦 Purchase %1$s - %2$s</string>
+    <plurals name="detailed_review_purchase_summary">
+        <item quantity="one">%1$d item, %2$d kr</item>
+        <item quantity="other">%1$d items, %2$d kr</item>
+    </plurals>
+    <string name="detailed_review_unsaved_changes">⚠️ Unsaved changes</string>
+    <string name="detailed_review_items_header">Items</string>
+    <string name="detailed_review_item_number">Item %1$d</string>
+    <string name="detailed_review_item_collateral">(collateral damage)</string>
+    <string name="detailed_review_seller_with_status">Seller: %1$d %2$s</string>
+    <string name="detailed_review_price">Price: %1$d kr</string>
+    <string name="detailed_review_collateral_message">ℹ️ Cannot be uploaded together with items that have errors</string>
+    <string name="detailed_review_button_change_seller">Change seller</string>
+    <string name="detailed_review_button_remove">Remove</string>
+    <string name="detailed_review_not_found">Purchase not found</string>
+
+    <!-- Seller Editor Dialog -->
+    <string name="dialog_seller_editor_title">Change seller number</string>
+    <string name="dialog_seller_editor_label">Seller number</string>
+    <string name="dialog_seller_editor_valid_sellers">Valid sellers: %1$s</string>
+    <string name="dialog_seller_editor_save">Save</string>
+
+    <!-- Cashier Screen - Additional -->
+    <string name="cashier_pending_info_title">Outstanding purchases</string>
+    <string name="cashier_pending_info_message">The number shows how many purchases are saved locally and have not yet been confirmed uploaded to the server. It should decrease when sync succeeds.</string>
+</resources>

@@ -1,0 +1,346 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA0000000000000000000200 /* iLoppisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000100 /* iLoppisApp.swift */; };
+		AA0000000000000000000202 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000102 /* Event.swift */; };
+		AA0000000000000000000203 /* ApiClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000103 /* ApiClient.swift */; };
+		AA0000000000000000000204 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000104 /* AppColors.swift */; };
+		AA0000000000000000000205 /* EventCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000105 /* EventCard.swift */; };
+		AA0000000000000000000206 /* EventDetailDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000106 /* EventDetailDialog.swift */; };
+		AA0000000000000000000207 /* CodeEntryDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000107 /* CodeEntryDialog.swift */; };
+		AA0000000000000000000208 /* EventListModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000108 /* EventListModels.swift */; };
+		AA0000000000000000000209 /* EventListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000109 /* EventListViewModel.swift */; };
+		AA0000000000000000000210 /* EventListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000110 /* EventListScreen.swift */; };
+		AA0000000000000000000211 /* CashierScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000111 /* CashierScreen.swift */; };
+		AA0000000000000000000216 /* CashierViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000118 /* CashierViewModel.swift */; };
+		AA0000000000000000000217 /* CashierModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000119 /* CashierModels.swift */; };
+		AA0000000000000000000212 /* ScannerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000112 /* ScannerScreen.swift */; };
+		AA0000000000000000000218 /* ScannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000120 /* ScannerViewModel.swift */; };
+		AA0000000000000000000219 /* ScannerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000121 /* ScannerModels.swift */; };
+		AA0000000000000000000220 /* CameraPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000122 /* CameraPermission.swift */; };
+		AA0000000000000000000221 /* QRCodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000123 /* QRCodeScannerView.swift */; };
+		AA0000000000000000000213 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000113 /* Localizable.strings */; };
+		AA0000000000000000000214 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000116 /* Assets.xcassets */; };
+		AA0000000000000000000215 /* CodeEntryMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000117 /* CodeEntryMode.swift */; };
+		AA0000000000000000000222 /* VisitorTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000124 /* VisitorTicket.swift */; };
+		AA0000000000000000000223 /* VisitorTicketMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000125 /* VisitorTicketMapper.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA0000000000000000000100 /* iLoppisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iLoppisApp.swift; sourceTree = "<group>"; };
+		AA0000000000000000000101 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA0000000000000000000102 /* Event.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model/Event.swift; sourceTree = "<group>"; };
+		AA0000000000000000000103 /* ApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiClient.swift; sourceTree = "<group>"; };
+		AA0000000000000000000104 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
+		AA0000000000000000000105 /* EventCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCard.swift; sourceTree = "<group>"; };
+		AA0000000000000000000106 /* EventDetailDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventDetailDialog.swift; sourceTree = "<group>"; };
+		AA0000000000000000000107 /* CodeEntryDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEntryDialog.swift; sourceTree = "<group>"; };
+		AA0000000000000000000108 /* EventListModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventListModels.swift; sourceTree = "<group>"; };
+		AA0000000000000000000109 /* EventListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventListViewModel.swift; sourceTree = "<group>"; };
+		AA0000000000000000000110 /* EventListScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventListScreen.swift; sourceTree = "<group>"; };
+		AA0000000000000000000111 /* CashierScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashierScreen.swift; sourceTree = "<group>"; };
+		AA0000000000000000000112 /* ScannerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerScreen.swift; sourceTree = "<group>"; };
+		AA0000000000000000000114 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA0000000000000000000115 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = Resources/sv.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA0000000000000000000116 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources/Assets.xcassets; sourceTree = "<group>"; };
+		AA0000000000000000000117 /* CodeEntryMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model/CodeEntryMode.swift; sourceTree = "<group>"; };
+		AA0000000000000000000118 /* CashierViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashierViewModel.swift; sourceTree = "<group>"; };
+		AA0000000000000000000119 /* CashierModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashierModels.swift; sourceTree = "<group>"; };
+		AA0000000000000000000120 /* ScannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerViewModel.swift; sourceTree = "<group>"; };
+		AA0000000000000000000121 /* ScannerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScannerModels.swift; sourceTree = "<group>"; };
+		AA0000000000000000000122 /* CameraPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPermission.swift; sourceTree = "<group>"; };
+		AA0000000000000000000123 /* QRCodeScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeScannerView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000124 /* VisitorTicket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model/VisitorTicket.swift; sourceTree = "<group>"; };
+		AA0000000000000000000125 /* VisitorTicketMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mapper/VisitorTicketMapper.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0000000000000000000013 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ( ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0000000000000000000002 = {isa = PBXGroup; children = (
+			AA0000000000000000000018 /* iLoppis */,
+			AA0000000000000000000003 /* Products */,
+		); sourceTree = "<group>"; };
+		AA0000000000000000000003 /* Products */ = {isa = PBXGroup; children = (
+			AA0000000000000000000017 /* iLoppis.app */,
+		); name = Products; sourceTree = "<group>"; };
+		AA0000000000000000000018 /* iLoppis */ = {isa = PBXGroup; children = (
+			AA0000000000000000000116 /* Assets.xcassets */,
+			AA0000000000000000000113 /* Localizable.strings */,
+			AA0000000000000000000101 /* Info.plist */,
+			AA0000000000000000000100 /* iLoppisApp.swift */,
+			AA0000000000000000000019 /* Domain */,
+			AA0000000000000000000020 /* Network */,
+			AA0000000000000000000021 /* UI */,
+		); path = iLoppis; sourceTree = "<group>"; };
+		AA0000000000000000000019 /* Domain */ = {isa = PBXGroup; children = (
+			AA0000000000000000000117 /* CodeEntryMode.swift */,
+			AA0000000000000000000102 /* Event.swift */,
+			AA0000000000000000000124 /* VisitorTicket.swift */,
+			AA0000000000000000000125 /* VisitorTicketMapper.swift */,
+		); path = Domain; sourceTree = "<group>"; };
+		AA0000000000000000000020 /* Network */ = {isa = PBXGroup; children = (
+			AA0000000000000000000103 /* ApiClient.swift */,
+		); path = Network; sourceTree = "<group>"; };
+		AA0000000000000000000021 /* UI */ = {isa = PBXGroup; children = (
+			AA0000000000000000000022 /* Theme */,
+			AA0000000000000000000023 /* Components */,
+			AA0000000000000000000024 /* Dialogs */,
+			AA0000000000000000000025 /* Screens */,
+		); path = UI; sourceTree = "<group>"; };
+		AA0000000000000000000022 /* Theme */ = {isa = PBXGroup; children = (
+			AA0000000000000000000104 /* AppColors.swift */,
+		); path = Theme; sourceTree = "<group>"; };
+		AA0000000000000000000023 /* Components */ = {isa = PBXGroup; children = (
+			AA0000000000000000000105 /* EventCard.swift */,
+			AA0000000000000000000122 /* CameraPermission.swift */,
+			AA0000000000000000000123 /* QRCodeScannerView.swift */,
+		); path = Components; sourceTree = "<group>"; };
+		AA0000000000000000000024 /* Dialogs */ = {isa = PBXGroup; children = (
+			AA0000000000000000000106 /* EventDetailDialog.swift */,
+			AA0000000000000000000107 /* CodeEntryDialog.swift */,
+		); path = Dialogs; sourceTree = "<group>"; };
+		AA0000000000000000000025 /* Screens */ = {isa = PBXGroup; children = (
+			AA0000000000000000000026 /* Events */,
+			AA0000000000000000000027 /* Cashier */,
+			AA0000000000000000000028 /* Scanner */,
+		); path = Screens; sourceTree = "<group>"; };
+		AA0000000000000000000026 /* Events */ = {isa = PBXGroup; children = (
+			AA0000000000000000000108 /* EventListModels.swift */,
+			AA0000000000000000000109 /* EventListViewModel.swift */,
+			AA0000000000000000000110 /* EventListScreen.swift */,
+		); path = Events; sourceTree = "<group>"; };
+		AA0000000000000000000027 /* Cashier */ = {isa = PBXGroup; children = (
+			AA0000000000000000000111 /* CashierScreen.swift */,
+			AA0000000000000000000119 /* CashierModels.swift */,
+			AA0000000000000000000118 /* CashierViewModel.swift */,
+		); path = Cashier; sourceTree = "<group>"; };
+		AA0000000000000000000028 /* Scanner */ = {isa = PBXGroup; children = (
+			AA0000000000000000000112 /* ScannerScreen.swift */,
+			AA0000000000000000000121 /* ScannerModels.swift */,
+			AA0000000000000000000120 /* ScannerViewModel.swift */,
+		); path = Scanner; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0000000000000000000004 /* iLoppis */ = {isa = PBXNativeTarget; buildConfigurationList = AA0000000000000000000008 /* Build configuration list for PBXNativeTarget "iLoppis" */; buildPhases = (
+			AA0000000000000000000011 /* Sources */,
+			AA0000000000000000000012 /* Resources */,
+			AA0000000000000000000013 /* Frameworks */,
+		); buildRules = ( ); dependencies = ( ); name = iLoppis; productName = iLoppis; productReference = AA0000000000000000000017 /* iLoppis.app */; productType = "com.apple.product-type.application"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000000000000000000001 /* Project object */ = {isa = PBXProject; attributes = { LastUpgradeCheck = 1500; ORGANIZATIONNAME = iLoppis; }; buildConfigurationList = AA0000000000000000000005 /* Build configuration list for PBXProject "iLoppis" */; compatibilityVersion = "Xcode 15.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (
+			en,
+			sv,
+		); mainGroup = AA0000000000000000000002; productRefGroup = AA0000000000000000000003 /* Products */; projectDirPath = ""; projectRoot = ""; targets = (
+			AA0000000000000000000004 /* iLoppis */,
+		); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA0000000000000000000012 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (
+			AA0000000000000000000213 /* Localizable.strings in Resources */,
+			AA0000000000000000000214 /* Assets.xcassets in Resources */,
+		); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0000000000000000000011 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
+			AA0000000000000000000202 /* Event.swift in Sources */,
+			AA0000000000000000000203 /* ApiClient.swift in Sources */,
+			AA0000000000000000000204 /* AppColors.swift in Sources */,
+			AA0000000000000000000215 /* CodeEntryMode.swift in Sources */,
+			AA0000000000000000000222 /* VisitorTicket.swift in Sources */,
+			AA0000000000000000000223 /* VisitorTicketMapper.swift in Sources */,
+			AA0000000000000000000205 /* EventCard.swift in Sources */,
+			AA0000000000000000000220 /* CameraPermission.swift in Sources */,
+			AA0000000000000000000221 /* QRCodeScannerView.swift in Sources */,
+			AA0000000000000000000206 /* EventDetailDialog.swift in Sources */,
+			AA0000000000000000000207 /* CodeEntryDialog.swift in Sources */,
+			AA0000000000000000000208 /* EventListModels.swift in Sources */,
+			AA0000000000000000000209 /* EventListViewModel.swift in Sources */,
+			AA0000000000000000000210 /* EventListScreen.swift in Sources */,
+			AA0000000000000000000211 /* CashierScreen.swift in Sources */,
+			AA0000000000000000000217 /* CashierModels.swift in Sources */,
+			AA0000000000000000000216 /* CashierViewModel.swift in Sources */,
+			AA0000000000000000000212 /* ScannerScreen.swift in Sources */,
+			AA0000000000000000000219 /* ScannerModels.swift in Sources */,
+			AA0000000000000000000218 /* ScannerViewModel.swift in Sources */,
+			AA0000000000000000000200 /* iLoppisApp.swift in Sources */,
+		); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		AA0000000000000000000113 /* Localizable.strings */ = {isa = PBXVariantGroup; children = (
+			AA0000000000000000000114 /* en */,
+			AA0000000000000000000115 /* sv */,
+		); name = Localizable.strings; sourceTree = "<group>"; };
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		AA0000000000000000000006 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+			ALWAYS_SEARCH_USER_PATHS = NO;
+			CLANG_ANALYZER_NONNULL = YES;
+			CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+			CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+			CLANG_ENABLE_MODULES = YES;
+			CLANG_ENABLE_OBJC_ARC = YES;
+			CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+			CLANG_WARN_BOOL_CONVERSION = YES;
+			CLANG_WARN_COMMA = YES;
+			CLANG_WARN_CONSTANT_CONVERSION = YES;
+			CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+			CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+			CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+			CLANG_WARN_EMPTY_BODY = YES;
+			CLANG_WARN_ENUM_CONVERSION = YES;
+			CLANG_WARN_INFINITE_RECURSION = YES;
+			CLANG_WARN_INT_CONVERSION = YES;
+			CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+			CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+			CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+			CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+			CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+			CLANG_WARN_STRICT_PROTOTYPES = YES;
+			CLANG_WARN_SUSPICIOUS_MOVE = YES;
+			CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+			CODE_SIGN_STYLE = Automatic;
+			CURRENT_PROJECT_VERSION = 1;
+			DEBUG_INFORMATION_FORMAT = dwarf;
+			ENABLE_PREVIEWS = YES;
+			ENABLE_STRICT_OBJC_MSGSEND = YES;
+			GCC_C_LANGUAGE_STANDARD = gnu11;
+			GCC_NO_COMMON_BLOCKS = YES;
+			GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+			GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+			GCC_WARN_UNDECLARED_SELECTOR = YES;
+			GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+			GCC_WARN_UNUSED_FUNCTION = YES;
+			GCC_WARN_UNUSED_VARIABLE = YES;
+			IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+			MTL_FAST_MATH = YES;
+			ONLY_ACTIVE_ARCH = YES;
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SDKROOT = iphoneos;
+			SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+			SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
+			VERSIONING_SYSTEM = "apple-generic";
+		}; name = Debug; };
+		AA0000000000000000000007 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+			ALWAYS_SEARCH_USER_PATHS = NO;
+			CLANG_ANALYZER_NONNULL = YES;
+			CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+			CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+			CLANG_ENABLE_MODULES = YES;
+			CLANG_ENABLE_OBJC_ARC = YES;
+			CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+			CLANG_WARN_BOOL_CONVERSION = YES;
+			CLANG_WARN_COMMA = YES;
+			CLANG_WARN_CONSTANT_CONVERSION = YES;
+			CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+			CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+			CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+			CLANG_WARN_EMPTY_BODY = YES;
+			CLANG_WARN_ENUM_CONVERSION = YES;
+			CLANG_WARN_INFINITE_RECURSION = YES;
+			CLANG_WARN_INT_CONVERSION = YES;
+			CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+			CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+			CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+			CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+			CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+			CLANG_WARN_STRICT_PROTOTYPES = YES;
+			CLANG_WARN_SUSPICIOUS_MOVE = YES;
+			CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+			CODE_SIGN_STYLE = Automatic;
+			CURRENT_PROJECT_VERSION = 1;
+			DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+			ENABLE_NS_ASSERTIONS = NO;
+			ENABLE_PREVIEWS = YES;
+			ENABLE_STRICT_OBJC_MSGSEND = YES;
+			GCC_C_LANGUAGE_STANDARD = gnu11;
+			GCC_NO_COMMON_BLOCKS = YES;
+			GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+			GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+			GCC_WARN_UNDECLARED_SELECTOR = YES;
+			GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+			GCC_WARN_UNUSED_FUNCTION = YES;
+			GCC_WARN_UNUSED_VARIABLE = YES;
+			IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			MTL_ENABLE_DEBUG_INFO = NO;
+			MTL_FAST_MATH = YES;
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SDKROOT = iphoneos;
+			SWIFT_COMPILATION_MODE = wholemodule;
+			SWIFT_OPTIMIZATION_LEVEL = "-O";
+			SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
+			VALIDATE_PRODUCT = YES;
+			VERSIONING_SYSTEM = "apple-generic";
+		}; name = Release; };
+		AA0000000000000000000009 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = "";
+			CODE_SIGN_STYLE = Automatic;
+			CURRENT_PROJECT_VERSION = 1;
+			DEVELOPMENT_TEAM = "";
+			ENABLE_PREVIEWS = YES;
+			GENERATE_INFOPLIST_FILE = NO;
+			INFOPLIST_FILE = iLoppis/Info.plist;
+			IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+			MARKETING_VERSION = 1.0;
+			PRODUCT_BUNDLE_IDENTIFIER = se.iloppis.app;
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_EMIT_LOC_STRINGS = YES;
+			SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
+		}; name = Debug; };
+		AA0000000000000000000010 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = "";
+			CODE_SIGN_STYLE = Automatic;
+			CURRENT_PROJECT_VERSION = 1;
+			DEVELOPMENT_TEAM = "";
+			ENABLE_PREVIEWS = YES;
+			GENERATE_INFOPLIST_FILE = NO;
+			INFOPLIST_FILE = iLoppis/Info.plist;
+			IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+			MARKETING_VERSION = 1.0;
+			PRODUCT_BUNDLE_IDENTIFIER = se.iloppis.app;
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_EMIT_LOC_STRINGS = YES;
+			SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
+		}; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA0000000000000000000005 /* Build configuration list for PBXProject "iLoppis" */ = {isa = XCConfigurationList; buildConfigurations = (
+			AA0000000000000000000006 /* Debug */,
+			AA0000000000000000000007 /* Release */,
+		); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA0000000000000000000008 /* Build configuration list for PBXNativeTarget "iLoppis" */ = {isa = XCConfigurationList; buildConfigurations = (
+			AA0000000000000000000009 /* Debug */,
+			AA0000000000000000000010 /* Release */,
+		); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+
+/* Begin PBXFileReference section (Products) */
+		AA0000000000000000000017 /* iLoppis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iLoppis.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section (Products) */
+
+};
+	rootObject = AA0000000000000000000001 /* Project object */;
+}

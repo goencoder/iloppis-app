@@ -1,0 +1,73 @@
+# iLoppis Mobile App - Git Ignore
+
+# ============================================================================
+# Android
+# ============================================================================
+
+# Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/.kotlin/
+android/local.properties
+
+# IDE
+android/.idea/
+android/*.iml
+
+# Signing keys (NEVER commit these!)
+android/*.jks
+android/*.keystore
+android/keystore.properties
+
+# Debug/crash files
+android/*.hprof
+android/lint_output.txt
+
+# ============================================================================
+# iOS
+# ============================================================================
+
+# Xcode
+ios/build/
+ios/DerivedData/
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+ios/.build/
+
+# Pods (if using CocoaPods)
+ios/Pods/
+ios/Podfile.lock
+
+# SPM
+ios/.swiftpm/
+
+# ============================================================================
+# General
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+*.swp
+*.swo
+*~
+.vscode/
+*.code-workspace
+
+# Environment/secrets
+.env
+.env.*
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test outputs
+test-results/
+coverage/

@@ -1,0 +1,5792 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "iloppis/v1/api_key.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ApiKeyService"
+    },
+    {
+      "name": "AuthCodeService"
+    },
+    {
+      "name": "ChatService"
+    },
+    {
+      "name": "EventService"
+    },
+    {
+      "name": "LoginService"
+    },
+    {
+      "name": "DraftMarketService"
+    },
+    {
+      "name": "ApprovedMarketService"
+    },
+    {
+      "name": "PlatformAdminService"
+    },
+    {
+      "name": "PreferencesService"
+    },
+    {
+      "name": "ProfileService"
+    },
+    {
+      "name": "ReportService"
+    },
+    {
+      "name": "SoldItemsService"
+    },
+    {
+      "name": "StatsService"
+    },
+    {
+      "name": "TicketTypeService"
+    },
+    {
+      "name": "VisitorTicketService"
+    },
+    {
+      "name": "VendorService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/auth/captcha-challenge": {
+      "get": {
+        "summary": "Step 1: Generate a CAPTCHA challenge.",
+        "operationId": "AuthCodeService_CreateCaptchaChallenge",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateCaptchaChallengeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AuthCodeService"
+        ]
+      }
+    },
+    "/v1/auth/exchange-code": {
+      "get": {
+        "summary": "Step 3: Exchange the OTP code for an API key.",
+        "operationId": "AuthCodeService_ExchangeCode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ExchangeCodeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "description": "user's email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "code",
+            "description": "OTP code",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthCodeService"
+        ]
+      }
+    },
+    "/v1/auth/request-code": {
+      "post": {
+        "summary": "Step 2: Request an OTP code after solving the CAPTCHA.",
+        "operationId": "AuthCodeService_RequestCode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RequestCodeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RequestCodeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AuthCodeService"
+        ]
+      }
+    },
+    "/v1/chat": {
+      "get": {
+        "summary": "List chat messages for a specific resource with pagination.\nAuthorization: authenticated user with access to the specified resource.\nResource access is validated based on resource type (MARKET, EVENT, VENDOR).",
+        "operationId": "ChatService_ListMessages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListChatMessagesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "resourceType",
+            "description": " - MARKET: Market chat is open for all users to discuss about the market\n - DRAFT_MARKET: Draft market chat is open for market owner and platform owner.\n - VENDOR: Vendor chat is open for vendor (defined by the vendor id) and the market owner\n - EVENT: Event chat is opened for all vendors for the event and the market owner",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "RESOURCE_TYPE_UNSPECIFIED",
+              "MARKET",
+              "DRAFT_MARKET",
+              "VENDOR",
+              "EVENT"
+            ],
+            "default": "RESOURCE_TYPE_UNSPECIFIED"
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "nextPageToken",
+            "description": "Token provided by the server to retrieve the next page. Use the ID of the\nlast message from the previous page.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "prevPageToken",
+            "description": "Token provided by the server to retrieve the previous page. Use the ID of\nthe first message from the previous page.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ChatService"
+        ]
+      },
+      "post": {
+        "summary": "Post a new chat message to a specific resource.\nAuthorization: authenticated user with access to the specified resource.\nResource access is validated based on resource type (MARKET, EVENT, VENDOR).",
+        "operationId": "ChatService_PostMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateChatMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateChatMessageRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChatService"
+        ]
+      }
+    },
+    "/v1/chat/{chatId}": {
+      "delete": {
+        "summary": "Delete a chat message (moderation action).\nAuthorization: market owner, event owner, or platform admin/owner only.\nResource ownership is validated based on the message's resource type.",
+        "operationId": "ChatService_DeleteMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteChatMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ChatService"
+        ]
+      }
+    },
+    "/v1/chat/{chatId}/flags": {
+      "delete": {
+        "summary": "Clear all flags from a chat message (moderation action).\nAuthorization: market owner, event owner, or platform admin/owner only.\nResource ownership is validated based on the message's resource type.",
+        "operationId": "ChatService_ClearMessageFlags",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ClearChatMessageFlagsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ChatService"
+        ]
+      }
+    },
+    "/v1/chat/{chatId}:flag": {
+      "post": {
+        "summary": "Flag a chat message as inappropriate.\nAuthorization: authenticated user with access to the resource where the message was posted.\nPlatform admins can flag any message regardless of resource access.",
+        "operationId": "ChatService_FlagMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1FlagChatMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "chatId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ChatServiceFlagMessageBody"
+            }
+          }
+        ],
+        "tags": [
+          "ChatService"
+        ]
+      }
+    },
+    "/v1/chat:search": {
+      "post": {
+        "summary": "Search chat messages across ALL resources with advanced filtering capabilities.\nSTRICTLY RESTRICTED: platform_admin and platform_owner roles ONLY.\nThis endpoint provides administrative access to all chat messages system-wide\nand bypasses normal resource-based access controls.",
+        "operationId": "ChatService_SearchMessages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SearchChatMessagesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SearchChatMessagesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ChatService"
+        ]
+      }
+    },
+    "/v1/draft-markets": {
+      "get": {
+        "summary": "List draft markets owned by the caller.\nAuthorization: platform owner can list all.",
+        "operationId": "DraftMarketService_ListMarkets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListMarketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ownerEmail",
+            "description": "Optional filter: only markets owned by this email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DraftMarketService"
+        ]
+      },
+      "post": {
+        "summary": "Create a new market request (draft).\nAuthorization: authenticated user; owner_email defaults to caller if empty.",
+        "operationId": "DraftMarketService_CreateMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMarketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateMarketRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DraftMarketService"
+        ]
+      }
+    },
+    "/v1/draft-markets/{marketId}": {
+      "get": {
+        "summary": "Get details of a specific draft market.\nAuthorization: platform owner or market owner.",
+        "operationId": "DraftMarketService_GetMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMarketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Identifier of the market to fetch",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DraftMarketService"
+        ]
+      },
+      "delete": {
+        "summary": "Delete a specific draft market.\nAuthorization: platform owner or market owner.",
+        "operationId": "DraftMarketService_DeleteMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Identifier of the market to delete",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DraftMarketService"
+        ]
+      },
+      "put": {
+        "summary": "Update a specific draft market.\nAuthorization: platform owner or market owner.",
+        "operationId": "DraftMarketService_UpdateMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMarketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Identifier of the market to update",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DraftMarketServiceUpdateMarketBody"
+            }
+          }
+        ],
+        "tags": [
+          "DraftMarketService"
+        ]
+      }
+    },
+    "/v1/draft-markets/{marketId}/approval": {
+      "post": {
+        "summary": "Approve a draft market.\nAuthorization: platform owner only.",
+        "operationId": "DraftMarketService_ApproveMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMarketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Identifier of the draft market to approve",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DraftMarketServiceApproveMarketBody"
+            }
+          }
+        ],
+        "tags": [
+          "DraftMarketService"
+        ]
+      }
+    },
+    "/v1/draft-markets:filter": {
+      "post": {
+        "summary": "Filter draft markets with pagination.\nAuthorization: platform owner can filter all; others only their own markets.",
+        "operationId": "DraftMarketService_FilterMarkets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1FilterMarketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1FilterMarketsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DraftMarketService"
+        ]
+      }
+    },
+    "/v1/events": {
+      "get": {
+        "summary": "List all events\nAuthorization: none.",
+        "operationId": "EventService_ListEvents",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListEventsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketIds",
+            "description": "IDs of the approved markets to list events for format: CSV",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      },
+      "post": {
+        "summary": "Create a new event\nAuthorization: any authenticated user (event ownership assigned to caller).",
+        "operationId": "EventService_CreateEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateEventRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}": {
+      "get": {
+        "summary": "Get details of a specific event\nAuthorization: none.",
+        "operationId": "EventService_GetEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "ID of the event to retrieve",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      },
+      "delete": {
+        "summary": "Delete a specific event\nAuthorization: event owner or platform owner.",
+        "operationId": "EventService_DeleteEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "ID of the event to delete",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      },
+      "put": {
+        "summary": "Update an existing event\nAuthorization: event owner or platform owner.",
+        "operationId": "EventService_UpdateEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "ID of the event to update",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EventServiceUpdateEventBody"
+            }
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/api-keys": {
+      "get": {
+        "summary": "Lists all API keys for the specified event.\nAuthorization: Platform owner or event owner.",
+        "operationId": "ApiKeyService_ListApiKeys",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListApiKeysResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Unique identifier of the event whose API keys should be listed.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "alias",
+            "description": "Optional alias filter. When provided, only the matching API key is returned.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiKeyService"
+        ]
+      },
+      "delete": {
+        "summary": "Deletes an API key for the specified event.\nAuthorization: Event owner.",
+        "operationId": "ApiKeyService_DeleteApiKey2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteApiKeyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Unique identifier of the event from which the API key should be removed.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiKeyId",
+            "description": "Id of the API key to delete.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiKeyService"
+        ]
+      },
+      "post": {
+        "summary": "Creates a new API key for the specified event.\nAuthorization: Event owner.",
+        "operationId": "ApiKeyService_CreateApiKey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateApiKeyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Unique identifier of the event for which the API key should be created.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ApiKeyServiceCreateApiKeyBody"
+            }
+          }
+        ],
+        "tags": [
+          "ApiKeyService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/api-keys/alias/{alias}": {
+      "get": {
+        "summary": "Retrieves the details of a specific API key.\nAuthorization: Public (no auth required). Used for cashier/scanner login by alias or ID.",
+        "operationId": "ApiKeyService_GetApiKey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetApiKeyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Unique identifier of the event that owns the API key.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "alias",
+            "description": "Alias of the requested API key (kassakod format: XXX-YYY)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiKeyId",
+            "description": "Preferred identifier of the API key to fetch.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiKeyService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/api-keys/{apiKeyId}": {
+      "get": {
+        "summary": "Retrieves the details of a specific API key.\nAuthorization: Public (no auth required). Used for cashier/scanner login by alias or ID.",
+        "operationId": "ApiKeyService_GetApiKey2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetApiKeyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Unique identifier of the event that owns the API key.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiKeyId",
+            "description": "Preferred identifier of the API key to fetch.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "alias",
+            "description": "Alias of the requested API key (kassakod format: XXX-YYY)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiKeyService"
+        ]
+      },
+      "delete": {
+        "summary": "Deletes an API key for the specified event.\nAuthorization: Event owner.",
+        "operationId": "ApiKeyService_DeleteApiKey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteApiKeyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Unique identifier of the event from which the API key should be removed.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiKeyId",
+            "description": "Id of the API key to delete.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiKeyService"
+        ]
+      },
+      "patch": {
+        "summary": "Updates the tags for a given API key.\nAuthorization: Event owner.",
+        "operationId": "ApiKeyService_UpdateApiKey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateApiKeyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Required. The ID of the event",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiKeyId",
+            "description": "Required. The ID of the API key to update",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "apiKey",
+            "description": "Required. API key update information",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ApiKeyUpdate"
+            }
+          }
+        ],
+        "tags": [
+          "ApiKeyService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/sold-items": {
+      "get": {
+        "summary": "List sold items for an event.\nAuthorization: event owner, platform owner, or event API key for the event.",
+        "operationId": "SoldItemsService_ListSoldItems",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListSoldItemsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "purchaseId",
+            "description": "Filter by purchase ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "paidFilter",
+            "description": "Filter by paid/unpaid state\n\n - PAID_FILTER_UNSPECIFIED: means \"all\"\n - ONLY_PAID: only collected_by_seller == true\n - ONLY_UNPAID: only collected_by_seller == false",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "PAID_FILTER_UNSPECIFIED",
+              "ONLY_PAID",
+              "ONLY_UNPAID"
+            ],
+            "default": "PAID_FILTER_UNSPECIFIED"
+          },
+          {
+            "name": "paymentMethodFilter",
+            "description": "Filter by payment method\n\n - PAYMENT_METHOD_FILTER_UNSPECIFIED: means \"all methods\"",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "PAYMENT_METHOD_FILTER_UNSPECIFIED",
+              "ONLY_SWISH",
+              "ONLY_KONTANT"
+            ],
+            "default": "PAYMENT_METHOD_FILTER_UNSPECIFIED"
+          },
+          {
+            "name": "seller",
+            "description": "Filter items sold by a particular seller number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "includeArchived",
+            "description": "Include items already archived",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "pageSize",
+            "description": "Pagination: items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "nextPageToken",
+            "description": "Pagination token for the next page",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "prevPageToken",
+            "description": "Pagination token for the previous page",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "includeAggregates",
+            "description": "Include aggregate totals in the response",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "SoldItemsService"
+        ]
+      },
+      "post": {
+        "summary": "Create new sold item records.\nAuthorization: event owner, platform owner, or event API key for the event.",
+        "operationId": "SoldItemsService_CreateSoldItems",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateSoldItemsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event to which the sold items belong",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SoldItemsServiceCreateSoldItemsBody"
+            }
+          }
+        ],
+        "tags": [
+          "SoldItemsService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/sold-items/{itemId}": {
+      "delete": {
+        "summary": "Delete a sold item.\nAuthorization: event owner, platform owner, or event API key for the event.",
+        "operationId": "SoldItemsService_DeleteSoldItem",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteSoldItemResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event that owns the item",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "itemId",
+            "description": "Identifier of the item to delete",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SoldItemsService"
+        ]
+      },
+      "put": {
+        "summary": "Update a sold item.\nAuthorization: event owner, platform owner, or event API key for the event.",
+        "operationId": "SoldItemsService_UpdateSoldItem",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateSoldItemResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event containing the item",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "itemId",
+            "description": "Identifier of the item to update",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SoldItemsServiceUpdateSoldItemBody"
+            }
+          }
+        ],
+        "tags": [
+          "SoldItemsService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/sold-items:archive": {
+      "post": {
+        "summary": "Archive sold items for an event.\nAuthorization: event owner, platform owner, or event API key for the event.",
+        "operationId": "SoldItemsService_Archive",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ArchiveResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event whose items should be archived",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SoldItemsServiceArchiveBody"
+            }
+          }
+        ],
+        "tags": [
+          "SoldItemsService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/sold-items:payout": {
+      "post": {
+        "summary": "Mark sold items as paid out.\nAuthorization: event owner, platform owner, or event API key for the event.",
+        "operationId": "SoldItemsService_Payout",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PayoutResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event for which to calculate payouts",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SoldItemsServicePayoutBody"
+            }
+          }
+        ],
+        "tags": [
+          "SoldItemsService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/state": {
+      "put": {
+        "summary": "Authorization: event owner or platform owner.",
+        "operationId": "EventService_UpdateEventState",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateEventStateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Unique identifier of the event whose state is to be updated.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EventServiceUpdateEventStateBody"
+            }
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/ticket_types": {
+      "get": {
+        "summary": "List all ticket types for an event.\nAuthorization: none.",
+        "operationId": "TicketTypeService_ListTicketTypes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListTicketTypesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event for which to list ticket types",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TicketTypeService"
+        ]
+      },
+      "post": {
+        "summary": "Create a ticket type.\nAuthorization: platform owner or event owner.",
+        "operationId": "TicketTypeService_CreateTicketType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateTicketTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event to create the ticket type for",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ticketType",
+            "description": "Ticket type details",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1TicketType"
+            }
+          }
+        ],
+        "tags": [
+          "TicketTypeService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/ticket_types/{id}": {
+      "delete": {
+        "summary": "Delete a ticket type.\nNote! You cannot delete a ticket type that has sold tickets.\nAuthorization: platform owner or event owner.",
+        "operationId": "TicketTypeService_DeleteTicketType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteTicketTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event that owns the ticket type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "ID of the ticket type to delete",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TicketTypeService"
+        ]
+      },
+      "put": {
+        "summary": "Update a ticket type.\nAuthorization: platform owner or event owner.",
+        "operationId": "TicketTypeService_UpdateTicketType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateTicketTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event that owns the ticket type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "ID of the ticket type to update",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ticketType",
+            "description": "Updated ticket type data",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1TicketType"
+            }
+          }
+        ],
+        "tags": [
+          "TicketTypeService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/ticket_types:bulk_sale_start": {
+      "patch": {
+        "summary": "Bulk update sale start time for ticket types.\nAuthorization: platform owner or event owner.",
+        "operationId": "TicketTypeService_BulkUpdateSaleStart",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1BulkUpdateSaleStartResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event that owns the ticket types",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TicketTypeServiceBulkUpdateSaleStartBody"
+            }
+          }
+        ],
+        "tags": [
+          "TicketTypeService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/vendors": {
+      "get": {
+        "summary": "Lists vendor applications for an event.\nAuthorization: platform owner, event owner, event API key, or vendor themselves.",
+        "operationId": "VendorService_ListVendors",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListVendorsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event whose vendors should be listed",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageSize",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "nextPageToken",
+            "description": "Token for the next page",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "prevPageToken",
+            "description": "Token for the previous page",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VendorService"
+        ]
+      },
+      "post": {
+        "summary": "Creates a vendor application for the specified event.\nAuthorization: any authenticated user.",
+        "operationId": "VendorService_CreateVendor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1VendorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event in which the vendor wants to participate",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VendorServiceCreateVendorBody"
+            }
+          }
+        ],
+        "tags": [
+          "VendorService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/vendors/{vendorId}": {
+      "get": {
+        "summary": "Retrieves a single vendor application.\nAuthorization: platform owner, event owner, event API key, or vendor themselves.",
+        "operationId": "VendorService_GetVendor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1VendorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event containing the vendor",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vendorId",
+            "description": "Identifier of the vendor",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VendorService"
+        ]
+      },
+      "delete": {
+        "summary": "Deletes a vendor application.\nAuthorization: platform owner, vendor (status pending), or event owner.",
+        "operationId": "VendorService_DeleteVendor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteVendorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event containing the vendor",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vendorId",
+            "description": "Identifier of the vendor to delete",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VendorService"
+        ]
+      },
+      "put": {
+        "summary": "Updates a vendor application.\nAuthorization: platform owner, event owner, or vendor themselves.",
+        "operationId": "VendorService_UpdateVendor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1VendorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event containing the vendor",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vendorId",
+            "description": "Identifier of the vendor to update",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VendorServiceUpdateVendorBody"
+            }
+          }
+        ],
+        "tags": [
+          "VendorService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/vendors:filter": {
+      "post": {
+        "summary": "Filters vendor applications with pagination.\nAuthorization: platform owner, event owner, event API key, or vendor themselves.",
+        "operationId": "VendorService_FilterVendors",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1FilterVendorsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event whose vendors are being filtered (required)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VendorServiceFilterVendorsBody"
+            }
+          }
+        ],
+        "tags": [
+          "VendorService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/visitor_tickets": {
+      "get": {
+        "summary": "Lista biljetter.\nAuthorization: any authenticated user, but filtering of tickets applies (ticket holder, event owner, or platform owner).",
+        "operationId": "VisitorTicketService_ListVisitorTickets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListVisitorTicketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event to list tickets for ('*' lists across events if allowed)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "description": "Optional filter by purchaser email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pageSize",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "nextPageToken",
+            "description": "Token for the next page",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "prevPageToken",
+            "description": "Token for the previous page",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/visitor_tickets/{id}": {
+      "get": {
+        "summary": "Hämta en enskild biljett.\nAuthorization: Ticket holder, event owner, or platform owner.",
+        "operationId": "VisitorTicketService_GetVisitorTicket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetVisitorTicketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event that owns the ticket",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "Ticket identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/visitor_tickets/{id}/scan": {
+      "post": {
+        "summary": "Skanna / validera en biljett.\nAuthorization: Event owner or event cashier",
+        "operationId": "VisitorTicketService_ScanVisitorTicket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ScanVisitorTicketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event that owns the ticket",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "Ticket identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VisitorTicketServiceScanVisitorTicketBody"
+            }
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/visitor_tickets:filter": {
+      "post": {
+        "summary": "Filter visitor tickets with pagination and sorting.\nAuthorization: ticket holder, event owner, event API key, or platform owner.",
+        "operationId": "VisitorTicketService_FilterVisitorTickets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1FilterVisitorTicketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VisitorTicketServiceFilterVisitorTicketsBody"
+            }
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/visitor_tickets:order": {
+      "post": {
+        "summary": "Beställ biljetter.\nAuthorization: any authenticated user.",
+        "operationId": "VisitorTicketService_OrderVisitorTickets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1OrderVisitorTicketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event where the tickets belong",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VisitorTicketServiceOrderVisitorTicketsBody"
+            }
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
+      }
+    },
+    "/v1/events:filter": {
+      "post": {
+        "summary": "Filter events based on criteria\nAuthorization: none.",
+        "operationId": "EventService_FilterEvents",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1FilterEventsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request for filtering events.\n\nMOBILE CLIENT USAGE:\nPOST /v1/events:filter\nNo authentication required for listing public events.\nFilter by date_from and lifecycle_states=[\"OPEN\"] to show active events.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1FilterEventsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EventService"
+        ]
+      }
+    },
+    "/v1/login": {
+      "post": {
+        "summary": "Sends a magic login link to the provided email address.\nAuthorization: none.",
+        "operationId": "LoginService_Login",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LoginResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LoginRequest"
+            }
+          }
+        ],
+        "tags": [
+          "LoginService"
+        ]
+      }
+    },
+    "/v1/logout": {
+      "post": {
+        "summary": "Invalidates the API key associated with the given email.\nAuthorization: none.",
+        "operationId": "LoginService_Logout",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LogoutResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LogoutRequest"
+            }
+          }
+        ],
+        "tags": [
+          "LoginService"
+        ]
+      }
+    },
+    "/v1/markets": {
+      "get": {
+        "summary": "List all approved markets. Authorization: none.",
+        "operationId": "ApprovedMarketService_ListMarkets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListMarketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ownerEmail",
+            "description": "Optional filter: only markets owned by this email",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApprovedMarketService"
+        ]
+      },
+      "post": {
+        "summary": "Create a new approved market.\nAuthorization: platform owner only.",
+        "operationId": "ApprovedMarketService_CreateMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMarketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateMarketRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApprovedMarketService"
+        ]
+      }
+    },
+    "/v1/markets/{marketId}": {
+      "get": {
+        "summary": "Get details of a specific approved market. Authorization: none.",
+        "operationId": "ApprovedMarketService_GetMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMarketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Identifier of the market to fetch",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApprovedMarketService"
+        ]
+      },
+      "delete": {
+        "summary": "Delete a specific approved market.\nAuthorization: platform owner only.",
+        "operationId": "ApprovedMarketService_DeleteMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Identifier of the market to delete",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApprovedMarketService"
+        ]
+      },
+      "put": {
+        "summary": "Update a specific approved market.\nAuthorization: platform owner or market owner.",
+        "operationId": "ApprovedMarketService_UpdateMarket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMarketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Identifier of the market to update",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ApprovedMarketServiceUpdateMarketBody"
+            }
+          }
+        ],
+        "tags": [
+          "ApprovedMarketService"
+        ]
+      }
+    },
+    "/v1/markets:filter": {
+      "post": {
+        "summary": "Filter approved markets with pagination.\nAuthorization: none.",
+        "operationId": "ApprovedMarketService_FilterMarkets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1FilterMarketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1FilterMarketsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApprovedMarketService"
+        ]
+      }
+    },
+    "/v1/platform/admins": {
+      "get": {
+        "summary": "List admin bindings.",
+        "operationId": "PlatformAdminService_ListPlatformAdmins",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListPlatformAdminsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PlatformAdminService"
+        ]
+      },
+      "post": {
+        "summary": "Grant admin role to a user.",
+        "operationId": "PlatformAdminService_GrantPlatformAdmin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GrantPlatformAdminResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GrantPlatformAdminRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PlatformAdminService"
+        ]
+      }
+    },
+    "/v1/platform/admins/{email}": {
+      "get": {
+        "summary": "Get an admin binding.",
+        "operationId": "PlatformAdminService_GetPlatformAdmin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetPlatformAdminResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PlatformAdminService"
+        ]
+      },
+      "delete": {
+        "summary": "Revoke admin role from a user.",
+        "operationId": "PlatformAdminService_RevokePlatformAdmin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RevokePlatformAdminResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "PlatformAdminService"
+        ]
+      }
+    },
+    "/v1/preferences": {
+      "get": {
+        "summary": "Retrieves the authenticated user's preferences.\nAuthorization: authenticated user.",
+        "operationId": "PreferencesService_GetPreferences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PreferencesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "PreferencesService"
+        ]
+      },
+      "put": {
+        "summary": "Updates the authenticated user's preferences.\nAuthorization: authenticated user.",
+        "operationId": "PreferencesService_UpdatePreferences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PreferencesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to update preferences.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdatePreferencesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "PreferencesService"
+        ]
+      }
+    },
+    "/v1/profiles": {
+      "get": {
+        "summary": "Lists all profiles.\nAuthorization: platform owner only.",
+        "operationId": "ProfileService_ListProfiles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListProfilesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "ProfileService"
+        ]
+      },
+      "post": {
+        "summary": "Creates a new profile.\nAuthorization: platform owner or unauthenticated user.",
+        "operationId": "ProfileService_CreateProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateProfileRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProfileService"
+        ]
+      }
+    },
+    "/v1/profiles/{email}": {
+      "get": {
+        "summary": "Retrieves a profile by email.\nAuthorization: profile owner, platform owner, or according to event/vendor relations.",
+        "operationId": "ProfileService_GetProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Profile"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "description": "Email of the profile to retrieve\n\nUnless platform owner, this should be the authenticated user's email",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProfileService"
+        ]
+      },
+      "delete": {
+        "summary": "Deletes a profile.\nAuthorization: profile owner or platform owner.",
+        "operationId": "ProfileService_DeleteProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "description": "Email of the profile to delete",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProfileService"
+        ]
+      },
+      "put": {
+        "summary": "Updates an existing profile.\nAuthorization: profile owner or platform owner.",
+        "operationId": "ProfileService_UpdateProfile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateProfileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "description": "Email of the profile being updated\nUnless platform owner, this should match the authenticated user",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProfileServiceUpdateProfileBody"
+            }
+          }
+        ],
+        "tags": [
+          "ProfileService"
+        ]
+      }
+    },
+    "/v1/profiles:filter": {
+      "post": {
+        "summary": "Filters profiles by email or other fields.\nAuthorization: platform owner only.",
+        "operationId": "ProfileService_FilterProfiles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1FilterProfilesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1FilterProfilesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProfileService"
+        ]
+      }
+    },
+    "/v1/reports": {
+      "post": {
+        "summary": "Report a resource to the platform owner.\nAuthorization: any authenticated user.",
+        "operationId": "ReportService_ReportResource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ReportResourceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "Request to report a resource.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ReportResourceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ReportService"
+        ]
+      }
+    },
+    "/v1/stats:aggregate": {
+      "get": {
+        "summary": "Retrieve aggregate statistics across all matching events.\nAuthorization: authenticated user.",
+        "operationId": "StatsService_GetAggregateStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAggregateStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "fromDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "marketId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sellerId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
+    "/v1/stats:perEvent": {
+      "get": {
+        "summary": "Retrieve statistics broken down per event.\nAuthorization: authenticated user.",
+        "operationId": "StatsService_GetPerEventStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetPerEventStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fromDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
+    "/v1/stats:timeSeries": {
+      "get": {
+        "summary": "Retrieve time series statistics, e.g. per day or week.\nAuthorization: authenticated user.",
+        "operationId": "StatsService_GetTimeSeriesStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTimeSeriesStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "fromDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "aggregationLevel",
+            "description": "daily, weekly, monthly",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "AGGREGATION_LEVEL_UNSPECIFIED",
+              "DAILY",
+              "WEEKLY",
+              "MONTHLY"
+            ],
+            "default": "AGGREGATION_LEVEL_UNSPECIFIED"
+          },
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "marketId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sellerId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
+    "/v1/userinfo": {
+      "get": {
+        "summary": "Returns the identity and roles of the caller.\nAuthorization: requires a valid API key in the request context.",
+        "operationId": "LoginService_GetUserInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUserInfoResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "LoginService"
+        ]
+      }
+    },
+    "/v1/visitor_tickets:aggregate": {
+      "post": {
+        "summary": "Aggregate ticket counts over multiple events.\nAuthorization: none.",
+        "operationId": "VisitorTicketService_AggregateVisitorTickets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AggregateVisitorTicketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1AggregateVisitorTicketsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
+      }
+    },
+    "/v1/visitor_tickets:filter": {
+      "post": {
+        "summary": "Admin search tickets across all events.\nAuthorization: platform owner and platform admin only.",
+        "operationId": "VisitorTicketService_AdminSearchTickets",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AdminSearchTicketsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1AdminSearchTicketsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ApiKeyServiceCreateApiKeyBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/v1ApiKeyType",
+          "description": "Type of tool the API key should authorize."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional tags used to categorize the API key."
+        }
+      },
+      "description": "Request to create a new API key for an event."
+    },
+    "ChatServiceFlagMessageBody": {
+      "type": "object",
+      "title": "Request to flag a chat message by its ID"
+    },
+    "DraftMarketServiceApproveMarketBody": {
+      "type": "object"
+    },
+    "EventServiceUpdateEventBody": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/v1Event",
+          "title": "Updated event information"
+        }
+      },
+      "title": "Request for updating an event"
+    },
+    "EventServiceUpdateEventStateBody": {
+      "type": "object",
+      "properties": {
+        "lifecycleState": {
+          "$ref": "#/definitions/v1EventLifecycleState",
+          "description": "The new lifecycle state for the event."
+        }
+      },
+      "title": "UpdateEventStateRequest is used to change the lifecycle state of an event.\nThe request includes the event's unique identifier and the desired new state.\nAllowed transitions are:\n  OPEN -\u003e CLOSED\n  CLOSED -\u003e FINALIZED"
+    },
+    "ProfileServiceUpdateProfileBody": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "$ref": "#/definitions/v1Profile",
+          "title": "Updated profile data"
+        }
+      }
+    },
+    "SoldItemsServiceArchiveBody": {
+      "type": "object",
+      "properties": {
+        "paidFilter": {
+          "$ref": "#/definitions/v1PaidFilter",
+          "title": "Filter by paid/unpaid state"
+        },
+        "paymentMethodFilter": {
+          "$ref": "#/definitions/v1PaymentMethodFilter",
+          "title": "Filter by payment method"
+        },
+        "seller": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Archive items for this seller number only"
+        },
+        "includeArchived": {
+          "type": "boolean",
+          "title": "Include already archived items in the result"
+        },
+        "untilTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Archive items up to this point in time"
+        }
+      }
+    },
+    "SoldItemsServiceCreateSoldItemsBody": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SoldItem"
+          },
+          "description": "Items being created. Mobile clients should provide item_id and purchase_id for each item."
+        }
+      },
+      "description": "Request to create sold items for an event.\n\nMOBILE CLIENT USAGE:\n1. Generate unique item_id (ULID) for each item before sending\n2. Generate common purchase_id (ULID) for all items in same purchase\n3. Save items locally before sending (offline-first)\n4. Send to server when network available\n5. If network fails, retry with same IDs - backend will detect duplicates\n6. Handle rejected_items: DUPLICATE_RECEIPT means already saved (safe to mark uploaded)\n\nExample:\n{\n  \"event_id\": \"evt_abc123\",\n  \"items\": [\n    {\"item_id\": \"01JHRM8YFZA1B2C3D4E5F6G7H8\", \"purchase_id\": \"01JHRM8YFZA1B2C3D4E5F6G7H0\", \"seller\": 42, \"price\": 50, \"payment_method\": 1},\n    {\"item_id\": \"01JHRM8YFZA1B2C3D4E5F6G7H9\", \"purchase_id\": \"01JHRM8YFZA1B2C3D4E5F6G7H0\", \"seller\": 42, \"price\": 75, \"payment_method\": 1}\n  ]\n}"
+    },
+    "SoldItemsServicePayoutBody": {
+      "type": "object",
+      "properties": {
+        "paymentMethodFilter": {
+          "$ref": "#/definitions/v1PaymentMethodFilter",
+          "title": "Filter payouts by payment method"
+        },
+        "seller": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Payout for a specific seller number"
+        },
+        "untilTimestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Consider only items sold up to this time (must be in the past)"
+        },
+        "dryRun": {
+          "type": "boolean",
+          "title": "If true, no state is changed and amounts are only calculated"
+        }
+      }
+    },
+    "SoldItemsServiceUpdateSoldItemBody": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "$ref": "#/definitions/v1SoldItem",
+          "title": "Updated item data"
+        }
+      }
+    },
+    "TicketTypeServiceBulkUpdateSaleStartBody": {
+      "type": "object",
+      "properties": {
+        "saleStartsAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "When sales should start for all these ticket types"
+        },
+        "ticketTypeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Ticket type IDs to update (empty means all ticket types for the event)"
+        }
+      },
+      "title": "Bulk update sale start time for multiple ticket types"
+    },
+    "VendorServiceCreateVendorBody": {
+      "type": "object",
+      "properties": {
+        "sellerNumber": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Desired seller number at the event"
+        },
+        "freeText": {
+          "type": "string",
+          "title": "Additional information from the vendor"
+        }
+      }
+    },
+    "VendorServiceFilterVendorsBody": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "$ref": "#/definitions/v1VendorFilter",
+          "title": "Optional filter criteria"
+        },
+        "sort": {
+          "$ref": "#/definitions/v1SortOrder",
+          "title": "Optional sort order"
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination",
+          "title": "Optional pagination parameters"
+        }
+      }
+    },
+    "VendorServiceUpdateVendorBody": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "$ref": "#/definitions/v1Vendor",
+          "title": "Updated vendor data"
+        }
+      }
+    },
+    "VisitorTicketServiceFilterVisitorTicketsBody": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "$ref": "#/definitions/v1VisitorTicketFilter"
+        },
+        "sort": {
+          "$ref": "#/definitions/v1TicketSortOrder"
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      },
+      "title": "Request for filtering visitor tickets"
+    },
+    "VisitorTicketServiceOrderVisitorTicketsBody": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "title": "Email of the purchaser"
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderLine"
+          },
+          "title": "Lines describing ticket types and quantities"
+        },
+        "acceptPartial": {
+          "type": "boolean",
+          "title": "If true, allow fewer tickets than requested"
+        }
+      },
+      "title": "-----------------------------------\nBegäran om att beställa biljetter atomärt eller \"så många som finns\"\n-----------------------------------"
+    },
+    "VisitorTicketServiceScanVisitorTicketBody": {
+      "type": "object",
+      "title": "Request/response för att skanna en biljett"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1AdminSearchTicketsRequest": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "$ref": "#/definitions/v1AdminTicketFilter"
+        },
+        "sort": {
+          "$ref": "#/definitions/v1TicketSortOrder"
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      },
+      "title": "Request for admin search across all events"
+    },
+    "v1AdminSearchTicketsResponse": {
+      "type": "object",
+      "properties": {
+        "tickets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VisitorTicket"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        },
+        "prevPageToken": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Response from admin ticket search"
+    },
+    "v1AdminTicketFilter": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "title": "Search by ticket holder email"
+        },
+        "eventId": {
+          "type": "string",
+          "title": "Filter by specific event (optional - omit to search all events)"
+        },
+        "status": {
+          "$ref": "#/definitions/v1TicketStatus",
+          "title": "Filter by ticket status"
+        },
+        "dateFrom": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Date range: issued from this time"
+        },
+        "dateTo": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Date range: issued to this time"
+        },
+        "freeText": {
+          "type": "string",
+          "title": "Free text search across ticket ID, email, and ticket type"
+        },
+        "ticketType": {
+          "type": "string",
+          "title": "Filter by ticket type"
+        }
+      },
+      "title": "Admin filter for searching tickets across all events"
+    },
+    "v1AggregateVisitorTicketsRequest": {
+      "type": "object",
+      "properties": {
+        "eventIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Events to include in the aggregation"
+        }
+      },
+      "title": "Request for aggregated ticket counts across multiple events"
+    },
+    "v1AggregateVisitorTicketsResponse": {
+      "type": "object",
+      "properties": {
+        "totalSold": {
+          "type": "integer",
+          "format": "int32",
+          "description": "sum of all sold tickets for all requested events."
+        },
+        "totalReleased": {
+          "type": "integer",
+          "format": "int32",
+          "description": "sum of all released tickets for all requested events."
+        },
+        "perEvent": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1EventTicketAggregate"
+          }
+        }
+      },
+      "title": "Response containing aggregated ticket data"
+    },
+    "v1Aggregates": {
+      "type": "object",
+      "properties": {
+        "totalCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "total items matched"
+        },
+        "totalPrice": {
+          "type": "integer",
+          "format": "int32",
+          "title": "sum of all prices"
+        }
+      }
+    },
+    "v1AggregationLevel": {
+      "type": "string",
+      "enum": [
+        "AGGREGATION_LEVEL_UNSPECIFIED",
+        "DAILY",
+        "WEEKLY",
+        "MONTHLY"
+      ],
+      "default": "AGGREGATION_LEVEL_UNSPECIFIED"
+    },
+    "v1ApiKeyInfo": {
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string",
+          "description": "Human-readable alias for the API key.\nMust be 3-20 characters, uppercase letters, numbers, or hyphens."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether the API key is currently active."
+        },
+        "type": {
+          "$ref": "#/definitions/v1ApiKeyType",
+          "title": "Type of tool this API key is used for"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Optional tags for organizing and filtering API keys\nExamples: \"entrance\", \"main-counter\", \"mobile\", \"backup\", \"Dörr 3\""
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the API key document."
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "Secret API key value. Only populated for certain responses (e.g., desktop tools)."
+        }
+      },
+      "description": "Represents metadata for an API key, excluding the secret key itself."
+    },
+    "v1ApiKeyType": {
+      "type": "string",
+      "enum": [
+        "API_KEY_TYPE_UNSPECIFIED",
+        "API_KEY_TYPE_WEB_CASHIER",
+        "API_KEY_TYPE_SCANNER",
+        "API_KEY_TYPE_DESKTOP_CASHIER"
+      ],
+      "default": "API_KEY_TYPE_UNSPECIFIED",
+      "description": "- API_KEY_TYPE_WEB_CASHIER: Browser-based cashier (Webkassa)\n - API_KEY_TYPE_SCANNER: Ticket scanner (Biljettscanner)\n - API_KEY_TYPE_DESKTOP_CASHIER: Offline desktop cashier (OfflineKassa)",
+      "title": "Enum defining the type of tool the API key is used for"
+    },
+    "v1ApiKeyUpdate": {
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Optional. Tags for categorization"
+        }
+      },
+      "title": "API key update information"
+    },
+    "v1ApprovedMarketServiceUpdateMarketBody": {
+      "type": "object",
+      "properties": {
+        "market": {
+          "$ref": "#/definitions/v1Market",
+          "title": "Updated market information"
+        }
+      }
+    },
+    "v1ArchiveResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SoldItem"
+          },
+          "title": "Items that were archived"
+        }
+      }
+    },
+    "v1BulkUpdateSaleStartResponse": {
+      "type": "object",
+      "properties": {
+        "updatedCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of ticket types updated"
+        },
+        "updatedTypes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TicketType"
+          },
+          "title": "Updated ticket types"
+        }
+      }
+    },
+    "v1ChatMessage": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Unique identifier for the chat message"
+        },
+        "resourceType": {
+          "$ref": "#/definitions/v1ResourceType",
+          "title": "Type of the associated resource"
+        },
+        "resourceId": {
+          "type": "string",
+          "title": "ID of the associated resource"
+        },
+        "createdBy": {
+          "type": "string",
+          "title": "Email of the user who created the message"
+        },
+        "message": {
+          "type": "string",
+          "title": "The content of the chat message"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Time when the message was created"
+        },
+        "readBy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Emails of users who have read the message"
+        },
+        "alias": {
+          "type": "string",
+          "readOnly": true
+        },
+        "status": {
+          "$ref": "#/definitions/v1ChatMessageStatus",
+          "title": "Alias of the user who created the message",
+          "readOnly": true
+        },
+        "flagCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Moderation status of the message",
+          "readOnly": true
+        },
+        "moderatedBy": {
+          "type": "string",
+          "title": "Number of unique user flags for this message",
+          "readOnly": true
+        },
+        "flaggedByMe": {
+          "type": "boolean",
+          "description": "True if the authenticated user has flagged this message",
+          "title": "Email of the user who last moderated the message",
+          "readOnly": true
+        }
+      },
+      "title": "Represents a single chat message associated with a resource"
+    },
+    "v1ChatMessageFilter": {
+      "type": "object",
+      "properties": {
+        "messageContent": {
+          "type": "string",
+          "title": "Search in message text"
+        },
+        "createdBy": {
+          "type": "string",
+          "title": "Search by creator email"
+        },
+        "dateFrom": {
+          "type": "string",
+          "title": "ISO date string (e.g., \"2024-01-01T00:00:00Z\")"
+        },
+        "dateTo": {
+          "type": "string",
+          "title": "ISO date string (e.g., \"2024-12-31T23:59:59Z\")"
+        },
+        "status": {
+          "$ref": "#/definitions/v1ChatMessageStatus",
+          "title": "Filter by message status"
+        },
+        "resourceType": {
+          "$ref": "#/definitions/v1ResourceType",
+          "title": "Filter by resource type"
+        },
+        "resourceId": {
+          "type": "string",
+          "title": "Filter by specific resource ID"
+        }
+      },
+      "title": "Filter options for searching chat messages across all resources"
+    },
+    "v1ChatMessageStatus": {
+      "type": "string",
+      "enum": [
+        "CHAT_MESSAGE_STATUS_UNSPECIFIED",
+        "VISIBLE",
+        "MASKED",
+        "DELETED"
+      ],
+      "default": "CHAT_MESSAGE_STATUS_UNSPECIFIED",
+      "description": "- VISIBLE: Message is visible to all users\n - MASKED: Message is masked due to user reports\n - DELETED: Message has been deleted by a moderator",
+      "title": "Status of a chat message in regard to moderation and visibility"
+    },
+    "v1ClearChatMessageFlagsResponse": {
+      "type": "object",
+      "properties": {
+        "chatMessage": {
+          "$ref": "#/definitions/v1ChatMessage"
+        }
+      },
+      "title": "Response after clearing flags"
+    },
+    "v1CreateApiKeyResponse": {
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string",
+          "description": "Alias chosen for the API key."
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "The generated secret API key."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether the API key is currently active."
+        },
+        "type": {
+          "$ref": "#/definitions/v1ApiKeyType",
+          "description": "Type of tool this key authenticates."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Tags assigned to the key."
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the API key document."
+        }
+      },
+      "description": "Response containing the details of the newly created API key."
+    },
+    "v1CreateCaptchaChallengeResponse": {
+      "type": "object",
+      "properties": {
+        "challengeId": {
+          "type": "string",
+          "title": "e.g. UUID"
+        },
+        "imageData": {
+          "type": "string",
+          "format": "byte",
+          "title": "PNG‐bytes för “4 + 4 = ?”"
+        }
+      }
+    },
+    "v1CreateChatMessageRequest": {
+      "type": "object",
+      "properties": {
+        "resourceType": {
+          "$ref": "#/definitions/v1ResourceType"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "title": "Request to create a new chat message"
+    },
+    "v1CreateChatMessageResponse": {
+      "type": "object",
+      "properties": {
+        "chatMessage": {
+          "$ref": "#/definitions/v1ChatMessage",
+          "title": "The created chat message"
+        }
+      },
+      "title": "Response after creating a new chat message"
+    },
+    "v1CreateEventRequest": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/v1Event"
+        }
+      },
+      "title": "Request for creating an event"
+    },
+    "v1CreateEventResponse": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/v1Event",
+          "title": "Created event information"
+        }
+      },
+      "title": "Response for creating an event"
+    },
+    "v1CreateMarketRequest": {
+      "type": "object",
+      "properties": {
+        "market": {
+          "$ref": "#/definitions/v1Market",
+          "title": "Market information to create"
+        }
+      }
+    },
+    "v1CreateMarketResponse": {
+      "type": "object",
+      "properties": {
+        "market": {
+          "$ref": "#/definitions/v1Market",
+          "title": "Newly created market"
+        }
+      }
+    },
+    "v1CreateProfileRequest": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "$ref": "#/definitions/v1Profile",
+          "title": "Profile details to create"
+        }
+      }
+    },
+    "v1CreateProfileResponse": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "$ref": "#/definitions/v1Profile",
+          "title": "The created profile"
+        },
+        "apiKey": {
+          "type": "string",
+          "title": "API key issued for the new profile"
+        }
+      }
+    },
+    "v1CreateSoldItemsResponse": {
+      "type": "object",
+      "properties": {
+        "acceptedItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SoldItem"
+          },
+          "title": "Items successfully accepted and saved by the server"
+        },
+        "rejectedItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1RejectedItem"
+          },
+          "title": "Items that were rejected with error details"
+        }
+      },
+      "description": "Response from creating sold items.\n\nMOBILE CLIENT HANDLING:\n- accepted_items: Successfully saved, mark as uploaded in local storage\n- rejected_items: Check error_code:\n  - DUPLICATE_RECEIPT: Item already exists (safe to mark uploaded)\n  - INVALID_SELLER: Seller not approved (store error, show to user)"
+    },
+    "v1CreateTicketTypeResponse": {
+      "type": "object",
+      "properties": {
+        "ticketType": {
+          "$ref": "#/definitions/v1TicketType"
+        }
+      }
+    },
+    "v1DeleteApiKeyResponse": {
+      "type": "object",
+      "description": "Response for a successful API key deletion. Empty on success."
+    },
+    "v1DeleteChatMessageResponse": {
+      "type": "object",
+      "properties": {
+        "chatMessage": {
+          "$ref": "#/definitions/v1ChatMessage"
+        }
+      },
+      "title": "Response after deleting a chat message"
+    },
+    "v1DeleteSoldItemResponse": {
+      "type": "object",
+      "properties": {
+        "deletedItem": {
+          "$ref": "#/definitions/v1SoldItem",
+          "title": "The item that was removed"
+        }
+      }
+    },
+    "v1DeleteTicketTypeResponse": {
+      "type": "object"
+    },
+    "v1DeleteVendorResponse": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "$ref": "#/definitions/v1Vendor",
+          "title": "Deleted vendor information"
+        }
+      }
+    },
+    "v1DraftMarketServiceUpdateMarketBody": {
+      "type": "object",
+      "properties": {
+        "market": {
+          "$ref": "#/definitions/v1Market",
+          "title": "Updated market information"
+        }
+      }
+    },
+    "v1Errors": {
+      "type": "object",
+      "properties": {
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OrderLineError"
+          },
+          "title": "Errors for each order line"
+        },
+        "partialTickets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VisitorTicket"
+          },
+          "title": "Om accept_partial = true och några biljetter kunde skapas:\nKan (om man vill) även returnera de skapade biljetterna här,\nannars kan anroparen göra ett nytt anrop om de vill gå vidare.\nTickets created when accept_partial=true"
+        }
+      },
+      "title": "Om ordern misslyckas eller bara delvis går igenom (om accept_partial=true)"
+    },
+    "v1Event": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string",
+          "description": "ID of the approved market this event belongs to."
+        },
+        "name": {
+          "type": "string",
+          "title": "Event-specific name; inherits from Market if not provided"
+        },
+        "description": {
+          "type": "string",
+          "title": "Event-specific description; inherits from Market if not provided"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "addressStreet": {
+          "type": "string",
+          "description": "Event-specific street; inherits from Market if not provided",
+          "title": "Address fields"
+        },
+        "addressCity": {
+          "type": "string",
+          "title": "Event-specific city; inherits from Market if not provided"
+        },
+        "addressState": {
+          "type": "string",
+          "title": "Event-specific state; inherits from Market if not provided"
+        },
+        "addressZip": {
+          "type": "string",
+          "title": "Event-specific ZIP code; inherits from Market if not provided"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double",
+          "title": "Event-specific latitude; inherits from Market if not provided"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double",
+          "title": "Event-specific longitude; inherits from Market if not provided"
+        },
+        "maxVendors": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "vendorApplicationStartTime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Date and time from when the event accepts vendor applications"
+        },
+        "publishTime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Date and time when the event is published"
+        },
+        "maxTicketsPerVisitor": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "availableTickets": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "soldTickets": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "acceptVendorApplications": {
+          "type": "boolean",
+          "description": "`accept_vendor_applications` is computed by the API and is output only.",
+          "readOnly": true
+        },
+        "ownerEmail": {
+          "type": "string",
+          "description": "'owner_email' is the email of the market owner and is output only.",
+          "readOnly": true
+        },
+        "lifecycleState": {
+          "$ref": "#/definitions/v1EventLifecycleState",
+          "description": "*\nThe event’s lifecycle state controls whether the event is open for new transactions.\n\nAlthough the start and end dates imply a timeline (coming, ongoing, completed),\nif the event has not been explicitly closed or finalized, it is treated as OPEN.\n\nAllowed explicit state transitions:\n - OPEN -\u003e CLOSED: When the market owner stops further sales.\n - CLOSED -\u003e FINALIZED: When sold items are archived and payouts are complete."
+        }
+      },
+      "title": "Event messages"
+    },
+    "v1EventAggregate": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "eventName": {
+          "type": "string"
+        },
+        "endtime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "totalSales": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalSwish": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalKontant": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalItemsSold": {
+          "type": "string",
+          "format": "int64"
+        },
+        "averageSaleValue": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalSellerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalMarketOwnerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalPlatformOwnerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalCharityShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "sellerSales": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/v1SellerSales"
+          }
+        }
+      }
+    },
+    "v1EventFilter": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "longitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "radiusKm": {
+          "type": "number",
+          "format": "double",
+          "title": "Radius in kilometers"
+        },
+        "dateFrom": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Events that end after this time"
+        },
+        "dateTo": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Events that start before this time"
+        },
+        "searchText": {
+          "type": "string",
+          "title": "Free text search across event name, description, and address fields"
+        },
+        "marketId": {
+          "type": "string",
+          "title": "Search by market ID to find events for a specific market"
+        },
+        "lifecycleStates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1EventLifecycleState"
+          },
+          "title": "Filter by lifecycle state(s) - e.g., only show OPEN events"
+        }
+      },
+      "description": "Filter criteria for events.\n\nMOBILE CLIENT USAGE:\nOn app startup, fetch open events for today:\n{\n  \"filter\": {\n    \"date_from\": \"2026-01-18T00:00:00Z\",\n    \"lifecycle_states\": [\"OPEN\"]\n  }\n}\nThis returns events that are currently accepting cashier operations."
+    },
+    "v1EventLifecycleState": {
+      "type": "string",
+      "enum": [
+        "EVENT_LIFECYCLE_STATE_UNSPECIFIED",
+        "OPEN",
+        "CLOSED",
+        "FINALIZED"
+      ],
+      "default": "EVENT_LIFECYCLE_STATE_UNSPECIFIED",
+      "description": "EventLifecycleState defines the explicit lifecycle state of an event.\nAlthough the event’s start and end dates imply \"coming\", \"ongoing\" and \"completed\"\nphases, these are all mapped to the OPEN state. The market owner can explicitly\nchange an event’s state to CLOSED (to prevent further transactions) and subsequently\nto FINALIZED (to archive sold items and mark the event read-only).\n\n - EVENT_LIFECYCLE_STATE_UNSPECIFIED: Unspecified state. Must not be used.\n - OPEN: OPEN indicates that the event is open for transactions.\n(This includes events that are coming, ongoing, or even completed by date,\nprovided they have not been explicitly closed.)\n - CLOSED: CLOSED indicates that the market owner has explicitly closed the event,\nand no new sold items are accepted.\n - FINALIZED: FINALIZED indicates that the event has been finalized.\nSold items should be archived and the event is rendered read-only."
+    },
+    "v1EventTicketAggregate": {
+      "type": "object",
+      "properties": {
+        "totalSold": {
+          "type": "integer",
+          "format": "int32",
+          "title": "sum of all sold tickets for this event"
+        },
+        "totalReleased": {
+          "type": "integer",
+          "format": "int32",
+          "title": "sum of all released tickets for this event"
+        },
+        "perType": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TicketTypeAggregate"
+          }
+        }
+      }
+    },
+    "v1ExchangeCodeResponse": {
+      "type": "object",
+      "properties": {
+        "apiKey": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1FilterEventsRequest": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "$ref": "#/definitions/v1EventFilter"
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      },
+      "description": "Request for filtering events.\n\nMOBILE CLIENT USAGE:\nPOST /v1/events:filter\nNo authentication required for listing public events.\nFilter by date_from and lifecycle_states=[\"OPEN\"] to show active events."
+    },
+    "v1FilterEventsResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Event"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        },
+        "prevPageToken": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "description": "Response for filtering events.\nReturns matching events that user can select for cashier or scanner operations."
+    },
+    "v1FilterMarketsRequest": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "$ref": "#/definitions/v1MarketFilter"
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      },
+      "title": "Request message for filtering markets"
+    },
+    "v1FilterMarketsResponse": {
+      "type": "object",
+      "properties": {
+        "markets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Market"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        },
+        "prevPageToken": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Response message containing the filtered markets"
+    },
+    "v1FilterProfilesRequest": {
+      "type": "object",
+      "properties": {
+        "searchText": {
+          "type": "string",
+          "title": "Free text search on email"
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination",
+          "title": "Pagination options"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Specific fields to include in the response"
+        }
+      }
+    },
+    "v1FilterProfilesResponse": {
+      "type": "object",
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Profile"
+          },
+          "title": "Profiles matching the filter"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "title": "Token for the next page"
+        },
+        "prevPageToken": {
+          "type": "string",
+          "title": "Token for the previous page"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total number of profiles returned"
+        }
+      }
+    },
+    "v1FilterVendorsResponse": {
+      "type": "object",
+      "properties": {
+        "vendors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Vendor"
+          },
+          "title": "Vendors that matched the filter"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "title": "Token for the next page"
+        },
+        "prevPageToken": {
+          "type": "string",
+          "title": "Token for the previous page"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total vendors matched ignoring pagination"
+        }
+      }
+    },
+    "v1FilterVisitorTicketsResponse": {
+      "type": "object",
+      "properties": {
+        "tickets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VisitorTicket"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        },
+        "prevPageToken": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Response from filtering visitor tickets"
+    },
+    "v1FlagChatMessageResponse": {
+      "type": "object",
+      "properties": {
+        "chatMessage": {
+          "$ref": "#/definitions/v1ChatMessage"
+        }
+      },
+      "title": "Response after flagging a chat message"
+    },
+    "v1GetAggregateStatsResponse": {
+      "type": "object",
+      "properties": {
+        "totalSales": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalSwish": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalKontant": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalSellerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalMarketOwnerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalPlatformOwnerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalCharityShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalItemsSold": {
+          "type": "string",
+          "format": "int64"
+        },
+        "uniqueMarketsCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uniqueEventsCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "uniqueSellersCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1GetApiKeyResponse": {
+      "type": "object",
+      "properties": {
+        "alias": {
+          "type": "string",
+          "title": "Alias of the API key (XXX-YYY format)"
+        },
+        "apiKey": {
+          "type": "string",
+          "title": "The secret API key to use in Bearer token authentication"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether the API key is currently active and may be used."
+        },
+        "type": {
+          "$ref": "#/definitions/v1ApiKeyType",
+          "title": "Type of the API key (WEB_CASHIER, TICKET_SCANNER, etc.)"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Tags stored for the API key."
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the API key."
+        }
+      },
+      "description": "Response containing details of a specific API key.\n\nMOBILE CLIENT: Store api_key in memory (not persistent storage) and use for\nall subsequent API calls via Authorization: Bearer {api_key} header."
+    },
+    "v1GetEventResponse": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/v1Event",
+          "title": "Detailed event information"
+        }
+      },
+      "title": "Response for getting event details"
+    },
+    "v1GetMarketResponse": {
+      "type": "object",
+      "properties": {
+        "market": {
+          "$ref": "#/definitions/v1Market",
+          "title": "Market details"
+        }
+      }
+    },
+    "v1GetPerEventStatsResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1EventAggregate"
+          }
+        }
+      }
+    },
+    "v1GetPlatformAdminResponse": {
+      "type": "object",
+      "properties": {
+        "admin": {
+          "$ref": "#/definitions/v1PlatformAdmin"
+        }
+      }
+    },
+    "v1GetTimeSeriesStatsResponse": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TimeSeriesStat"
+          }
+        }
+      }
+    },
+    "v1GetUserInfoResponse": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "title": "The email associated with the API key"
+        },
+        "isPlatformOwner": {
+          "type": "boolean",
+          "title": "Indicates if the user is a platform owner"
+        },
+        "isMarketOwner": {
+          "type": "boolean",
+          "title": "Indicates if the user is a market owner"
+        },
+        "isVendor": {
+          "type": "boolean",
+          "title": "Indicates if the user is a vendor"
+        },
+        "isVisitor": {
+          "type": "boolean",
+          "title": "Indicates if the user is a visitor (has purchased tickets)"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Expiration time of the API key"
+        }
+      }
+    },
+    "v1GetVisitorTicketResponse": {
+      "type": "object",
+      "properties": {
+        "ticket": {
+          "$ref": "#/definitions/v1VisitorTicket",
+          "title": "The requested ticket"
+        }
+      }
+    },
+    "v1GrantPlatformAdminRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GrantPlatformAdminResponse": {
+      "type": "object",
+      "properties": {
+        "admin": {
+          "$ref": "#/definitions/v1PlatformAdmin"
+        }
+      }
+    },
+    "v1Language": {
+      "type": "string",
+      "enum": [
+        "LANGUAGE_UNSPECIFIED",
+        "SWEDISH",
+        "ENGLISH"
+      ],
+      "default": "LANGUAGE_UNSPECIFIED",
+      "description": "Supported language options for the user interface.\nSystem default is Swedish, unless overridden by user preferences."
+    },
+    "v1ListApiKeysResponse": {
+      "type": "object",
+      "properties": {
+        "apiKeys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ApiKeyInfo"
+          },
+          "description": "List of API keys associated with the event."
+        }
+      },
+      "description": "Response containing all API keys belonging to an event."
+    },
+    "v1ListChatMessagesResponse": {
+      "type": "object",
+      "properties": {
+        "chatMessages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ChatMessage"
+          },
+          "title": "List of chat messages"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total number of chat messages"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "title": "Token for the next page of results"
+        },
+        "prevPageToken": {
+          "type": "string",
+          "title": "Token for the previous page of results"
+        }
+      },
+      "title": "Response containing a list of chat messages with pagination details"
+    },
+    "v1ListEventsResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Event"
+          },
+          "title": "List of events"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total number of events"
+        }
+      },
+      "title": "Response for listing events"
+    },
+    "v1ListMarketsResponse": {
+      "type": "object",
+      "properties": {
+        "markets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Market"
+          },
+          "title": "Markets matching the request"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total number of markets returned"
+        }
+      }
+    },
+    "v1ListPlatformAdminsResponse": {
+      "type": "object",
+      "properties": {
+        "admins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1PlatformAdmin"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ListProfilesResponse": {
+      "type": "object",
+      "properties": {
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Profile"
+          },
+          "title": "All profiles"
+        }
+      }
+    },
+    "v1ListSoldItemsResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SoldItem"
+          },
+          "title": "Sold items for the requested page"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total number of matched items"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "title": "Token for the next page"
+        },
+        "prevPageToken": {
+          "type": "string",
+          "title": "Token for the previous page"
+        },
+        "aggregates": {
+          "$ref": "#/definitions/v1Aggregates",
+          "title": "Aggregate values for the entire result set"
+        }
+      }
+    },
+    "v1ListTicketTypesResponse": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1TicketType"
+          },
+          "title": "Available ticket types"
+        }
+      }
+    },
+    "v1ListVendorsResponse": {
+      "type": "object",
+      "properties": {
+        "vendors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Vendor"
+          },
+          "title": "Vendors in the requested page"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total number of matching vendors"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "title": "Token for the next page"
+        },
+        "prevPageToken": {
+          "type": "string",
+          "title": "Token for the previous page"
+        }
+      }
+    },
+    "v1ListVisitorTicketsResponse": {
+      "type": "object",
+      "properties": {
+        "tickets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VisitorTicket"
+          },
+          "title": "Visitor tickets on this page"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "title": "Token for the next page"
+        },
+        "prevPageToken": {
+          "type": "string",
+          "title": "Token for the previous page"
+        }
+      }
+    },
+    "v1LoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email address used for the login link."
+        }
+      },
+      "title": "Login messages"
+    },
+    "v1LoginResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "title": "A confirmation message that the email has been sent"
+        }
+      }
+    },
+    "v1LogoutRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email whose API key should be revoked."
+        }
+      },
+      "title": "Logout messages"
+    },
+    "v1LogoutResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "title": "A confirmation message that the user has been logged out"
+        }
+      }
+    },
+    "v1Market": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "Unique identifier of the market"
+        },
+        "name": {
+          "type": "string",
+          "title": "Human friendly name of the market"
+        },
+        "description": {
+          "type": "string",
+          "title": "Textual description shown to potential vendors/visitors"
+        },
+        "revenueSplit": {
+          "$ref": "#/definitions/v1RevenueSplit",
+          "title": "Revenue split configuration for sales"
+        },
+        "maxTicketsPerPerson": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Rename to max_tickets_per_visitor",
+          "title": "Per-visitor ticket limit"
+        },
+        "ownerEmail": {
+          "type": "string",
+          "title": "Email of the user requesting/owning the market"
+        }
+      },
+      "title": "--------------------\nMarkets\n--------------------\nMarket messages"
+    },
+    "v1MarketFilter": {
+      "type": "object",
+      "properties": {
+        "ownerEmail": {
+          "type": "string",
+          "title": "Filter by the email of the market owner"
+        },
+        "name": {
+          "type": "string",
+          "title": "Filter markets by their name (partial match)"
+        },
+        "searchText": {
+          "type": "string",
+          "title": "ADD: Free text search across name, description"
+        }
+      },
+      "title": "Filtering options for markets"
+    },
+    "v1OrderLine": {
+      "type": "object",
+      "properties": {
+        "ticketTypeId": {
+          "type": "string",
+          "title": "Ticket type identifier"
+        },
+        "ticketCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of tickets of this type"
+        }
+      },
+      "title": "-----------------------------------\nEn rad i ordern: biljettyp och antal\n-----------------------------------"
+    },
+    "v1OrderLineError": {
+      "type": "object",
+      "properties": {
+        "ticketTypeId": {
+          "type": "string",
+          "title": "Ticket type that failed"
+        },
+        "errorCode": {
+          "$ref": "#/definitions/v1TicketOrderErrorCode",
+          "title": "Machine readable error code"
+        },
+        "errorMessage": {
+          "type": "string",
+          "title": "Human readable error description"
+        },
+        "available": {
+          "type": "integer",
+          "format": "int32",
+          "title": "För INSUFFICIENT_TICKETS kan servern ange hur många som faktiskt finns\nAvailable quantity when INSUFFICIENT_TICKETS is returned"
+        }
+      },
+      "title": "-----------------------------------\nFel på en enskild orderrad\n-----------------------------------"
+    },
+    "v1OrderVisitorTicketsResponse": {
+      "type": "object",
+      "properties": {
+        "tickets": {
+          "$ref": "#/definitions/v1Tickets",
+          "title": "Alla biljetter lyckades skapas"
+        },
+        "errors": {
+          "$ref": "#/definitions/v1Errors",
+          "title": "Något fel uppstod (lista med fel per rad)"
+        }
+      },
+      "title": "-----------------------------------\nSvar på beställning: oneof tickets/errors\n-----------------------------------"
+    },
+    "v1Organization": {
+      "type": "object",
+      "properties": {
+        "companyName": {
+          "type": "string",
+          "title": "Registered company name"
+        },
+        "organizationNumber": {
+          "type": "string",
+          "title": "Company registration number"
+        },
+        "contactPerson": {
+          "type": "string",
+          "title": "Name of the contact person within the company"
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "Contact person's email address."
+        },
+        "contactPhone": {
+          "type": "string",
+          "title": "Contact person's phone number"
+        },
+        "street": {
+          "type": "string",
+          "title": "Company address"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "zip": {
+          "type": "string"
+        }
+      },
+      "title": "Organization information message"
+    },
+    "v1Pagination": {
+      "type": "object",
+      "properties": {
+        "pageSize": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of items to return per page"
+        },
+        "pageToken": {
+          "type": "string",
+          "description": "Deprecated page token field. Use next_page_token or prev_page_token instead."
+        },
+        "nextPageToken": {
+          "type": "string",
+          "title": "Token for the next page returned by the server"
+        },
+        "prevPageToken": {
+          "type": "string",
+          "title": "Token for the previous page returned by the server"
+        }
+      },
+      "title": "Pagination information"
+    },
+    "v1PaidFilter": {
+      "type": "string",
+      "enum": [
+        "PAID_FILTER_UNSPECIFIED",
+        "ONLY_PAID",
+        "ONLY_UNPAID"
+      ],
+      "default": "PAID_FILTER_UNSPECIFIED",
+      "description": "- PAID_FILTER_UNSPECIFIED: means \"all\"\n - ONLY_PAID: only collected_by_seller == true\n - ONLY_UNPAID: only collected_by_seller == false",
+      "title": "PaidFilter enum for specifying whether we want paid/unpaid/all"
+    },
+    "v1PaymentMethod": {
+      "type": "string",
+      "enum": [
+        "PAYMENT_METHOD_UNSPECIFIED",
+        "SWISH",
+        "KONTANT"
+      ],
+      "default": "PAYMENT_METHOD_UNSPECIFIED",
+      "description": "- SWISH: \"Swish\"\n - KONTANT: \"Kontant\"",
+      "title": "PaymentMethod enum"
+    },
+    "v1PaymentMethodFilter": {
+      "type": "string",
+      "enum": [
+        "PAYMENT_METHOD_FILTER_UNSPECIFIED",
+        "ONLY_SWISH",
+        "ONLY_KONTANT"
+      ],
+      "default": "PAYMENT_METHOD_FILTER_UNSPECIFIED",
+      "description": "- PAYMENT_METHOD_FILTER_UNSPECIFIED: means \"all methods\"",
+      "title": "PaymentMethodFilter for specifying method or \"all\""
+    },
+    "v1PaymentStatus": {
+      "type": "string",
+      "enum": [
+        "PAYMENT_STATUS_UNSPECIFIED",
+        "PAID",
+        "UNPAID"
+      ],
+      "default": "PAYMENT_STATUS_UNSPECIFIED",
+      "title": "PaymentStatus is an enum that tell if the vendor has been paid or not"
+    },
+    "v1PayoutResponse": {
+      "type": "object",
+      "properties": {
+        "sellerShare": {
+          "type": "number",
+          "format": "float",
+          "title": "Amount that goes to the seller"
+        },
+        "marketOwnerShare": {
+          "type": "number",
+          "format": "float",
+          "title": "Amount that goes to the market owner"
+        },
+        "platformProviderShare": {
+          "type": "number",
+          "format": "float",
+          "title": "Amount that goes to the platform provider"
+        },
+        "charityShare": {
+          "type": "number",
+          "format": "float",
+          "title": "Amount donated to charity"
+        },
+        "totalRevenue": {
+          "type": "number",
+          "format": "float",
+          "title": "Sum of all item prices"
+        },
+        "totalItems": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of items included in the payout"
+        }
+      }
+    },
+    "v1Person": {
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "phoneNumber": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string",
+          "title": "Address fields"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "zip": {
+          "type": "string"
+        },
+        "bankName": {
+          "type": "string",
+          "title": "Bank information"
+        },
+        "bankClearingNumber": {
+          "type": "string"
+        },
+        "bankAccountNumber": {
+          "type": "string"
+        },
+        "avatarIconType": {
+          "type": "string",
+          "description": "MIME type of the avatar icon, e.g., \"image/png\"",
+          "title": "Avatar information"
+        },
+        "avatarIconData": {
+          "type": "string",
+          "format": "byte",
+          "title": "Byte array of the avatar icon"
+        }
+      },
+      "title": "Personal information message"
+    },
+    "v1PlatformAdmin": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "grantedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Audit"
+        },
+        "grantedBy": {
+          "type": "string",
+          "title": "actor id (email)"
+        }
+      },
+      "description": "A PlatformAdmin binding means \"this user has the Platform Admin role\".\nPlatform Owner has the same permissions, plus the ability to manage admins."
+    },
+    "v1PreferencesResponse": {
+      "type": "object",
+      "properties": {
+        "preferences": {
+          "$ref": "#/definitions/v1UserPreferences"
+        }
+      },
+      "description": "Response containing the preferences."
+    },
+    "v1Profile": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Unique identifier for the profile, used for login.\nMust be a valid email address."
+        },
+        "person": {
+          "$ref": "#/definitions/v1Person",
+          "title": "Personal information"
+        },
+        "organization": {
+          "$ref": "#/definitions/v1Organization",
+          "title": "Organization information (if applicable)"
+        },
+        "extraData": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Arbitrary data for future extensions"
+        }
+      },
+      "title": "Profile message"
+    },
+    "v1RejectedItem": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "$ref": "#/definitions/v1SoldItem"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "errorCode": {
+          "$ref": "#/definitions/v1SoldItemErrorCode",
+          "title": "Structured error code"
+        }
+      }
+    },
+    "v1ReportResourceRequest": {
+      "type": "object",
+      "properties": {
+        "resourceType": {
+          "$ref": "#/definitions/v1ReportResourceType"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "description": "Request to report a resource."
+    },
+    "v1ReportResourceResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "description": "Response after creating a report."
+    },
+    "v1ReportResourceType": {
+      "type": "string",
+      "enum": [
+        "REPORT_RESOURCE_TYPE_UNSPECIFIED",
+        "REPORT_RESOURCE_TYPE_PROFILE",
+        "REPORT_RESOURCE_TYPE_MARKET",
+        "REPORT_RESOURCE_TYPE_EVENT",
+        "REPORT_RESOURCE_TYPE_VENDOR"
+      ],
+      "default": "REPORT_RESOURCE_TYPE_UNSPECIFIED",
+      "description": "Type of resource that can be reported.\n\n - REPORT_RESOURCE_TYPE_PROFILE: A user profile\n - REPORT_RESOURCE_TYPE_MARKET: A market listing\n - REPORT_RESOURCE_TYPE_EVENT: An event\n - REPORT_RESOURCE_TYPE_VENDOR: A vendor application or profile"
+    },
+    "v1RequestCodeRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "title": "user's email"
+        },
+        "challengeId": {
+          "type": "string",
+          "title": "from CreateCaptchaChallengeResponse"
+        },
+        "answer": {
+          "type": "string",
+          "title": "user's answer to question"
+        },
+        "honeypot": {
+          "type": "string",
+          "title": "must be blank"
+        }
+      },
+      "title": "--- Messages for RequestCode ---"
+    },
+    "v1RequestCodeResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "title": "confirmation text"
+        }
+      }
+    },
+    "v1ResourceType": {
+      "type": "string",
+      "enum": [
+        "RESOURCE_TYPE_UNSPECIFIED",
+        "MARKET",
+        "DRAFT_MARKET",
+        "VENDOR",
+        "EVENT"
+      ],
+      "default": "RESOURCE_TYPE_UNSPECIFIED",
+      "description": "- MARKET: Market chat is open for all users to discuss about the market\n - DRAFT_MARKET: Draft market chat is open for market owner and platform owner.\n - VENDOR: Vendor chat is open for vendor (defined by the vendor id) and the market owner\n - EVENT: Event chat is opened for all vendors for the event and the market owner",
+      "title": "Enumerations"
+    },
+    "v1RevenueSplit": {
+      "type": "object",
+      "properties": {
+        "vendorPercentage": {
+          "type": "number",
+          "format": "float",
+          "title": "Percentage of revenue given to the vendor"
+        },
+        "marketOwnerPercentage": {
+          "type": "number",
+          "format": "float",
+          "title": "Portion for the market owner"
+        },
+        "platformProviderPercentage": {
+          "type": "number",
+          "format": "float",
+          "title": "Portion for the platform provider"
+        },
+        "charityPercentage": {
+          "type": "number",
+          "format": "float",
+          "title": "Optional portion donated to charity"
+        }
+      }
+    },
+    "v1RevokePlatformAdminResponse": {
+      "type": "object",
+      "properties": {
+        "revoked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1ScanVisitorTicketResponse": {
+      "type": "object",
+      "properties": {
+        "ticket": {
+          "$ref": "#/definitions/v1VisitorTicket",
+          "title": "Ticket after scanning"
+        }
+      }
+    },
+    "v1SearchChatMessagesRequest": {
+      "type": "object",
+      "properties": {
+        "filter": {
+          "$ref": "#/definitions/v1ChatMessageFilter"
+        },
+        "pagination": {
+          "$ref": "#/definitions/v1Pagination"
+        }
+      },
+      "title": "Request to search chat messages across all resources with admin privileges"
+    },
+    "v1SearchChatMessagesResponse": {
+      "type": "object",
+      "properties": {
+        "chatMessages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ChatMessage"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        },
+        "prevPageToken": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Response containing search results for chat messages"
+    },
+    "v1SellerSales": {
+      "type": "object",
+      "properties": {
+        "sellerNo": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "sellerEmail": {
+          "type": "string"
+        },
+        "totalSale": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1SoldItem": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "description": "Unique identifier for this sold item. Can be client-generated (ULID) for idempotency.\nIf empty, server generates a ULID. Mobile clients should always provide this for offline support."
+        },
+        "eventId": {
+          "type": "string",
+          "description": "Event this item belongs to. Set by server based on request path.",
+          "readOnly": true
+        },
+        "cashierAlias": {
+          "type": "string",
+          "description": "Alias from the API key used to create this item. Set by server from authentication context.",
+          "readOnly": true
+        },
+        "purchaseId": {
+          "type": "string",
+          "description": "ULID used to group multiple items into one purchase. Can be client-generated.\nAll items with the same purchase_id are part of the same transaction.\nIf all items in request have empty purchase_id, server generates one common ID.\nMobile clients should provide this to maintain purchase grouping across retries."
+        },
+        "seller": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Seller number must be positive and correspond to an approved vendor."
+        },
+        "price": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Price in SEK, must be \u003e 0."
+        },
+        "paymentMethod": {
+          "$ref": "#/definitions/v1PaymentMethod",
+          "description": "Accepted payment method."
+        },
+        "soldTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the item was sold. Cannot be in the future."
+        },
+        "collectedBySeller": {
+          "type": "boolean",
+          "title": "True if payout done"
+        },
+        "collectedTime": {
+          "type": "string",
+          "format": "date-time",
+          "title": "If collected, the date/time"
+        },
+        "isArchived": {
+          "type": "boolean",
+          "title": "If true, item is read-only"
+        }
+      },
+      "description": "SoldItem represents a single sold record.\n\nIMPORTANT FOR MOBILE CLIENTS:\nTo support offline operation and ensure idempotency (safe retries), mobile clients\nMUST generate and provide both item_id and purchase_id before sending items to the server.\n\n- item_id: Unique identifier for each item (ULID format). If not provided, server generates one.\n  Client-generated IDs enable duplicate detection: if network fails and client retries,\n  the backend will reject duplicates (error code: DUPLICATE_RECEIPT) rather than creating duplicates.\n  \n- purchase_id: Groups multiple items into one purchase (ULID format). All items with the same\n  purchase_id are considered part of the same transaction. If not provided by client, server\n  generates one common purchase_id for all items in the request.\n\nULID format: 26 uppercase alphanumeric characters (0-9, A-Z excluding I, L, O, U)\nExample: \"01JHRM8YFZA1B2C3D4E5F6G7H8\""
+    },
+    "v1SoldItemErrorCode": {
+      "type": "string",
+      "enum": [
+        "SOLD_ITEM_ERROR_CODE_UNSPECIFIED",
+        "SOLD_ITEM_ERROR_CODE_INVALID_SELLER",
+        "SOLD_ITEM_ERROR_CODE_DUPLICATE_RECEIPT"
+      ],
+      "default": "SOLD_ITEM_ERROR_CODE_UNSPECIFIED",
+      "description": "- SOLD_ITEM_ERROR_CODE_UNSPECIFIED: Unspecified error\n - SOLD_ITEM_ERROR_CODE_INVALID_SELLER: Seller not in approved list\n - SOLD_ITEM_ERROR_CODE_DUPLICATE_RECEIPT: MongoDB E11000: duplicate key (event_id, item_id)",
+      "title": "Error codes for rejected sold items"
+    },
+    "v1SortOrder": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "title": "e.g. \"created_at\", \"seller_number\", \"email\""
+        },
+        "ascending": {
+          "type": "boolean",
+          "title": "true = ascending, false = descending"
+        }
+      }
+    },
+    "v1TicketOrderErrorCode": {
+      "type": "string",
+      "enum": [
+        "TICKET_ORDER_ERROR_UNSPECIFIED",
+        "SOLD_OUT",
+        "MAX_PER_VISITOR",
+        "INSUFFICIENT_TICKETS",
+        "NO_TICKETS_ORDERED"
+      ],
+      "default": "TICKET_ORDER_ERROR_UNSPECIFIED",
+      "description": "- SOLD_OUT: Slut på denna typ\n - MAX_PER_VISITOR: Användaren har nått max per person\n - INSUFFICIENT_TICKETS: Det finns färre biljetter än önskat\n - NO_TICKETS_ORDERED: Inga biljetter beställdes",
+      "title": "-----------------------------------\nError codes för tydlig maskinell hantering\n-----------------------------------"
+    },
+    "v1TicketSortOrder": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "title": "e.g. \"issued_at\", \"email\""
+        },
+        "ascending": {
+          "type": "boolean"
+        }
+      },
+      "title": "Sort order for visitor ticket filtering"
+    },
+    "v1TicketStatus": {
+      "type": "string",
+      "enum": [
+        "TICKET_STATUS_UNSPECIFIED",
+        "TICKET_STATUS_SCANNED",
+        "TICKET_STATUS_NOT_SCANNED"
+      ],
+      "default": "TICKET_STATUS_UNSPECIFIED"
+    },
+    "v1TicketType": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "unik biljett‐ID"
+        },
+        "eventId": {
+          "type": "string",
+          "title": "vilket event denna biljettyp hör till"
+        },
+        "type": {
+          "type": "string",
+          "title": "t.ex. \"Standard\", \"VIP\""
+        },
+        "description": {
+          "type": "string",
+          "title": "valfri beskrivning"
+        },
+        "maxPerVisitor": {
+          "type": "integer",
+          "format": "int32",
+          "title": "max antal per besökare"
+        },
+        "available": {
+          "type": "integer",
+          "format": "int32",
+          "title": "totalt tillgängliga (faktiskt tillgänliga är available - sold)"
+        },
+        "sold": {
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        },
+        "validFrom": {
+          "type": "string",
+          "format": "date-time",
+          "title": "biljettyp giltig från"
+        },
+        "validUntil": {
+          "type": "string",
+          "format": "date-time",
+          "title": "biljettyp giltig till"
+        },
+        "saleStartsAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "när biljettsläppet startar för denna biljettyp"
+        }
+      }
+    },
+    "v1TicketTypeAggregate": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "title": "TicketType.type"
+        },
+        "sold": {
+          "type": "integer",
+          "format": "int32",
+          "title": "number of sold tickets"
+        },
+        "released": {
+          "type": "integer",
+          "format": "int32",
+          "title": "number of tickets released"
+        }
+      },
+      "title": "Aggregated counts for a ticket type"
+    },
+    "v1Tickets": {
+      "type": "object",
+      "properties": {
+        "tickets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VisitorTicket"
+          },
+          "title": "Tickets that were successfully created"
+        }
+      },
+      "title": "Om ordern lyckas returneras alla skapade biljetter här"
+    },
+    "v1TimeSeriesStat": {
+      "type": "object",
+      "properties": {
+        "periodStart": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Start date of period (day/week/month)"
+        },
+        "totalSales": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalSwish": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalKontant": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalItemsSold": {
+          "type": "string",
+          "format": "int64"
+        },
+        "averageSaleValue": {
+          "type": "number",
+          "format": "double",
+          "title": "total_sales / total_items_sold"
+        },
+        "totalSellerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalMarketOwnerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalPlatformOwnerShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalCharityShare": {
+          "type": "number",
+          "format": "double"
+        },
+        "uniqueEventsCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "distinct event_id in period"
+        },
+        "uniqueSellersCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "distinct seller_id in period"
+        },
+        "uniqueMarketsCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "distinct market_id in period"
+        }
+      }
+    },
+    "v1UpdateApiKeyResponse": {
+      "type": "object",
+      "properties": {
+        "apiKey": {
+          "$ref": "#/definitions/v1ApiKeyInfo"
+        }
+      },
+      "description": "Response containing the updated API key metadata."
+    },
+    "v1UpdateEventResponse": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/v1Event",
+          "title": "Updated event information"
+        }
+      },
+      "title": "Response for updating an event"
+    },
+    "v1UpdateEventStateResponse": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/v1Event",
+          "description": "The event after applying the state transition."
+        }
+      },
+      "description": "UpdateEventStateResponse returns the updated event."
+    },
+    "v1UpdatePreferencesRequest": {
+      "type": "object",
+      "properties": {
+        "preferences": {
+          "$ref": "#/definitions/v1UserPreferences"
+        }
+      },
+      "description": "Request to update preferences."
+    },
+    "v1UpdateProfileResponse": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "$ref": "#/definitions/v1Profile",
+          "title": "The updated profile"
+        }
+      }
+    },
+    "v1UpdateSoldItemResponse": {
+      "type": "object",
+      "properties": {
+        "item": {
+          "$ref": "#/definitions/v1SoldItem",
+          "title": "The updated item"
+        }
+      }
+    },
+    "v1UpdateTicketTypeResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "ID of the updated ticket type"
+        },
+        "ticketType": {
+          "$ref": "#/definitions/v1TicketType",
+          "title": "Updated ticket type details"
+        }
+      }
+    },
+    "v1UserPreferences": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "$ref": "#/definitions/v1Language"
+        },
+        "theme": {
+          "type": "string",
+          "description": "UI theme preference, e.g., \"dark\" or \"light\"."
+        }
+      },
+      "description": "Preferences associated with a user."
+    },
+    "v1Vendor": {
+      "type": "object",
+      "properties": {
+        "vendorId": {
+          "type": "string",
+          "title": "Unique ID for the vendor"
+        },
+        "eventId": {
+          "type": "string",
+          "title": "ID of the event being applied to"
+        },
+        "email": {
+          "type": "string",
+          "title": "Allow either empty or valid email\nempty string → no validation, otherwise must be a valid email\nAllow empty or require a valid email when non-empty"
+        },
+        "sellerNumber": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Desired seller number for the event"
+        },
+        "freeText": {
+          "type": "string",
+          "title": "Additional information provided by the vendor"
+        },
+        "status": {
+          "type": "string",
+          "title": "Status: \"pending\", \"approved\", \"denied\""
+        },
+        "paymentStatus": {
+          "$ref": "#/definitions/v1PaymentStatus",
+          "title": "Payment status: \"paid\", \"unpaid\""
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payoutMethod": {
+          "type": "string",
+          "title": "Payout method: \"Swish\", \"Banköverföring\", \"Kontant\", \"Annat\""
+        }
+      },
+      "title": "Vendor message"
+    },
+    "v1VendorFilter": {
+      "type": "object",
+      "properties": {
+        "sellerNumber": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Filter by seller number"
+        },
+        "email": {
+          "type": "string",
+          "title": "Filter by vendor email"
+        },
+        "status": {
+          "type": "string",
+          "title": "Filter by status: pending, approved, denied"
+        },
+        "freeText": {
+          "type": "string",
+          "title": "Free text search in free_text field"
+        },
+        "searchText": {
+          "type": "string",
+          "title": "Fuzzy search across vendor metadata"
+        }
+      }
+    },
+    "v1VendorResponse": {
+      "type": "object",
+      "properties": {
+        "vendor": {
+          "$ref": "#/definitions/v1Vendor",
+          "title": "The vendor record"
+        }
+      }
+    },
+    "v1VisitorTicket": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "unik biljett‐ID"
+        },
+        "eventId": {
+          "type": "string",
+          "title": "vilket event denna biljett hör till, must not be empty"
+        },
+        "ticketType": {
+          "type": "string",
+          "title": "refererar till TicketType.type"
+        },
+        "email": {
+          "type": "string",
+          "title": "vem som köpt"
+        },
+        "status": {
+          "$ref": "#/definitions/v1TicketStatus",
+          "title": "status"
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "tidpunkt för köp"
+        },
+        "validFrom": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "validUntil": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "scannedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "tidpunkt för scanning"
+        }
+      }
+    },
+    "v1VisitorTicketFilter": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "title": "Filter by purchaser email"
+        },
+        "ticketType": {
+          "type": "string",
+          "title": "Filter by ticket type"
+        },
+        "status": {
+          "$ref": "#/definitions/v1TicketStatus",
+          "title": "Filter by ticket status"
+        },
+        "freeText": {
+          "type": "string",
+          "title": "Free text search in id or email"
+        }
+      },
+      "title": "Filters for visitor tickets"
+    }
+  }
+}

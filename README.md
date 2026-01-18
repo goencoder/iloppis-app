@@ -113,9 +113,8 @@ make ios-clean
 
 Backend-API:et är dokumenterat i `spec/swagger/iloppis.swagger.json`.
 
-**API-endpoints:**
-- Staging: `https://staging.iloppis.se`
-- Produktion: `https://api.iloppis.se`
+**API-endpoint:**
+- Staging: `https://iloppis-staging.fly.dev/`
 
 Öppna swagger-filen i [Swagger Editor](https://editor.swagger.io/) för interaktiv dokumentation.
 

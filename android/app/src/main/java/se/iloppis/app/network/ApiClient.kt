@@ -14,7 +14,7 @@ import se.iloppis.app.BuildConfig
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    private const val BASE_URL = "https://iloppis.fly.dev/"
+    private const val BASE_URL = "https://iloppis-staging.fly.dev/"
 
     /**
      * Logging interceptor that:

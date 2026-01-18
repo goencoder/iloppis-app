@@ -4914,7 +4914,7 @@
         "pageSize": {
           "type": "integer",
           "format": "int32",
-          "title": "Number of items to return per page"
+          "description": "Number of items to return per page. Default and maximum vary by endpoint.\nTypical defaults: 100 for most endpoints."
         },
         "pageToken": {
           "type": "string",
@@ -4922,14 +4922,14 @@
         },
         "nextPageToken": {
           "type": "string",
-          "title": "Token for the next page returned by the server"
+          "description": "Token for fetching the next page. Include this value from the previous\nresponse to get the next page of results. Empty string means no more pages."
         },
         "prevPageToken": {
           "type": "string",
-          "title": "Token for the previous page returned by the server"
+          "description": "Token for fetching the previous page. Include this value to navigate backwards.\nEmpty string means this is the first page."
         }
       },
-      "title": "Pagination information"
+      "description": "Pagination information for list requests.\nAll paginated APIs follow the same pattern for consistency."
     },
     "v1PaidFilter": {
       "type": "string",

@@ -343,7 +343,7 @@ val purchaseId = ULID.random()  // Different ULID for purchase grouping
 
 ### API Client Configuration
 **File:** `android/app/.../network/ApiClient.kt`
-- Base URL hardcoded: `https://iloppis.fly.dev/`
+- Base URL hardcoded: `https://iloppis-staging.fly.dev/`
 - **Future improvement:** Move to BuildConfig/gradle.properties for environment switching
 - HttpLoggingInterceptor: Currently BODY level (consider BASIC/NONE for release builds)
 

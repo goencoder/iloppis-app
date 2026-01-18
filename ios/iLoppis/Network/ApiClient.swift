@@ -34,7 +34,7 @@ final class DebugLogStore: ObservableObject {
 }
 
 struct ApiClient {
-    let baseURL = URL(string: "https://iloppis.fly.dev/")!
+    let baseURL = URL(string: "https://iloppis-staging.fly.dev/")!
 
     private let enableDebugLogging: Bool
 

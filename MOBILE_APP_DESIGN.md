@@ -761,7 +761,7 @@ data class CommittedScan(
 
 ### Base URL
 ```
-Production: https://iloppis.fly.dev
+Staging: https://iloppis-staging.fly.dev/
 All endpoints: /v1/...
 ```
 
@@ -769,6 +769,88 @@ All endpoints: /v1/...
 ```
 Header: Authorization: Bearer <api_key>
 ```
+
+### Pagination
+
+All list endpoints (vendors, sold items, tickets) follow the same token-based pagination pattern:
+
+**Initial Request:**
+```http
+GET /v1/events/{eventId}/vendors?pageSize=100
+```
+
+**Response:**
+```json
+{
+  "vendors": [ /* ... */ ],
+  "total": 350,
+  "nextPageToken": "eyJ...",
+  "prevPageToken": ""
+}
+```
+
+**Next Page Request:**
+```http
+GET /v1/events/{eventId}/vendors?pageSize=100&nextPageToken=eyJ...
+```
+
+**Pattern:**
+1. Send `pageSize` (default 100, adjust per endpoint)
+2. Receive items + `nextPageToken` (empty = last page)
+3. Pass `nextPageToken` in next request
+4. Continue until `nextPageToken` is empty
+
+**Android Example:**
+```kotlin
+class VendorRepository(private val api: VendorApi) {
+    suspend fun loadAllVendors(eventId: String): List<Vendor> {
+        val allVendors = mutableListOf<Vendor>()
+        var nextToken: String? = null
+        
+        do {
+            val response = api.listVendors(
+                eventId = eventId,
+                pageSize = 100,
+                nextPageToken = nextToken
+            )
+            allVendors.addAll(response.vendors)
+            nextToken = response.nextPageToken.takeIf { it.isNotEmpty() }
+        } while (nextToken != null)
+        
+        return allVendors
+    }
+}
+```
+
+**iOS Example:**
+```swift
+class VendorRepository {
+    func loadAllVendors(eventId: String) async throws -> [Vendor] {
+        var allVendors: [Vendor] = []
+        var nextToken: String? = nil
+        
+        repeat {
+            let response = try await api.listVendors(
+                eventId: eventId,
+                pageSize: 100,
+                nextPageToken: nextToken
+            )
+            allVendors.append(contentsOf: response.vendors)
+            nextToken = response.nextPageToken.isEmpty ? nil : response.nextPageToken
+        } while nextToken != nil
+        
+        return allVendors
+    }
+}
+```
+
+**Notes:**
+- Store `nextPageToken` for "Load More" UI patterns
+- `total` field available on some endpoints for progress indicators
+- Empty `nextPageToken` signals last page reached
+- Most endpoints default to 100 items per page
+
+---
 
 ### Endpoints Summary
 

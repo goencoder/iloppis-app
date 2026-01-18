@@ -285,9 +285,12 @@ User presses "Slutför köp" (Complete Purchase)
     │   └─> PendingItemsStore.appendItems() [BLOCKS until write completes]
     │       File: context.filesDir/events/{eventId}/pending_items.jsonl
     │
-    ├─> STEP 2: Trigger background upload (WorkManager)
+    ├─> STEP 2: Clear UI fields immediately (optimistic UI)
+    │   └─> Empty seller/price fields, clear transaction list
+    │       Ready for next purchase - no receipt shown
     │
-    └─> STEP 3: Show receipt immediately to user
+    └─> STEP 3: Trigger background upload (WorkManager)
+        └─> Best-effort sync, retries automatically on failure
 ```
 
 **Critical Fields:**
@@ -429,36 +432,20 @@ Scanner provides instant, clear visual feedback using three elements:
    - **❌ Red border** (thick ~8dp): Error/duplicate scan
    - Duration: 500ms flash animation
 
-2. **Party Counter (above camera view):**
-   - Large number showing total tickets scanned for current party
+2. **Party Counter (overlayed on camera view):**
+   - Large number (120sp) centered on camera preview
+   - Shows ONLY during successful scan (flashes with green border)
+   - Displays current party count: "3" = 3rd ticket for this party
    - Party = group of tickets with same email address
-   - Updates immediately after successful scan
-   - Example: "3" means 3rd ticket for this party
-   - Resets to 0 when different email detected
+   - Semi-transparent (75% opacity) to not block camera view
+   - Disappears after border animation completes
+   - NOT shown on error/duplicate scans (only red border)
 
 3. **Status Message (below counter):**
    - Success: "Scannad ✓" (green text)
    - Duplicate: "Redan scannad!" (red text)
    - Offline: "Scannad (offline mode)" (yellow text)
 
-**UI Layout:**
-```
-┌─────────────────────────────┐
-│   Party Counter: [3]        │ ← Large centered number
-│   "Scannad ✓"               │ ← Status message
-│                             │
-│  ┌─────────────────────┐   │
-│  │                     │   │
-│  │   CAMERA PREVIEW    │   │ ← Green/red border flashes here
-│  │                     │   │
-│  │    [QR CODE VIEW]   │   │
-│  │                     │   │
-│  └─────────────────────┘   │
-│                             │
-│  Last scan: anna@ex.com     │
-│  Total scans: 47            │
-└─────────────────────────────┘
-```
 
 **Flow:**
 ```

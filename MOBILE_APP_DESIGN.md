@@ -420,35 +420,112 @@ api.createSoldItems(...)
 
 ### 2. Ticket Scanning
 
+**Visual Feedback (CRITICAL for User Experience):**
+
+Scanner provides instant, clear visual feedback using three elements:
+
+1. **Border Flash (around camera view):**
+   - **✅ Green border** (thick ~8dp): Successful scan
+   - **❌ Red border** (thick ~8dp): Error/duplicate scan
+   - Duration: 500ms flash animation
+
+2. **Party Counter (above camera view):**
+   - Large number showing total tickets scanned for current party
+   - Party = group of tickets with same email address
+   - Updates immediately after successful scan
+   - Example: "3" means 3rd ticket for this party
+   - Resets to 0 when different email detected
+
+3. **Status Message (below counter):**
+   - Success: "Scannad ✓" (green text)
+   - Duplicate: "Redan scannad!" (red text)
+   - Offline: "Scannad (offline mode)" (yellow text)
+
+**UI Layout:**
+```
+┌─────────────────────────────┐
+│   Party Counter: [3]        │ ← Large centered number
+│   "Scannad ✓"               │ ← Status message
+│                             │
+│  ┌─────────────────────┐   │
+│  │                     │   │
+│  │   CAMERA PREVIEW    │   │ ← Green/red border flashes here
+│  │                     │   │
+│  │    [QR CODE VIEW]   │   │
+│  │                     │   │
+│  └─────────────────────┘   │
+│                             │
+│  Last scan: anna@ex.com     │
+│  Total scans: 47            │
+└─────────────────────────────┘
+```
+
 **Flow:**
 ```
 User scans QR code with ticket ID: "TKT-12345"
     │
     ├─> Check if already scanned in current group (local dedup)
-    │   └─> Duplicate? Show warning, stop
+    │   └─> Duplicate? 
+    │       ├─ Flash RED border
+    │       ├─ Show "Redan scannad!" 
+    │       └─ Keep party counter unchanged
     │
     ├─> ONLINE MODE:
     │   └─> API: POST /v1/events/{eventId}/tickets/{ticketId}/scan
     │       │
     │       ├─ SUCCESS (200):
-    │       │  - Save to committed_scans.jsonl (wasOffline=false)
-    │       │  - Show green success UI
+    │       │  ├─ Save to committed_scans.jsonl (wasOffline=false)
+    │       │  ├─ Flash GREEN border (500ms)
+    │       │  ├─ Increment party counter if same email
+    │       │  └─ Show "Scannad ✓" (green)
     │       │
     │       ├─ ALREADY SCANNED (412):
-    │       │  - Show red "Redan scannad" UI
+    │       │  ├─ Flash RED border
+    │       │  └─ Show "Redan scannad!" (red)
     │       │
     │       └─ TIMEOUT (5 seconds) or NETWORK ERROR:
     │          └─> Switch to OFFLINE MODE
     │
     └─> OFFLINE MODE:
         ├─> Check if already scanned (read committed_scans.jsonl)
-        │   └─> Duplicate? Show "Redan scannad (offline)"
+        │   └─> Duplicate? 
+        │       ├─ Flash RED border
+        │       └─ Show "Redan scannad (offline)" (red)
         │
         └─> New scan:
             ├─> Save to pending_scans.jsonl
             ├─> Save to committed_scans.jsonl (wasOffline=true)
-            └─> Show yellow "Offline" success UI
+            ├─> Flash GREEN border (500ms)
+            ├─> Increment party counter if same email
+            ├─> Show "Scannad (offline mode)" (yellow)
             └─> Background sync will upload later
+```
+
+**Party Grouping Logic:**
+```kotlin
+// Group tickets by email for party counter
+data class ScannerState(
+    val lastScannedEmail: String? = null,
+    val currentPartyCount: Int = 0,
+    val totalScansToday: Int = 0
+)
+
+fun updatePartyCounter(newTicketEmail: String, currentState: ScannerState): ScannerState {
+    return if (newTicketEmail == currentState.lastScannedEmail) {
+        // Same party - increment counter
+        currentState.copy(
+            currentPartyCount = currentState.currentPartyCount + 1,
+            totalScansToday = currentState.totalScansToday + 1
+        )
+    } else {
+        // New party - reset counter to 1
+        currentState.copy(
+            lastScannedEmail = newTicketEmail,
+            currentPartyCount = 1,
+            totalScansToday = currentState.totalScansToday + 1
+        )
+    }
+}
 ```
 
 **API Call (Online):**

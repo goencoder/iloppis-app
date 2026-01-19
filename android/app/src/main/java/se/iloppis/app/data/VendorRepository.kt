@@ -4,7 +4,10 @@ import android.util.Log
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import se.iloppis.app.network.ApiClient
+import se.iloppis.app.network.FilterVendorsRequest
 import se.iloppis.app.network.VendorApi
+import se.iloppis.app.network.VendorFilter
+import se.iloppis.app.network.VendorPagination
 
 private const val TAG = "VendorRepository"
 
@@ -83,11 +86,16 @@ object VendorRepository {
                 var nextPageToken: String? = null
                 
                 do {
-                    val response = vendorApi.listVendors(
+                    val response = vendorApi.filterVendors(
                         authorization = "Bearer $apiKey",
                         eventId = eventId,
-                        pageSize = 100,
-                        nextPageToken = nextPageToken
+                        request = FilterVendorsRequest(
+                            filter = VendorFilter(status = "approved"),
+                            pagination = VendorPagination(
+                                pageSize = 100,
+                                nextPageToken = nextPageToken
+                            )
+                        )
                     )
                     
                     vendors.addAll(response.vendors.map { it.sellerNumber })

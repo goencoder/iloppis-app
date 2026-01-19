@@ -37,7 +37,7 @@ private const val TAG = "CashierViewModel"
  * Represents a single transaction item in the current purchase.
  */
 data class TransactionItem(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = se.iloppis.app.utils.Ulid.random(),
     val sellerNumber: Int,
     val price: Int,
     val status: TransactionStatus = TransactionStatus.PENDING
@@ -579,10 +579,10 @@ class CashierViewModel(
         }
 
         // STEP 1: Generate stable unique IDs
-        // purchaseId: Groups all items in this purchase (26-char UUID)
-        // itemId: Already in TransactionItem.id (full UUID from creation)
+        // purchaseId: ULID groups all items in this purchase (26-char time-ordered ID)
+        // itemId: Already in TransactionItem.id (ULID from creation)
         val purchaseTotal = uiState.total
-        val purchaseId = UUID.randomUUID().toString().replace("-", "").take(26).uppercase()
+        val purchaseId = se.iloppis.app.utils.Ulid.random()
         val paymentMethodStr = when (method) {
             PaymentMethodType.CASH -> "KONTANT"
             PaymentMethodType.SWISH -> "SWISH"

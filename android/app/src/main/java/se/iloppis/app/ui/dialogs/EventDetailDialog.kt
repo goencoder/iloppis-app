@@ -105,6 +105,12 @@ private fun EventDetailContent(
             }
         }
 
+
+
+        //
+        // Information that does not change on size
+        //
+
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = stringResource(R.string.select_mode),

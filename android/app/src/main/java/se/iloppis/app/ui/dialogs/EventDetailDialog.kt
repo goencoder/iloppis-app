@@ -1,6 +1,7 @@
 package se.iloppis.app.ui.dialogs
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -66,33 +67,42 @@ private fun EventDetailContent(
     onScannerClick: () -> Unit
 ) {
     Column {
-        // Date
-        Text(
-            text = event.dates,
-            color = AppColors.TextMuted
-        )
+        LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
+            item {
+                // Date
+                Text(
+                    text = event.dates,
+                    color = AppColors.TextMuted
+                )
+            }
 
-        // Opening hours
-        if (event.startTimeFormatted.isNotBlank() || event.endTimeFormatted.isNotBlank()) {
-            Spacer(modifier = Modifier.height(4.dp))
-            val hours = listOfNotNull(
-                event.startTimeFormatted.takeIf { it.isNotBlank() },
-                event.endTimeFormatted.takeIf { it.isNotBlank() }
-            ).joinToString(" – ")
-            Text(
-                text = stringResource(R.string.opening_hours_label, hours),
-                color = AppColors.TextMuted
-            )
-        }
 
-        // Description
-        if (event.description.isNotBlank()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = event.description,
-                fontSize = 14.sp,
-                color = AppColors.TextDark
-            )
+            // Opening hours
+            if (event.startTimeFormatted.isNotBlank() || event.endTimeFormatted.isNotBlank()) {
+                item {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    val hours = listOfNotNull(
+                        event.startTimeFormatted.takeIf { it.isNotBlank() },
+                        event.endTimeFormatted.takeIf { it.isNotBlank() }
+                    ).joinToString(" – ")
+                    Text(
+                        text = stringResource(R.string.opening_hours_label, hours),
+                        color = AppColors.TextMuted
+                    )
+                }
+            }
+
+            // Description
+            if (event.description.isNotBlank()) {
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = event.description,
+                        fontSize = 14.sp,
+                        color = AppColors.TextDark
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))

@@ -99,7 +99,7 @@ fun CodeBox(
         else -> AppColors.InputBorder
     }
     val borderWidth = if (isFocused || hasError) 2.dp else 1.dp
-    
+
     Box(
         modifier = modifier
             .aspectRatio(1f)

@@ -134,7 +134,7 @@ data class VendorPagination(
 
 data class FilterVendorsRequest(
     val filter: VendorFilter = VendorFilter(),
-    val sortOrder: VendorSortOrder? = null,
+    val sort: VendorSortOrder? = null,
     val pagination: VendorPagination = VendorPagination()
 )
 

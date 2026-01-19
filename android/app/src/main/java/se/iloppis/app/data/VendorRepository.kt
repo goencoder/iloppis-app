@@ -83,11 +83,16 @@ object VendorRepository {
                 var nextPageToken: String? = null
                 
                 do {
-                    val response = vendorApi.listVendors(
+                    val response = vendorApi.filterVendors(
                         authorization = "Bearer $apiKey",
                         eventId = eventId,
-                        pageSize = 100,
-                        nextPageToken = nextPageToken
+                        request = se.iloppis.app.network.FilterVendorsRequest(
+                            filter = se.iloppis.app.network.VendorFilter(status = "approved"),
+                            pagination = se.iloppis.app.network.VendorPagination(
+                                pageSize = 100,
+                                nextPageToken = nextPageToken
+                            )
+                        )
                     )
                     
                     vendors.addAll(response.vendors.map { it.sellerNumber })

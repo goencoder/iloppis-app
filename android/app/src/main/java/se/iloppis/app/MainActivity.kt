@@ -25,8 +25,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ILoppisTheme {
-                ScreenModelProvider {
+            ScreenModelProvider {
+                ILoppisTheme {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = AppColors.Background

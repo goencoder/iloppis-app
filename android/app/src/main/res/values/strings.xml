@@ -4,6 +4,10 @@
     <string name="app_name">iLoppis</string>
     <string name="app_title">iLoppis</string>
 
+    <!-- Navigation -->
+    <string name="nav_home">Hem</string>
+    <string name="nav_cashier">Kassa</string>
+
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>
     <string name="filter_all">Alla</string>
@@ -117,7 +121,7 @@
     <string name="scanner_manual_error_event">Biljetten hör inte till %1$s.</string>
     <string name="scanner_manual_error_format">Koden kunde inte tolkas.</string>
     <string name="scanner_manual_confirm">Verifiera</string>
-    
+
     <!-- Group scanning strings -->
     <string name="scanner_group_no_email">Ingen e-post</string>
     <string name="scanner_group_unknown_type">Okänd typ</string>

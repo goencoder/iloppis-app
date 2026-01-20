@@ -35,6 +35,16 @@ sealed class ScreenAction {
          */
         val status: Boolean
     ) : ScreenAction()
+
+    /**
+     * Screen load page action
+     */
+    data class LoadPage(
+        /**
+         * Page to load
+         */
+        val page: ScreenPage
+    ) : ScreenAction()
 }
 
 

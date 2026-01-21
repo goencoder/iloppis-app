@@ -33,10 +33,19 @@ sealed class ScreenPage {
      */
     data object Home : ScreenPage()
 
+
+
     /**
      * Cashier selector page
      */
     data object CashierSelector : ScreenPage()
+
+    /**
+     * Cashier page
+     */
+    data object Cashier : ScreenPage()
+
+
 
     /**
      * Scanner selector page

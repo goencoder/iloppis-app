@@ -1,6 +1,7 @@
 package se.iloppis.app.ui.components.navigation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdfScanner
 import androidx.compose.material.icons.filled.Home
@@ -49,8 +51,10 @@ fun Navigator(
         top = 5.dp,
         end = 25.dp
     ),
-    alpha: Float = 0.4f,
+    alpha: Float = 0.2f,
     buttonSize: Dp = 75.dp,
+    buttonCorner: Dp = 5.dp,
+    buttonSpacing: Dp = 15.dp,
     iconSize: Dp = 35.dp
 ) {
     val screen = screenContext()
@@ -71,7 +75,9 @@ fun Navigator(
                 else Icons.Outlined.Home,
                 stringResource(R.string.nav_home),
                 buttonSize,
-                iconSize
+                iconSize,
+                buttonCorner,
+                buttonSpacing
             ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.Home)) }
 
             NavigatorButton(
@@ -80,7 +86,9 @@ fun Navigator(
                 else Icons.Outlined.AdfScanner,
                 stringResource(R.string.nav_cashier),
                 buttonSize,
-                iconSize
+                iconSize,
+                buttonCorner,
+                buttonSpacing
             ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.Cashier)) }
         }
     }
@@ -97,17 +105,22 @@ fun NavigatorButton(
     description: String,
     size: Dp,
     icon: Dp,
+    rounded: Dp,
+    space: Dp,
     onClick: () -> Unit
 ) {
-    IconButton(
-        modifier = Modifier.size(size),
-        onClick = onClick
-    ) {
-        Icon(
-            modifier = Modifier.size(icon),
-            imageVector = image,
-            contentDescription = description,
-            tint = MaterialTheme.colorScheme.background
-        )
+    Box(modifier = Modifier.padding(horizontal = space)) {
+        IconButton(
+            modifier = Modifier.size(size),
+            shape = RoundedCornerShape(rounded),
+            onClick = onClick
+        ) {
+            Icon(
+                modifier = Modifier.size(icon),
+                imageVector = image,
+                contentDescription = description,
+                tint = MaterialTheme.colorScheme.background
+            )
+        }
     }
 }

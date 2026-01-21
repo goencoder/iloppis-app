@@ -7,6 +7,7 @@
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_cashier">Cashier</string>
+    <string name="nav_scanner">Scanner</string>
 
     <!-- Event List Screen -->
     <string name="search_placeholder">Search flea market…</string>

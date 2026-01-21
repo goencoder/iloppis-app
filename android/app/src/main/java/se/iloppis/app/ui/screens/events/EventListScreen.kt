@@ -21,6 +21,7 @@ import se.iloppis.app.ui.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.dialogs.EventDetailDialog
 import se.iloppis.app.ui.screens.cashier.CashierScreen
 import se.iloppis.app.ui.screens.scanner.ScannerScreen
+import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.theme.AppColors
 
 /**
@@ -63,6 +64,7 @@ fun EventListScreen() {
  */
 @Composable
 fun EventDialogs() {
+    val screen = screenContext()
     val events = eventContext()
 
 
@@ -74,8 +76,8 @@ fun EventDialogs() {
             isValidating = codeEntry.isValidating,
             errorMessage = codeEntry.errorMessage,
             onDismiss = { events.onAction(EventListAction.DismissCodeEntry) },
-            onCodeChange = { code -> events.onAction(EventListAction.ValidateCode(code)) },
-            onCodeEntered = { code -> events.onAction(EventListAction.SubmitCode(code)) }
+            onCodeChange = { code -> events.onAction(EventListAction.ValidateCode(screen, code)) },
+            onCodeEntered = { code -> events.onAction(EventListAction.SubmitCode(screen, code)) }
         )
     }
 

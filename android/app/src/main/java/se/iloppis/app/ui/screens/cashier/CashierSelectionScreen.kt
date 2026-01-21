@@ -25,6 +25,9 @@ fun CashierSelectionScreen(
 
     LazyColumn() {
         items(viewModel.uiState.events) {
+
+            /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
+
             if(events.contains(it.id)) {
                 EventCard(it) {
 

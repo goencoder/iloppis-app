@@ -8,6 +8,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.core.content.edit
+import kotlinx.serialization.json.Json.Default.decodeFromString
+import kotlinx.serialization.json.Json.Default.encodeToString
 
 /**
  * Local storage bucket name
@@ -48,6 +50,31 @@ data class LocalStorage(val context: Context, val name: String, val mode: Int) {
      */
     fun get(key: String, default: String? = null): String? {
         return storage.getString(key, default)
+    }
+
+
+
+    /**
+     * Puts Json data in local storage using [encodeToString]
+     *
+     * For full description of [putJson] read [put]
+     *
+     * @see put
+     */
+    inline fun <reified T> putJson(key: String, data: T) {
+        val json = encodeToString(data)
+        put(key, json)
+    }
+
+    /**
+     * Gets stored data as JSON format using [decodeFromString]
+     *
+     * For full description of [getJson] read [get]
+     *
+     * @see get
+     */
+    inline fun <reified T> getJson(key: String) : T {
+        return decodeFromString<T>(get(key, "{}") ?: "{}")
     }
 }
 

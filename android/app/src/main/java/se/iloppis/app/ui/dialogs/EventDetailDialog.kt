@@ -14,6 +14,7 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
+import se.iloppis.app.utils.localStorage
 
 /**
  * Dialog showing event details with options to open cashier or scanner mode.
@@ -119,6 +120,28 @@ private fun EventDetailContent(
         )
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        // ======================
+        // Save event as interest
+        // ======================
+
+        val storage = localStorage()
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors().copy(
+                containerColor = MaterialTheme.colorScheme.secondary
+            ),
+            onClick = {
+                // Store event in local storage
+            }
+        ) {
+            Text(
+                text = "Store",
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+
 
         // Action buttons - full width, stacked
         Column(

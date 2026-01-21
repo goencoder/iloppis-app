@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
-import se.iloppis.app.ui.states.ScreenPage
+import se.iloppis.app.navigation.ScreenPage
 
 /**
  * Application navigator

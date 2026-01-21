@@ -47,6 +47,11 @@ class EventListViewModel : ViewModel() {
         }
     }
 
+    /**
+     * User initialized reloading method
+     */
+    fun reload() { loadEvents() }
+
     private fun loadEvents() {
         Log.d(TAG, "Loading events from: https://iloppis.fly.dev/")
         viewModelScope.launch {
@@ -54,7 +59,7 @@ class EventListViewModel : ViewModel() {
             try {
                 val api = ApiClient.create<EventApi>()
                 Log.d(TAG, "API client created, making filterEvents request")
-                // Filtrera på dagens datum och endast OPEN evenemang  
+                // Filtrera på dagens datum och endast OPEN evenemang
                 val today = "${LocalDate.now()}T00:00:00Z"
                 val filterRequest = EventFilterRequest(
                     filter = EventFilter(
@@ -110,7 +115,7 @@ class EventListViewModel : ViewModel() {
      */
     private fun validateCode(code: String) {
         val codeEntry = uiState.codeEntryState ?: return
-        
+
         // Format: XXX-YYY (3 chars, dash, 3 chars) = 7 chars total
         // But we receive it without dash as 6 chars
         if (code.length < 6) {
@@ -126,19 +131,19 @@ class EventListViewModel : ViewModel() {
             uiState = uiState.copy(
                 codeEntryState = codeEntry.copy(isValidating = true, errorMessage = null)
             )
-            
+
             // Format code as XXX-YYY for API
             val formattedCode = "${code.substring(0, 3)}-${code.substring(3, 6)}".uppercase()
             val eventId = codeEntry.event.id
-            
+
             Log.d(TAG, "Validating code: $formattedCode for event: $eventId")
-            
+
             try {
                 val api = ApiClient.create<ApiKeyApi>()
                 val response = api.getApiKeyByAlias(eventId, formattedCode)
-                
+
                 Log.d(TAG, "API Response - alias: ${response.alias}, isActive: ${response.isActive}, type: ${response.type}")
-                
+
                 if (!response.isActive) {
                     Log.w(TAG, "API key is not active")
                     uiState = uiState.copy(
@@ -149,16 +154,16 @@ class EventListViewModel : ViewModel() {
                     )
                     return@launch
                 }
-                
+
                 // Check if type matches mode (if type is available)
-                // API returns types like: API_KEY_TYPE_CASHIER, API_KEY_TYPE_WEB_CASHIER, 
+                // API returns types like: API_KEY_TYPE_CASHIER, API_KEY_TYPE_WEB_CASHIER,
                 // API_KEY_TYPE_SCANNER, API_KEY_TYPE_WEB_SCANNER
                 val responseType = response.type?.uppercase() ?: ""
                 val isValidType = when (codeEntry.mode) {
                     CodeEntryMode.CASHIER -> responseType.contains("CASHIER")
                     CodeEntryMode.SCANNER -> responseType.contains("SCANNER")
                 }
-                
+
                 if (responseType.isNotEmpty() && !isValidType) {
                     Log.w(TAG, "API key type mismatch. Expected type containing: ${codeEntry.mode}, Got: $responseType")
                     uiState = uiState.copy(
@@ -169,7 +174,7 @@ class EventListViewModel : ViewModel() {
                     )
                     return@launch
                 }
-                
+
                 // Success - navigate to the appropriate screen
                 Log.i(TAG, "Code validated successfully! Navigating to ${codeEntry.mode}")
                 val screen = when (codeEntry.mode) {
@@ -180,18 +185,18 @@ class EventListViewModel : ViewModel() {
                     codeEntryState = null,
                     currentScreen = screen
                 )
-                
+
             } catch (e: HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
                 Log.e(TAG, "HTTP Error ${e.code()}: ${e.message()}")
                 Log.e(TAG, "Error body: $errorBody")
-                
+
                 val errorKey = when (e.code()) {
                     404 -> "not_found"
                     401, 403 -> "unauthorized"
                     else -> "invalid"
                 }
-                
+
                 uiState = uiState.copy(
                     codeEntryState = codeEntry.copy(
                         isValidating = false,

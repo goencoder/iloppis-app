@@ -16,11 +16,14 @@ import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.AppScreen
+import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.network.ApiClient
 import se.iloppis.app.network.ApiKeyApi
 import se.iloppis.app.network.EventApi
 import se.iloppis.app.network.EventFilter
 import se.iloppis.app.network.EventFilterRequest
+import se.iloppis.app.ui.screens.ScreenModel
+import se.iloppis.app.ui.states.ScreenAction
 import java.time.LocalDate
 
 private const val TAG = "EventListViewModel"
@@ -45,8 +48,8 @@ class EventListViewModel : ViewModel() {
             is EventListAction.DismissEventDetail -> dismissEventDetail()
             is EventListAction.StartCodeEntry -> startCodeEntry(action.mode, action.event)
             is EventListAction.DismissCodeEntry -> dismissCodeEntry()
-            is EventListAction.SubmitCode -> submitCode(action.code)
-            is EventListAction.ValidateCode -> validateCode(action.code)
+            is EventListAction.SubmitCode -> submitCode(action.state, action.code)
+            is EventListAction.ValidateCode -> validateCode(action.state, action.code)
             is EventListAction.NavigateBack -> navigateBack()
         }
     }
@@ -112,7 +115,7 @@ class EventListViewModel : ViewModel() {
      * Validate the code as the user types (implicit validation).
      * Shows error message when code is complete but invalid.
      */
-    private fun validateCode(code: String) {
+    private fun validateCode(state: ScreenModel, code: String) {
         val codeEntry = uiState.codeEntryState ?: return
 
         // Format: XXX-YYY (3 chars, dash, 3 chars) = 7 chars total
@@ -177,13 +180,12 @@ class EventListViewModel : ViewModel() {
                 // Success - navigate to the appropriate screen
                 Log.i(TAG, "Code validated successfully! Navigating to ${codeEntry.mode}")
                 val screen = when (codeEntry.mode) {
-                    CodeEntryMode.CASHIER -> AppScreen.Cashier(codeEntry.event, response.apiKey)
-                    CodeEntryMode.SCANNER -> AppScreen.Scanner(codeEntry.event, response.apiKey)
+                    CodeEntryMode.CASHIER -> ScreenPage.Cashier(codeEntry.event, response.apiKey)
+                    CodeEntryMode.SCANNER -> ScreenPage.Scanner(codeEntry.event, response.apiKey)
                 }
-                uiState = uiState.copy(
-                    codeEntryState = null,
-                    currentScreen = screen
-                )
+                state.onAction(ScreenAction.ShowNavigator(false)) /* Hides navigator */
+                state.onAction(ScreenAction.LoadPage(screen))
+                uiState = uiState.copy(codeEntryState = null)
 
             } catch (e: HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
@@ -218,8 +220,8 @@ class EventListViewModel : ViewModel() {
      * Submit code (when user clicks verify button).
      * Same as validateCode but user-initiated.
      */
-    private fun submitCode(code: String) {
-        validateCode(code)
+    private fun submitCode(state: ScreenModel, code: String) {
+        validateCode(state, code)
     }
 
     private fun navigateBack() {

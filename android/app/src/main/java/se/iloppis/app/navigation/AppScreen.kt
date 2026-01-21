@@ -61,4 +61,19 @@ sealed class ScreenPage {
      * Scanner selector page
      */
     data object ScannerSelector : ScreenPage()
+
+    /**
+     * Scanner page
+     */
+    data class Scanner(
+        /**
+         * Event that owns this scanner
+         */
+        val event: Event,
+
+        /**
+         * API key
+         */
+        val apiKey: String
+    ) : ScreenPage()
 }

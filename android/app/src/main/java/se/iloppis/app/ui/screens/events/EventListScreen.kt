@@ -13,7 +13,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.AppScreen
@@ -37,10 +36,7 @@ fun EventListScreen() {
     when (val screen = state.currentScreen) {
         is AppScreen.EventList -> {
             // Dialogs
-            EventDialogs(
-                state = state,
-                onAction = viewModel::onAction
-            )
+            EventDialogs()
 
             // Main content
             EventListContent(
@@ -70,33 +66,33 @@ fun EventListScreen() {
  * Handles dialog display based on current state.
  */
 @Composable
-private fun EventDialogs(
-    state: EventListUiState,
-    onAction: (EventListAction) -> Unit
-) {
+fun EventDialogs() {
+    val events = eventContext()
+
+
     // Code entry dialog
-    state.codeEntryState?.let { codeEntry ->
+    events.uiState.codeEntryState?.let { codeEntry ->
         CodeEntryDialog(
             mode = codeEntry.mode,
             eventName = codeEntry.event.name,
             isValidating = codeEntry.isValidating,
             errorMessage = codeEntry.errorMessage,
-            onDismiss = { onAction(EventListAction.DismissCodeEntry) },
-            onCodeChange = { code -> onAction(EventListAction.ValidateCode(code)) },
-            onCodeEntered = { code -> onAction(EventListAction.SubmitCode(code)) }
+            onDismiss = { events.onAction(EventListAction.DismissCodeEntry) },
+            onCodeChange = { code -> events.onAction(EventListAction.ValidateCode(code)) },
+            onCodeEntered = { code -> events.onAction(EventListAction.SubmitCode(code)) }
         )
     }
 
     // Event detail dialog
-    state.selectedEvent?.let { event ->
+    events.uiState.selectedEvent?.let { event ->
         EventDetailDialog(
             event = event,
-            onDismiss = { onAction(EventListAction.DismissEventDetail) },
+            onDismiss = { events.onAction(EventListAction.DismissEventDetail) },
             onCashierClick = {
-                onAction(EventListAction.StartCodeEntry(CodeEntryMode.CASHIER, event))
+                events.onAction(EventListAction.StartCodeEntry(CodeEntryMode.CASHIER, event))
             },
             onScannerClick = {
-                onAction(EventListAction.StartCodeEntry(CodeEntryMode.SCANNER, event))
+                events.onAction(EventListAction.StartCodeEntry(CodeEntryMode.SCANNER, event))
             }
         )
     }

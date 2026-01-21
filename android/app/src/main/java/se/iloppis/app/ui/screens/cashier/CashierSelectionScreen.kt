@@ -54,10 +54,8 @@ fun CashierSelectionScreen() {
                 /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
 
                 if (events.contains(it.id)) {
+
                     EventCard(it) {
-
-                        /* Fix to give full control to cashier page */
-
                         event.onAction(
                             EventListAction.StartCodeEntry(
                                 CodeEntryMode.CASHIER,

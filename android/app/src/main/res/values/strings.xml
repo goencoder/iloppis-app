@@ -27,6 +27,8 @@
     <!-- Event Detail Dialog -->
     <string name="opening_hours_label">Öppettider: %1$s</string>
     <string name="select_mode">Välj läge:</string>
+    <string name="store_event_locally">Följ event</string>
+    <string name="remove_event_locally">Sluta följa event</string>
     <string name="button_open_cashier">Öppna kassa</string>
     <string name="button_ticket_scanner">Biljettskanner</string>
     <string name="button_cancel">Avbryt</string>

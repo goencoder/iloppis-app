@@ -27,6 +27,8 @@
     <!-- Event Detail Dialog -->
     <string name="opening_hours_label">Opening hours: %1$s</string>
     <string name="select_mode">Select mode:</string>
+    <string name="store_event_locally">Follow event</string>
+    <string name="remove_event_locally">Unfollow event</string>
     <string name="button_open_cashier">Open cashier</string>
     <string name="button_ticket_scanner">Ticket scanner</string>
     <string name="button_cancel">Cancel</string>

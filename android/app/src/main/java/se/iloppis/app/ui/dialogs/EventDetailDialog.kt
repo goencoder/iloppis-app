@@ -153,9 +153,9 @@ private fun EventDetailContent(
         ) {
             Text(
                 text = if(!hasStoredEvent)
-                    "Store"
+                    stringResource(R.string.store_event_locally)
                 else
-                    "Remove",
+                    stringResource(R.string.remove_event_locally),
                 fontWeight = FontWeight.Medium
             )
         }

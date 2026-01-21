@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -128,17 +132,30 @@ private fun EventDetailContent(
         // ======================
 
         val storage = localStorage()
+
+        val key = "stored-events"
+        val storedEvents = storage.getJson<Set<String>>(key, "[]").toMutableSet()
+        var hasStoredEvent by remember { mutableStateOf(storedEvents.contains(event.id)) }
+
         Button(
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors().copy(
-                containerColor = MaterialTheme.colorScheme.secondary
+                containerColor = if(!hasStoredEvent)
+                    MaterialTheme.colorScheme.onSecondary
+                else MaterialTheme.colorScheme.primary
             ),
             onClick = {
-                // Store event in local storage
+                if(!hasStoredEvent) storedEvents += event.id
+                else storedEvents -= event.id
+                storage.putJson("stored-events", storedEvents)
+                hasStoredEvent = storedEvents.contains(event.id)
             }
         ) {
             Text(
-                text = "Store",
+                text = if(!hasStoredEvent)
+                    "Store"
+                else
+                    "Remove",
                 fontWeight = FontWeight.Medium
             )
         }

@@ -46,7 +46,7 @@ fun EventListScreen(
             // Main content
             EventListContent(
                 state = state,
-                onReload = { viewModel.reload() },
+                onReload = { viewModel.onAction(EventListAction.LoadEvents) },
                 onEventClick = { viewModel.onAction(EventListAction.SelectEvent(it)) }
             )
         }

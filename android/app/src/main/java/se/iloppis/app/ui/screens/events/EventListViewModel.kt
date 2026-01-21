@@ -17,7 +17,6 @@ import se.iloppis.app.network.EventApi
 import se.iloppis.app.network.EventFilter
 import se.iloppis.app.network.EventFilterRequest
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 private const val TAG = "EventListViewModel"
 
@@ -46,11 +45,6 @@ class EventListViewModel : ViewModel() {
             is EventListAction.NavigateBack -> navigateBack()
         }
     }
-
-    /**
-     * User initialized reloading method
-     */
-    fun reload() { loadEvents() }
 
     private fun loadEvents() {
         Log.d(TAG, "Loading events from: https://iloppis.fly.dev/")

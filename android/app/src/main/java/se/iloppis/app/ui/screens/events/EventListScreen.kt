@@ -137,7 +137,7 @@ private fun EventListContent(
 }
 
 @Composable
-private fun EventListHeader() {
+fun EventListHeader() {
     Text(
         text = stringResource(R.string.app_title),
         fontSize = 28.sp,

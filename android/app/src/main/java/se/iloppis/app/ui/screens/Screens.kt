@@ -1,6 +1,7 @@
 package se.iloppis.app.ui.screens
 
 import androidx.compose.runtime.Composable
+import se.iloppis.app.ui.screens.events.EventScreenProvider
 
 /**
  * Application Screens Provider
@@ -11,6 +12,8 @@ import androidx.compose.runtime.Composable
 @Composable
 fun Screens(content: @Composable () -> Unit) {
     ScreenModelProvider {
-        content()
+        EventScreenProvider {
+            content()
+        }
     }
 }

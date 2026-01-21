@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import se.iloppis.app.ui.components.navigation.Navigator
+import se.iloppis.app.ui.components.navigation.PageManager
 import se.iloppis.app.ui.screens.ScreenModelProvider
 import se.iloppis.app.ui.screens.events.EventListScreen
 import se.iloppis.app.ui.screens.screenContext
@@ -37,11 +38,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(it).fillMaxSize(),
                             color = AppColors.Background
                         ) {
-                            val screen = screenContext()
-                            when (screen.state.page) {
-                                is ScreenPage.Home -> EventListScreen()
-                                else -> Text("test")
-                            }
+                            PageManager()
                         }
                     }
                 }

@@ -25,6 +25,16 @@ sealed class ScreenAction {
          */
         val page: ScreenPage
     ) : ScreenAction()
+
+    /**
+     * Show navigator action
+     */
+    data class ShowNavigator(
+        /**
+         * Show status
+         */
+        val show: Boolean
+    ) : ScreenAction()
 }
 
 
@@ -40,6 +50,11 @@ data class ScreenState(
      * state is loading data
      */
     val isLoading: Boolean = true,
+
+    /**
+     * Show app navigator status
+     */
+    val showNavigator: Boolean = true,
 
     /**
      * State error message

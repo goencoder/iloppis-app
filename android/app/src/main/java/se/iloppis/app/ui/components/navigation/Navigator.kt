@@ -60,6 +60,7 @@ fun Navigator(
     iconSize: Dp = 35.dp
 ) {
     val screen = screenContext()
+    if(!screen.state.showNavigator) return /* Hides navigator if requested */
 
     NavigationBar(
         modifier = Modifier.height(height),

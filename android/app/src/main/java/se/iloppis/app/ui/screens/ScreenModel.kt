@@ -32,6 +32,7 @@ class ScreenModel : ViewModel() {
         when(action) {
             is ScreenAction.Loading -> setLoad(action.status)
             is ScreenAction.LoadPage -> loadPage(action.page)
+            is ScreenAction.ShowNavigator -> showNavigator(action.show)
         }
     }
 
@@ -39,6 +40,7 @@ class ScreenModel : ViewModel() {
 
     private fun setLoad(state: Boolean) { this.state = this.state.copy(isLoading = state) }
     private fun loadPage(page: ScreenPage) { state = state.copy(page = page) }
+    private fun showNavigator(state: Boolean) { this.state = this.state.copy(showNavigator = state) }
 }
 
 

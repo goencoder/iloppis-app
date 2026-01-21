@@ -44,6 +44,9 @@
     <string name="code_invalid">Invalid code. Check and try again.</string>
     <string name="code_validating">Verifying…</string>
 
+    <!-- Cashier Selection Screen -->
+    <string name="cashier_selection_title">Choose an event to act cashier for</string>
+
     <!-- Cashier Screen -->
     <string name="cashier_title">Cashier</string>
     <string name="cashier_loading">Loading sellers…</string>

@@ -44,6 +44,9 @@
     <string name="code_invalid">Ogiltig kod. Kontrollera och försök igen.</string>
     <string name="code_validating">Verifierar…</string>
 
+    <!-- Cashier Selection Screen -->
+    <string name="cashier_selection_title">Välj event att öppna kassa för</string>
+
     <!-- Cashier Screen -->
     <string name="cashier_title">Kassa</string>
     <string name="cashier_loading">Laddar säljare…</string>

@@ -181,7 +181,7 @@ private fun EventListBody(
     onEventClick: (Event) -> Unit
 ) {
     PullToRefreshBox(
-        isRefreshing = state.isLoading,
+        isRefreshing = false,
         onRefresh = onReload
     ) {
         when {

@@ -4,11 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,8 +65,7 @@ fun Navigator(
     ) {
         Row(modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
-            .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
+            .padding(paddingValues),
             horizontalArrangement = Arrangement.Center
         ) {
             NavigatorButton(
@@ -125,7 +121,7 @@ fun NavigatorButton(
 ) {
     Box(modifier = Modifier.padding(horizontal = space)) {
         IconButton(
-            modifier = Modifier.size(size),
+            modifier = Modifier.size(size).padding(0.dp),
             shape = RoundedCornerShape(rounded),
             onClick = onClick
         ) {

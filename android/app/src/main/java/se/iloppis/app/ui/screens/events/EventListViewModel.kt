@@ -1,11 +1,16 @@
 package se.iloppis.app.ui.screens.events
 
 import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
@@ -220,4 +225,36 @@ class EventListViewModel : ViewModel() {
     private fun navigateBack() {
         uiState = uiState.copy(currentScreen = AppScreen.EventList)
     }
+}
+
+
+
+/**
+ * Event view model context
+ */
+private val localEventScreenViewModel = compositionLocalOf<EventListViewModel> {
+    error("No events view model provider is present in this context")
+}
+
+
+
+/**
+ * Event screen state provider
+ */
+@Composable
+fun EventScreenProvider(screen: EventListViewModel = viewModel(), content: @Composable () -> Unit) {
+    val state = remember { screen }
+    CompositionLocalProvider(localEventScreenViewModel provides state) {
+        content()
+    }
+}
+
+
+
+/**
+ * Event screen state context
+ */
+@Composable
+fun eventContext(): EventListViewModel {
+    return localEventScreenViewModel.current
 }

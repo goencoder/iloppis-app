@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import se.iloppis.app.R
 import se.iloppis.app.ui.components.EventCard
 import se.iloppis.app.ui.screens.events.CodeEntryMode
 import se.iloppis.app.ui.screens.events.EventListAction
@@ -35,6 +38,7 @@ fun CashierSelectionScreen(
         .statusBarsPadding()
     ) {
         EventListHeader()
+        Text(stringResource(R.string.cashier_selection_header))
 
         LazyColumn() {
             items(viewModel.uiState.events) {

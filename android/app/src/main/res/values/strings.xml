@@ -45,7 +45,7 @@
     <string name="code_validating">Verifierar…</string>
 
     <!-- Cashier Selection Screen -->
-    <string name="cashier_selection_title">Välj event att öppna kassa för</string>
+    <string name="cashier_selection_header">Välj event att öppna kassa för</string>
 
     <!-- Cashier Screen -->
     <string name="cashier_title">Kassa</string>

@@ -20,11 +20,9 @@ import se.iloppis.app.ui.screens.screenContext
 fun PageManager() {
     val screen = screenContext()
 
-    val viewModel: EventListViewModel = viewModel()
-
     when (screen.state.page) {
-        is ScreenPage.Home -> EventListScreen(viewModel)
-        is ScreenPage.Cashier -> CashierSelectionScreen(viewModel)
+        is ScreenPage.Home -> EventListScreen()
+        is ScreenPage.Cashier -> CashierSelectionScreen()
         else -> {}
     }
 }

@@ -29,9 +29,8 @@ import se.iloppis.app.ui.theme.AppColors
  * Also handles navigation to cashier/scanner screens.
  */
 @Composable
-fun EventListScreen(
-    viewModel: EventListViewModel = viewModel()
-) {
+fun EventListScreen() {
+    val viewModel = eventContext()
     val state = viewModel.uiState
 
     // Navigate based on current screen

@@ -16,13 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
 import se.iloppis.app.ui.components.EventCard
 import se.iloppis.app.ui.screens.events.CodeEntryMode
 import se.iloppis.app.ui.screens.events.EventListAction
 import se.iloppis.app.ui.screens.events.EventListHeader
-import se.iloppis.app.ui.screens.events.EventListViewModel
+import se.iloppis.app.ui.screens.events.eventContext
 import se.iloppis.app.utils.localStorage
 
 /**
@@ -32,9 +31,8 @@ import se.iloppis.app.utils.localStorage
  * to get stored events for cashier selection.
  */
 @Composable
-fun CashierSelectionScreen(
-    viewModel: EventListViewModel = viewModel()
-) {
+fun CashierSelectionScreen() {
+    val event = eventContext()
     val storage = localStorage()
     val events = storage.getJson<Set<String>>("stored-events", "[]").toMutableSet()
 
@@ -51,7 +49,7 @@ fun CashierSelectionScreen(
         )
         Spacer(modifier = Modifier.height(4.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(viewModel.uiState.events) {
+            items(event.uiState.events) {
 
                 /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
 
@@ -60,7 +58,7 @@ fun CashierSelectionScreen(
 
                         /* Fix to give full control to cashier page */
 
-                        viewModel.onAction(
+                        event.onAction(
                             EventListAction.StartCodeEntry(
                                 CodeEntryMode.CASHIER,
                                 it

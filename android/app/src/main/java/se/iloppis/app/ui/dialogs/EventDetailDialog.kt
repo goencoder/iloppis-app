@@ -57,7 +57,7 @@ fun EventDetailDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    text = stringResource(R.string.button_cancel),
+                    text = stringResource(R.string.button_back),
                     color = AppColors.ButtonDanger
                 )
             }

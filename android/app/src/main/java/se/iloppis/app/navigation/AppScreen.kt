@@ -9,16 +9,38 @@ import se.iloppis.app.ui.screens.events.CodeEntryMode
 sealed class AppScreen {
     /** Event list / home screen */
     data object EventList : AppScreen()
-    
+
     /** Cashier mode screen */
     data class Cashier(
         val event: Event,
         val apiKey: String
     ) : AppScreen()
-    
+
     /** Scanner mode screen */
     data class Scanner(
         val event: Event,
         val apiKey: String
     ) : AppScreen()
+}
+
+
+
+/**
+ * Screen view state page
+ */
+sealed class ScreenPage {
+    /**
+     * Home page
+     */
+    data object Home : ScreenPage()
+
+    /**
+     * Cashier page
+     */
+    data object Cashier : ScreenPage()
+
+    /**
+     * Scanner page
+     */
+    data object Scanner : ScreenPage()
 }

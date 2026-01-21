@@ -1,26 +1,6 @@
 package se.iloppis.app.ui.states
 
-/**
- * Screen view state page
- */
-sealed class ScreenPage {
-    /**
-     * Home page
-     */
-    data object Home : ScreenPage()
-
-    /**
-     * Cashier page
-     */
-    data object Cashier : ScreenPage()
-
-    /**
-     * Scanner page
-     */
-    data object Scanner : ScreenPage()
-}
-
-
+import se.iloppis.app.navigation.ScreenPage
 
 /**
  * Screen view action

@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AdUnits
 import androidx.compose.material.icons.filled.AdfScanner
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.AdUnits
 import androidx.compose.material.icons.outlined.AdfScanner
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Icon
@@ -90,6 +92,17 @@ fun Navigator(
                 buttonCorner,
                 buttonSpacing
             ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.Cashier)) }
+
+            NavigatorButton(
+                if(screen.state.page == ScreenPage.Scanner)
+                    Icons.Filled.AdUnits
+                else Icons.Outlined.AdUnits,
+                stringResource(R.string.nav_scanner),
+                buttonSize,
+                iconSize,
+                buttonCorner,
+                buttonSpacing
+            ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.Scanner)) }
         }
     }
 }

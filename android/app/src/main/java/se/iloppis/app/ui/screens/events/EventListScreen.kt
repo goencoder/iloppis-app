@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ fun EventListScreen(
             // Main content
             EventListContent(
                 state = state,
+                onReload = { viewModel.reload() },
                 onEventClick = { viewModel.onAction(EventListAction.SelectEvent(it)) }
             )
         }
@@ -107,6 +109,7 @@ private fun EventDialogs(
 @Composable
 private fun EventListContent(
     state: EventListUiState,
+    onReload: () -> Unit,
     onEventClick: (Event) -> Unit
 ) {
     Column(
@@ -127,6 +130,7 @@ private fun EventListContent(
         // Content based on state
         EventListBody(
             state = state,
+            onReload = onReload,
             onEventClick = onEventClick
         )
     }
@@ -173,13 +177,19 @@ private fun FilterChips() {
 @Composable
 private fun EventListBody(
     state: EventListUiState,
+    onReload: () -> Unit,
     onEventClick: (Event) -> Unit
 ) {
-    when {
-        state.isLoading -> LoadingState()
-        state.errorMessage != null -> ErrorState(state.errorMessage)
-        state.events.isEmpty() -> EmptyState()
-        else -> EventList(events = state.events, onEventClick = onEventClick)
+    PullToRefreshBox(
+        isRefreshing = state.isLoading,
+        onRefresh = onReload
+    ) {
+        when {
+            state.isLoading -> LoadingState()
+            state.errorMessage != null -> ErrorState(state.errorMessage)
+            state.events.isEmpty() -> EmptyState()
+            else -> EventList(events = state.events, onEventClick = onEventClick)
+        }
     }
 }
 

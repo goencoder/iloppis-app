@@ -43,7 +43,17 @@ sealed class ScreenPage {
     /**
      * Cashier page
      */
-    data object Cashier : ScreenPage()
+    data class Cashier(
+        /**
+         * Event that owns this cashier
+         */
+        val event: Event,
+
+        /**
+         * API key
+         */
+        val apiKey: String
+    ) : ScreenPage()
 
 
 

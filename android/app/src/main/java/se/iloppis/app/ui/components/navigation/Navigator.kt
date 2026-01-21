@@ -80,7 +80,7 @@ fun Navigator(
             ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.Home)) }
 
             NavigatorButton(
-                if(screen.state.page == ScreenPage.Cashier)
+                if(screen.state.page == ScreenPage.CashierSelector)
                     Icons.Filled.AdfScanner
                 else Icons.Outlined.AdfScanner,
                 stringResource(R.string.nav_cashier),
@@ -88,10 +88,10 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing
-            ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.Cashier)) }
+            ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.CashierSelector)) }
 
             NavigatorButton(
-                if(screen.state.page == ScreenPage.Scanner)
+                if(screen.state.page == ScreenPage.ScannerSelector)
                     Icons.Filled.AdUnits
                 else Icons.Outlined.AdUnits,
                 stringResource(R.string.nav_scanner),
@@ -99,7 +99,7 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing
-            ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.Scanner)) }
+            ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.ScannerSelector)) }
         }
     }
 }

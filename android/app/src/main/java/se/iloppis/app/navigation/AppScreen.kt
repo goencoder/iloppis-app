@@ -1,7 +1,6 @@
 package se.iloppis.app.navigation
 
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.ui.screens.events.CodeEntryMode
 
 /**
  * Represents the current navigation destination in the app.
@@ -35,12 +34,12 @@ sealed class ScreenPage {
     data object Home : ScreenPage()
 
     /**
-     * Cashier page
+     * Cashier selector page
      */
-    data object Cashier : ScreenPage()
+    data object CashierSelector : ScreenPage()
 
     /**
-     * Scanner page
+     * Scanner selector page
      */
-    data object Scanner : ScreenPage()
+    data object ScannerSelector : ScreenPage()
 }

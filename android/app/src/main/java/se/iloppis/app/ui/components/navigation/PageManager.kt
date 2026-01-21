@@ -27,7 +27,7 @@ fun PageManager() {
     /* Main page content */
     when (screen.state.page) {
         is ScreenPage.Home -> EventListScreen()
-        is ScreenPage.Cashier -> CashierSelectionScreen()
-        is ScreenPage.Scanner -> { /* Scanner page */ }
+        is ScreenPage.CashierSelector -> CashierSelectionScreen()
+        is ScreenPage.ScannerSelector -> { /* Scanner page */ }
     }
 }

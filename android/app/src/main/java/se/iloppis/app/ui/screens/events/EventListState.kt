@@ -2,6 +2,7 @@ package se.iloppis.app.ui.screens.events
 
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.AppScreen
+import se.iloppis.app.ui.screens.ScreenModel
 
 /**
  * UI state for the event list screen.
@@ -42,7 +43,7 @@ sealed class EventListAction {
     data object DismissEventDetail : EventListAction()
     data class StartCodeEntry(val mode: CodeEntryMode, val event: Event) : EventListAction()
     data object DismissCodeEntry : EventListAction()
-    data class SubmitCode(val code: String) : EventListAction()
-    data class ValidateCode(val code: String) : EventListAction()
+    data class SubmitCode(val state: ScreenModel, val code: String) : EventListAction()
+    data class ValidateCode(val state: ScreenModel, val code: String) : EventListAction()
     data object NavigateBack : EventListAction()
 }

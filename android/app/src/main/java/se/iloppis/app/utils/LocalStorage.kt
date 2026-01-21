@@ -73,8 +73,8 @@ data class LocalStorage(val context: Context, val name: String, val mode: Int) {
      *
      * @see get
      */
-    inline fun <reified T> getJson(key: String) : T {
-        return decodeFromString<T>(get(key, "{}") ?: "{}")
+    inline fun <reified T> getJson(key: String, default: String = "{}") : T {
+        return decodeFromString<T>(get(key, default) ?: default)
     }
 }
 

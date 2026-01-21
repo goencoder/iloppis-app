@@ -42,11 +42,11 @@ fun EventListScreen() {
             )
         }
         is AppScreen.Cashier -> {
-            CashierScreen(
-                event = screen.event,
-                apiKey = screen.apiKey,
-                onBack = { viewModel.onAction(EventListAction.NavigateBack) }
-            )
+//            CashierScreen(
+//                event = screen.event,
+//                apiKey = screen.apiKey,
+//                onBack = { viewModel.onAction(EventListAction.NavigateBack) }
+//            )
         }
         is AppScreen.Scanner -> {
             ScannerScreen(

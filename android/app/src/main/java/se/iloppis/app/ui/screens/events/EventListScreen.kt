@@ -194,7 +194,7 @@ private fun EventListBody(
 }
 
 @Composable
-private fun LoadingState() {
+fun LoadingState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -204,7 +204,7 @@ private fun LoadingState() {
 }
 
 @Composable
-private fun ErrorState(message: String) {
+fun ErrorState(message: String) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -217,7 +217,7 @@ private fun ErrorState(message: String) {
 }
 
 @Composable
-private fun EmptyState() {
+fun EmptyState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

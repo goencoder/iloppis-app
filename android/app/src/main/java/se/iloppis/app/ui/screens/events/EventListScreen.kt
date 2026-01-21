@@ -35,10 +35,6 @@ fun EventListScreen() {
     // Navigate based on current screen
     when (val screen = state.currentScreen) {
         is AppScreen.EventList -> {
-            // Dialogs
-            EventDialogs()
-
-            // Main content
             EventListContent(
                 state = state,
                 onReload = { viewModel.onAction(EventListAction.LoadEvents) },

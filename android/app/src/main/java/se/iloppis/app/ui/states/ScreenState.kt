@@ -35,6 +35,11 @@ sealed class ScreenAction {
          */
         val show: Boolean
     ) : ScreenAction()
+
+    /**
+     * Navigates home and enables the navigator if disabled
+     */
+    data object NavigateHome : ScreenAction()
 }
 
 

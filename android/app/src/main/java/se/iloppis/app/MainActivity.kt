@@ -11,7 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import se.iloppis.app.ui.components.navigation.Navigator
 import se.iloppis.app.ui.components.navigation.PageManager
-import se.iloppis.app.ui.screens.ScreenModelProvider
+import se.iloppis.app.ui.screens.Screens
 import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.ui.theme.ILoppisTheme
 import se.iloppis.app.utils.LocalStorageProvider
@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LocalStorageProvider(this) {
-                ScreenModelProvider {
+                Screens {
                     ILoppisTheme {
                         Scaffold(
                             modifier = Modifier,

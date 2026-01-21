@@ -37,5 +37,6 @@ fun PageManager() {
         )
 
         is ScreenPage.ScannerSelector -> { /* Scanner Selector page */ }
+        is ScreenPage.Scanner -> { /* Scanner page */ }
     }
 }

@@ -121,6 +121,8 @@ private fun EventDetailContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+
+
         // ======================
         // Save event as interest
         // ======================

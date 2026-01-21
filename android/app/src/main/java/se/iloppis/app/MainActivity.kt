@@ -8,14 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import se.iloppis.app.ui.components.navigation.Navigator
 import se.iloppis.app.ui.components.navigation.PageManager
 import se.iloppis.app.ui.screens.ScreenModelProvider
-import se.iloppis.app.ui.screens.events.EventListScreen
-import se.iloppis.app.ui.screens.screenContext
-import se.iloppis.app.ui.states.ScreenPage
 import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.ui.theme.ILoppisTheme
 

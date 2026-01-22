@@ -19,11 +19,15 @@ sealed class ScreenAction {
     /**
      * Screen load page action
      */
-    data class LoadPage(
+    data class NavigateToPage(
         /**
          * Page to load
          */
-        val page: ScreenPage
+        val page: ScreenPage,
+        /**
+         * Show navigator
+         */
+        val navigator: Boolean = true
     ) : ScreenAction()
 
     /**

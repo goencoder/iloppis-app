@@ -32,6 +32,7 @@ import se.iloppis.app.ui.components.EventCard
 @Composable
 fun SwipeToDismissEventCard(
     event: Event,
+    modifier: Modifier = Modifier,
     enableStartToEnd: Boolean = false,
     enableEndToStart: Boolean = true,
     onStartToEnd: () -> Unit = {},
@@ -41,6 +42,7 @@ fun SwipeToDismissEventCard(
     val state = rememberSwipeToDismissBoxState()
     SwipeToDismissBox(
         state = state,
+        modifier = modifier.fillMaxSize(),
         enableDismissFromStartToEnd = enableStartToEnd,
         enableDismissFromEndToStart = enableEndToStart,
         backgroundContent = {

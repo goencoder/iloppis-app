@@ -15,12 +15,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.navigation.AppScreen
 import se.iloppis.app.ui.components.EventCard
 import se.iloppis.app.ui.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.dialogs.EventDetailDialog
-import se.iloppis.app.ui.screens.cashier.CashierScreen
-import se.iloppis.app.ui.screens.scanner.ScannerScreen
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.theme.AppColors
 
@@ -33,30 +30,11 @@ fun EventListScreen() {
     val viewModel = eventContext()
     val state = viewModel.uiState
 
-    // Navigate based on current screen
-    when (val screen = state.currentScreen) {
-        is AppScreen.EventList -> {
-            EventListContent(
-                state = state,
-                onReload = { viewModel.onAction(EventListAction.LoadEvents) },
-                onEventClick = { viewModel.onAction(EventListAction.SelectEvent(it)) }
-            )
-        }
-        is AppScreen.Cashier -> {
-//            CashierScreen(
-//                event = screen.event,
-//                apiKey = screen.apiKey,
-//                onBack = { viewModel.onAction(EventListAction.NavigateBack) }
-//            )
-        }
-        is AppScreen.Scanner -> {
-            ScannerScreen(
-                event = screen.event,
-                apiKey = screen.apiKey,
-                onBack = { viewModel.onAction(EventListAction.NavigateBack) }
-            )
-        }
-    }
+    EventListContent(
+        state = state,
+        onReload = { viewModel.onAction(EventListAction.LoadEvents) },
+        onEventClick = { viewModel.onAction(EventListAction.SelectEvent(it)) }
+    )
 }
 
 /**

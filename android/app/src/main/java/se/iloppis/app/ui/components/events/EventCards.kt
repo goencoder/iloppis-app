@@ -35,7 +35,7 @@ fun SwipeToDismissEventCard(
     enableStartToEnd: Boolean = false,
     enableEndToStart: Boolean = true,
     onStartToEnd: () -> Unit = {},
-    onEndToStart: () -> Unit,
+    onEndToStart: () -> Unit = {},
     cardAction: () -> Unit,
 ) {
     val state = rememberSwipeToDismissBoxState()

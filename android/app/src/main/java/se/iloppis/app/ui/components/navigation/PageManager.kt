@@ -6,6 +6,7 @@ import se.iloppis.app.ui.screens.cashier.CashierScreen
 import se.iloppis.app.ui.screens.cashier.CashierSelectionScreen
 import se.iloppis.app.ui.screens.events.EventDialogs
 import se.iloppis.app.ui.screens.events.EventListScreen
+import se.iloppis.app.ui.screens.scanner.ScannerSelectionScreen
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 
@@ -35,7 +36,7 @@ fun PageManager() {
             onBack = { screen.onAction(ScreenAction.NavigateHome) }
         )
 
-        is ScreenPage.ScannerSelector -> { /* Scanner Selector page */ }
+        is ScreenPage.ScannerSelector -> ScannerSelectionScreen()
         is ScreenPage.Scanner -> { /* Scanner page */ }
     }
 }

@@ -107,13 +107,6 @@ private fun EventDetailContent(event: Event) {
         //
 
         Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            text = stringResource(R.string.select_mode),
-            fontWeight = FontWeight.Medium,
-            color = AppColors.TextPrimary
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
 
 
 

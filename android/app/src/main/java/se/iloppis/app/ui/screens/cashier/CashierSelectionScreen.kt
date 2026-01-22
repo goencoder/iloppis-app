@@ -12,12 +12,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.ui.components.events.SwipeToDismissEventCard
+import se.iloppis.app.ui.screens.events.CodeEntryMode
+import se.iloppis.app.ui.screens.events.EmptyState
+import se.iloppis.app.ui.screens.events.EventListAction
 import se.iloppis.app.ui.screens.events.EventListHeader
 import se.iloppis.app.ui.screens.events.eventContext
 import se.iloppis.app.utils.localStorage
@@ -32,7 +37,11 @@ import se.iloppis.app.utils.localStorage
 fun CashierSelectionScreen() {
     val event = eventContext()
     val storage = localStorage()
-    val events = storage.getJson<Set<String>>("stored-events", "[]").toMutableSet()
+    val list = remember { mutableStateListOf<String>().apply {
+        addAll(
+            storage.getJson<List<String>>("stored-events", "[]").toMutableSet()
+        )
+    }}
 
     Column(modifier = Modifier.fillMaxSize()
         .padding(horizontal = 16.dp)
@@ -46,19 +55,28 @@ fun CashierSelectionScreen() {
             fontSize = 14.sp
         )
         Spacer(modifier = Modifier.height(4.dp))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+        if(list.isEmpty()) EmptyState() /* Empty list state */
+        else LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(event.uiState.events) {
 
                 /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
 
-                if (events.contains(it.id)) {
+                if (list.contains(it.id)) {
                     SwipeToDismissEventCard(
                         event = it,
+                        modifier = Modifier.animateItem(),
                         onEndToStart = {
-                            /* Remove card action */
+                            list.remove(it.id)
+                            storage.putJson("stored-events", list.toSet())
                         }
                     ) {
-                        /* Card action */
+                        event.onAction(
+                            EventListAction.StartCodeEntry(
+                                CodeEntryMode.CASHIER,
+                                it
+                            )
+                        )
                     }
                 }
             }

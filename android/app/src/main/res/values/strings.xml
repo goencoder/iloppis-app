@@ -68,6 +68,9 @@
     <string name="keypad_clear">C</string>
     <string name="keypad_ok">OK</string>
 
+    <!-- Scanner Selection Screen -->
+    <string name="scanner_selection_header">Välj event att öppna skannare för</string>
+
     <!-- Scanner Screen -->
     <string name="scanner_title">Biljettskanner</string>
     <string name="scanner_button_scan">Starta skanning</string>

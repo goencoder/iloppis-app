@@ -184,7 +184,7 @@ class EventListViewModel : ViewModel() {
                     CodeEntryMode.SCANNER -> ScreenPage.Scanner(codeEntry.event, response.apiKey)
                 }
                 state.onAction(ScreenAction.ShowNavigator(false)) /* Hides navigator */
-                state.onAction(ScreenAction.LoadPage(screen))
+                state.onAction(ScreenAction.NavigateToPage(screen))
                 uiState = uiState.copy(codeEntryState = null)
 
             } catch (e: HttpException) {

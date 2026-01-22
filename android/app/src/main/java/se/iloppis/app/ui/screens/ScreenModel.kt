@@ -31,7 +31,7 @@ class ScreenModel : ViewModel() {
     fun onAction(action: ScreenAction) {
         when(action) {
             is ScreenAction.Loading -> setLoad(action.status)
-            is ScreenAction.LoadPage -> loadPage(action.page)
+            is ScreenAction.NavigateToPage -> loadPage(action.page)
             is ScreenAction.ShowNavigator -> showNavigator(action.show)
             is ScreenAction.NavigateHome -> navigateHome()
         }

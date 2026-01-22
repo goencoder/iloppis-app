@@ -17,9 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
-import se.iloppis.app.ui.components.EventCard
-import se.iloppis.app.ui.screens.events.CodeEntryMode
-import se.iloppis.app.ui.screens.events.EventListAction
+import se.iloppis.app.ui.components.events.SwipeToDismissEventCard
 import se.iloppis.app.ui.screens.events.EventListHeader
 import se.iloppis.app.ui.screens.events.eventContext
 import se.iloppis.app.utils.localStorage
@@ -54,14 +52,13 @@ fun CashierSelectionScreen() {
                 /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
 
                 if (events.contains(it.id)) {
-
-                    EventCard(it) {
-                        event.onAction(
-                            EventListAction.StartCodeEntry(
-                                CodeEntryMode.CASHIER,
-                                it
-                            )
-                        )
+                    SwipeToDismissEventCard(
+                        event = it,
+                        onEndToStart = {
+                            /* Remove card action */
+                        }
+                    ) {
+                        /* Card action */
                     }
                 }
             }

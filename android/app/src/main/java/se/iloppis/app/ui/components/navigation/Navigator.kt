@@ -77,7 +77,7 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing
-            ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.Home)) }
+            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Home)) }
 
             NavigatorButton(
                 if(screen.state.page == ScreenPage.CashierSelector)
@@ -88,7 +88,7 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing
-            ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.CashierSelector)) }
+            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.CashierSelector)) }
 
             NavigatorButton(
                 if(screen.state.page == ScreenPage.ScannerSelector)
@@ -99,7 +99,7 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing
-            ) { screen.onAction(ScreenAction.LoadPage(ScreenPage.ScannerSelector)) }
+            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.ScannerSelector)) }
         }
     }
 }

@@ -212,4 +212,8 @@
     <!-- Cashier Screen - Additional -->
     <string name="cashier_pending_info_title">Utestående köp</string>
     <string name="cashier_pending_info_message">Siffran visar hur många köp som är sparade lokalt och ännu inte har bekräftats uppladdade till servern. Den ska gå ner när synk lyckas.</string>
+
+    <!-- Swipe to dismiss box -->
+    <string name="swipe_box_remove">Ta bort</string>
+    <string name="swipe_box_archive">Arkivera</string>
 </resources>

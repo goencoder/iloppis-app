@@ -212,4 +212,8 @@
     <!-- Cashier Screen - Additional -->
     <string name="cashier_pending_info_title">Outstanding purchases</string>
     <string name="cashier_pending_info_message">The number shows how many purchases are saved locally and have not yet been confirmed uploaded to the server. It should decrease when sync succeeds.</string>
+
+    <!-- Swipe to dismiss box -->
+    <string name="swipe_box_remove">Remove</string>
+    <string name="swipe_box_archive">Archive</string>
 </resources>

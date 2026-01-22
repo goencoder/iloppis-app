@@ -64,12 +64,6 @@ fun EventDialogs() {
         EventDetailDialog(
             event = event,
             onDismiss = { events.onAction(EventListAction.DismissEventDetail) },
-            onCashierClick = {
-                events.onAction(EventListAction.StartCodeEntry(CodeEntryMode.CASHIER, event))
-            },
-            onScannerClick = {
-                events.onAction(EventListAction.StartCodeEntry(CodeEntryMode.SCANNER, event))
-            }
         )
     }
 }

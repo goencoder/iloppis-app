@@ -26,9 +26,7 @@ import se.iloppis.app.utils.localStorage
 @Composable
 fun EventDetailDialog(
     event: Event,
-    onDismiss: () -> Unit,
-    onCashierClick: () -> Unit,
-    onScannerClick: () -> Unit
+    onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -47,11 +45,7 @@ fun EventDetailDialog(
             }
         },
         text = {
-            EventDetailContent(
-                event = event,
-                onCashierClick = onCashierClick,
-                onScannerClick = onScannerClick
-            )
+            EventDetailContent(event = event)
         },
         confirmButton = {},
         dismissButton = {
@@ -66,11 +60,7 @@ fun EventDetailDialog(
 }
 
 @Composable
-private fun EventDetailContent(
-    event: Event,
-    onCashierClick: () -> Unit,
-    onScannerClick: () -> Unit
-) {
+private fun EventDetailContent(event: Event) {
     Column {
         LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
             item {
@@ -158,35 +148,6 @@ private fun EventDetailContent(
                     stringResource(R.string.remove_event_locally),
                 fontWeight = FontWeight.Medium
             )
-        }
-
-
-
-        // Action buttons - full width, stacked
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = onCashierClick,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonSuccess)
-            ) {
-                Text(
-                    text = stringResource(R.string.button_open_cashier),
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            Button(
-                onClick = onScannerClick,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonInfo)
-            ) {
-                Text(
-                    text = stringResource(R.string.button_ticket_scanner),
-                    fontWeight = FontWeight.Medium
-                )
-            }
         }
     }
 }

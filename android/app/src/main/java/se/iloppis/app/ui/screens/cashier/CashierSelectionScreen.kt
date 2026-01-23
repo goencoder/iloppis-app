@@ -46,22 +46,7 @@ fun CashierSelectionScreen() {
         )
     }}
 
-    when {
-        event.uiState.isLoading -> LoadingState()
-        event.uiState.errorMessage != null -> ErrorState(event.uiState.errorMessage!!)
-        list.isEmpty() -> EmptyState()
-        else -> Content(list, storage)
-    }
-}
 
-
-
-@Composable
-private fun Content(
-    content: MutableList<String>,
-    storage: LocalStorage
-) {
-    val event = eventContext()
 
     Column(modifier = Modifier.fillMaxSize()
         .padding(horizontal = 16.dp)
@@ -75,27 +60,44 @@ private fun Content(
             fontSize = 18.sp
         )
         Spacer(modifier = Modifier.height(4.dp))
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(event.uiState.events) {
 
-                /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
+        when {
+            event.uiState.isLoading -> LoadingState()
+            event.uiState.errorMessage != null -> ErrorState(event.uiState.errorMessage!!)
+            list.isEmpty() -> EmptyState()
+            else -> Content(list, storage)
+        }
+    }
+}
 
-                if (content.contains(it.id)) {
-                    SwipeToDismissEventCard(
-                        event = it,
-                        modifier = Modifier.animateItem(),
-                        onEndToStart = {
-                            content.remove(it.id)
-                            storage.putJson("stored-events", content.toSet())
-                        }
-                    ) {
-                        event.onAction(
-                            EventListAction.StartCodeEntry(
-                                CodeEntryMode.CASHIER,
-                                it
-                            )
-                        )
+
+
+@Composable
+private fun Content(
+    content: MutableList<String>,
+    storage: LocalStorage
+) {
+    val event = eventContext()
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        items(event.uiState.events) {
+
+            /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
+
+            if (content.contains(it.id)) {
+                SwipeToDismissEventCard(
+                    event = it,
+                    modifier = Modifier.animateItem(),
+                    onEndToStart = {
+                        content.remove(it.id)
+                        storage.putJson("stored-events", content.toSet())
                     }
+                ) {
+                    event.onAction(
+                        EventListAction.StartCodeEntry(
+                            CodeEntryMode.CASHIER,
+                            it
+                        )
+                    )
                 }
             }
         }

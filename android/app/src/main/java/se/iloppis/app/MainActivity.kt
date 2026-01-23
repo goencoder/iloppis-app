@@ -14,7 +14,7 @@ import se.iloppis.app.ui.components.navigation.PageManager
 import se.iloppis.app.ui.screens.Screens
 import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.ui.theme.ILoppisTheme
-import se.iloppis.app.utils.LocalStorageProvider
+import se.iloppis.app.utils.storage.LocalStorageProvider
 
 /**
  * Main entry point for the iLoppis app.

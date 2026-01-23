@@ -29,13 +29,13 @@ import se.iloppis.app.ui.screens.events.EventListAction
 import se.iloppis.app.ui.screens.events.EventListHeader
 import se.iloppis.app.ui.screens.events.LoadingState
 import se.iloppis.app.ui.screens.events.eventContext
-import se.iloppis.app.utils.LocalStorage
-import se.iloppis.app.utils.localStorage
+import se.iloppis.app.utils.storage.LocalStorage
+import se.iloppis.app.utils.storage.localStorage
 
 /**
  * Scanner selection screen
  *
- * This uses the [se.iloppis.app.utils.LocalStorage] bucket
+ * This uses the [LocalStorage] bucket
  * to get stored events for scanner selection.
  */
 @Composable

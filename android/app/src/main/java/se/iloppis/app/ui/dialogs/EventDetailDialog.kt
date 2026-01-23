@@ -18,7 +18,7 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
-import se.iloppis.app.utils.localStorage
+import se.iloppis.app.utils.storage.localStorage
 
 /**
  * Dialog showing event details with options to open cashier or scanner mode.

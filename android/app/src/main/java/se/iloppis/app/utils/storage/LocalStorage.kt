@@ -1,4 +1,4 @@
-package se.iloppis.app.utils
+package se.iloppis.app.utils.storage
 
 import android.content.Context
 import androidx.compose.runtime.Composable

@@ -12,9 +12,14 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
-object ApiClient {
-    private const val BASE_URL = "https://iloppis-staging.fly.dev/"
+/**
+ * iLoppis API base url
+ */
+const val API_URL = "https://iloppis-staging.fly.dev/"
 
+
+
+object ApiClient {
     /**
      * Logging interceptor that:
      * - Uses BODY level only in debug builds (full request/response)
@@ -35,7 +40,7 @@ object ApiClient {
         .build()
 
     val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(API_URL)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
@@ -151,7 +156,7 @@ interface VendorApi {
         @Query("pageSize") pageSize: Int = 100,
         @Query("nextPageToken") nextPageToken: String? = null
     ): ListVendorsResponse
-    
+
     @POST("v1/events/{event_id}/vendors:filter")
     suspend fun filterVendors(
         @Header("Authorization") authorization: String,

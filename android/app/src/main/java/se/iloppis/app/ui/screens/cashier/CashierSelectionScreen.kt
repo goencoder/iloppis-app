@@ -22,9 +22,12 @@ import se.iloppis.app.R
 import se.iloppis.app.ui.components.events.SwipeToDismissEventCard
 import se.iloppis.app.ui.screens.events.CodeEntryMode
 import se.iloppis.app.ui.screens.events.EmptyState
+import se.iloppis.app.ui.screens.events.ErrorState
 import se.iloppis.app.ui.screens.events.EventListAction
 import se.iloppis.app.ui.screens.events.EventListHeader
+import se.iloppis.app.ui.screens.events.LoadingState
 import se.iloppis.app.ui.screens.events.eventContext
+import se.iloppis.app.utils.LocalStorage
 import se.iloppis.app.utils.localStorage
 
 /**
@@ -43,6 +46,23 @@ fun CashierSelectionScreen() {
         )
     }}
 
+    when {
+        event.uiState.isLoading -> LoadingState()
+        event.uiState.errorMessage != null -> ErrorState(event.uiState.errorMessage!!)
+        list.isEmpty() -> EmptyState()
+        else -> Content(list, storage)
+    }
+}
+
+
+
+@Composable
+private fun Content(
+    content: MutableList<String>,
+    storage: LocalStorage
+) {
+    val event = eventContext()
+
     Column(modifier = Modifier.fillMaxSize()
         .padding(horizontal = 16.dp)
         .statusBarsPadding()
@@ -55,20 +75,18 @@ fun CashierSelectionScreen() {
             fontSize = 18.sp
         )
         Spacer(modifier = Modifier.height(4.dp))
-
-        if(list.isEmpty()) EmptyState() /* Empty list state */
-        else LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(event.uiState.events) {
 
                 /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
 
-                if (list.contains(it.id)) {
+                if (content.contains(it.id)) {
                     SwipeToDismissEventCard(
                         event = it,
                         modifier = Modifier.animateItem(),
                         onEndToStart = {
-                            list.remove(it.id)
-                            storage.putJson("stored-events", list.toSet())
+                            content.remove(it.id)
+                            storage.putJson("stored-events", content.toSet())
                         }
                     ) {
                         event.onAction(

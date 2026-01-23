@@ -42,7 +42,8 @@ fun CashierSelectionScreen() {
     val storage = localStorage()
     val state = rememberStoredEventsListState(storage)
 
-    Column(modifier = Modifier.fillMaxSize()
+    Column(modifier = Modifier
+        .fillMaxSize()
         .padding(horizontal = 16.dp)
         .statusBarsPadding()
     ) {
@@ -59,7 +60,7 @@ fun CashierSelectionScreen() {
             state.isLoading -> LoadingState()
             state.errorMessage != null -> ErrorState(state.errorMessage!!)
             state.events.isEmpty() -> EmptyState()
-            else -> Content(state) { state.reload() }
+            else -> Content(state)
         }
     }
 }
@@ -68,22 +69,21 @@ fun CashierSelectionScreen() {
 
 @Composable
 private fun Content(
-    content: StoredEventsListState,
-    onReload: () -> Unit
+    state: StoredEventsListState
 ) {
     val event = eventContext()
 
     PullToRefreshBox(
         isRefreshing = false,
-        onRefresh = onReload
+        onRefresh = { state.reload() }
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(content.events) {
+            items(state.events) {
                 SwipeToDismissEventCard(
                     event = it,
                     modifier = Modifier.animateItem(),
                     onEndToStart = {
-                        content.remove(it.id)
+                        state.remove(it.id)
                     }
                 ) {
                     event.onAction(

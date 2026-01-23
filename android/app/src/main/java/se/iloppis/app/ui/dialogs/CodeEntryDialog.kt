@@ -189,7 +189,7 @@ private fun CodeInput(
                 .uppercase()
             onCodeChange(filtered)
         },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         modifier = Modifier
             .fillMaxWidth()
             .focusRequester(focusRequester),

@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
@@ -19,12 +20,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
+import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.events.SwipeToDismissEventCard
 import se.iloppis.app.ui.screens.events.CodeEntryMode
 import se.iloppis.app.ui.screens.events.EmptyState
+import se.iloppis.app.ui.screens.events.ErrorState
 import se.iloppis.app.ui.screens.events.EventListAction
 import se.iloppis.app.ui.screens.events.EventListHeader
+import se.iloppis.app.ui.screens.events.LoadingState
 import se.iloppis.app.ui.screens.events.eventContext
+import se.iloppis.app.utils.LocalStorage
 import se.iloppis.app.utils.localStorage
 
 /**
@@ -37,11 +42,13 @@ import se.iloppis.app.utils.localStorage
 fun ScannerSelectionScreen() {
     val event = eventContext()
     val storage = localStorage()
-    val list = remember { mutableStateListOf<String>().apply {
-        addAll(
-            storage.getJson<List<String>>("stored-events", "[]").toMutableSet()
-        )
+    val list = remember { mutableStateListOf<Event>().apply {
+//        addAll(
+//            storage.getJson<List<String>>("stored-events", "[]").toMutableSet()
+//        )
     }}
+
+
 
     Column(modifier = Modifier.fillMaxSize()
         .padding(horizontal = 16.dp)
@@ -56,28 +63,45 @@ fun ScannerSelectionScreen() {
         )
         Spacer(modifier = Modifier.height(4.dp))
 
-        if(list.isEmpty()) EmptyState() /* Empty list state */
-        else LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(event.uiState.events) {
+        when {
+            event.uiState.isLoading -> LoadingState()
+            event.uiState.errorMessage != null -> ErrorState(event.uiState.errorMessage!!)
+            list.isEmpty() -> EmptyState()
+            else -> Content(list, storage) {}
+        }
+    }
+}
 
-                /* This only uses the loaded events from EventViewModel - should fetch all events by ID */
 
-                if (list.contains(it.id)) {
-                    SwipeToDismissEventCard(
-                        event = it,
-                        modifier = Modifier.animateItem(),
-                        onEndToStart = {
-                            list.remove(it.id)
-                            storage.putJson("stored-events", list.toSet())
-                        }
-                    ) {
-                        event.onAction(
-                            EventListAction.StartCodeEntry(
-                                CodeEntryMode.SCANNER,
-                                it
-                            )
-                        )
+
+@Composable
+private fun Content(
+    content: MutableList<Event>,
+    storage: LocalStorage,
+    onReload: () -> Unit
+) {
+    val event = eventContext()
+
+    PullToRefreshBox(
+        isRefreshing = false,
+        onRefresh = onReload
+    ) {
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(content) {
+                SwipeToDismissEventCard(
+                    event = it,
+                    modifier = Modifier.animateItem(),
+                    onEndToStart = {
+                        content.remove(it)
+                        storage.putJson("stored-events", content.toSet())
                     }
+                ) {
+                    event.onAction(
+                        EventListAction.StartCodeEntry(
+                            CodeEntryMode.SCANNER,
+                            it
+                        )
+                    )
                 }
             }
         }

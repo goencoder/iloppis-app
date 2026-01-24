@@ -131,7 +131,7 @@ private fun EventDetailContent(event: Event) {
             onClick = {
                 if(!storedEvents.contains(event.id)) storedEvents.add(event.id)
                 else storedEvents.remove(event.id)
-                storage.putJson("stored-events", storedEvents.toSet())
+                storage.putJson(key, storedEvents.toSet())
             }
         ) {
             Text(

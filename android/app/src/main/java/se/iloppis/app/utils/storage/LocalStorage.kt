@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.core.content.edit
 import kotlinx.serialization.json.Json.Default.decodeFromString
@@ -30,7 +28,7 @@ data class LocalStorage(val context: Context, val name: String, val mode: Int) {
     /**
      * Storage instance
      */
-    private val storage by mutableStateOf(context.getSharedPreferences(name, mode))
+    private val storage = context.applicationContext.getSharedPreferences(name, mode)
 
 
 

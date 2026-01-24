@@ -51,7 +51,7 @@ fun CashierSelectionScreen() {
         Text(
             modifier = Modifier,
             text = stringResource(R.string.cashier_selection_header),
-            color = MaterialTheme.colorScheme.tertiary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 18.sp
         )
         Spacer(modifier = Modifier.height(4.dp))

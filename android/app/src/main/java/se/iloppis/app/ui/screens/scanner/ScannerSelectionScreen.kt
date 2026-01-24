@@ -77,12 +77,12 @@ private fun Content(
         onRefresh = { if(!state.isLoading) state.reload() }
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(state.events) {
+            items(state.events, key = { it.id }) {
                 SwipeToDismissEventCard(
                     event = it,
                     modifier = Modifier.animateItem(),
                     onEndToStart = {
-                        state.remove(it.id)
+                        if(!state.isLoading) state.remove(it.id)
                     }
                 ) {
                     event.onAction(

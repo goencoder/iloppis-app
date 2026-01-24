@@ -7,8 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
@@ -51,7 +51,7 @@ data class StoredEventsListStateData(
  * This uses [LocalStorage] to access locally stored
  * events.
  */
-class StoredEventsListState(val storage: LocalStorage) : ViewModel() {
+class StoredEventsListState(val storage: LocalStorage) {
     /**
      * State data
      *
@@ -97,8 +97,16 @@ class StoredEventsListState(val storage: LocalStorage) : ViewModel() {
 
 
     private fun getEvents() {
+        if(ids.isEmpty()) {
+            data = data.copy(
+                isLoading = false,
+                events = emptyList()
+            )
+            return
+        }
+
         Log.d(TAG, "Loading events from: $API_URL")
-        viewModelScope.launch {
+        CoroutineScope(Dispatchers.Main).launch {
             data = data.copy(isLoading = true, errorMessage = null)
             try {
                 val api = ApiClient.create<EventApi>()

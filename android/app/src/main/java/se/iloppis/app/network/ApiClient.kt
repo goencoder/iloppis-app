@@ -60,6 +60,38 @@ object ApiClient {
 
 // ============ Events API ============
 
+data class EventFID(
+    val id: String,
+    val marketId: String,
+    val name: String,
+    val description: String?,
+    val startTime: String?,
+    val endTime: String?,
+    val addressStreet: String?,
+    val addressCity: String?,
+    val addressState: String?,
+    val addressZip: Int?,
+    val latitude: Int?,
+    val longitude: Int?,
+    val maxVendors: Int?,
+    val vendorApplicationStartTime: String?,
+    val publishTime: String?,
+    val maxTicketsPerVisitor: Int?,
+    val availableTickets: Int?,
+    val soldTickets: Int?,
+    val acceptVendorApplications: Boolean?,
+    val ownerEmail: String?,
+    val lifecycleState: String?,
+    val sellerInfoSummary: String?,
+    val sellerLetter: String?
+)
+
+data class EventsFromID(
+    val events: List<EventFID>,
+    val total: Int
+)
+
+
 data class EventDto(
     val id: String,
     val name: String,
@@ -92,6 +124,12 @@ interface EventApi {
 
     @POST("v1/events:filter")
     suspend fun filterEvents(@Body request: EventFilterRequest): EventListResponse
+
+    @GET("v1/events")
+    suspend fun getEventsByIds(@Query("eventIds") ids: String): EventsFromID
+
+    @GET("v1/events")
+    suspend fun getMarketsByIds(@Query("marketIds") ids: String): EventsFromID
 }
 
 // ============ API Key API ============

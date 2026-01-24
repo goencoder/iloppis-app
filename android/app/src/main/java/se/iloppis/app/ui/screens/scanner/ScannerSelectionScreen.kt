@@ -74,7 +74,7 @@ private fun Content(
 
     PullToRefreshBox(
         isRefreshing = false,
-        onRefresh = { state.reload() }
+        onRefresh = { if(!state.isLoading) state.reload() }
     ) {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(state.events) {

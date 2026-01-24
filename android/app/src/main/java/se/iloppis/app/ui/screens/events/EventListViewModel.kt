@@ -50,7 +50,6 @@ class EventListViewModel : ViewModel() {
             is EventListAction.DismissCodeEntry -> dismissCodeEntry()
             is EventListAction.SubmitCode -> submitCode(action.state, action.code)
             is EventListAction.ValidateCode -> validateCode(action.state, action.code)
-            is EventListAction.NavigateBack -> navigateBack()
         }
     }
 
@@ -221,10 +220,6 @@ class EventListViewModel : ViewModel() {
      */
     private fun submitCode(state: ScreenModel, code: String) {
         validateCode(state, code)
-    }
-
-    private fun navigateBack() {
-        uiState = uiState.copy(currentScreen = AppScreen.EventList)
     }
 }
 

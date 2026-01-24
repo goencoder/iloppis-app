@@ -45,5 +45,4 @@ sealed class EventListAction {
     data object DismissCodeEntry : EventListAction()
     data class SubmitCode(val state: ScreenModel, val code: String) : EventListAction()
     data class ValidateCode(val state: ScreenModel, val code: String) : EventListAction()
-    data object NavigateBack : EventListAction()
 }

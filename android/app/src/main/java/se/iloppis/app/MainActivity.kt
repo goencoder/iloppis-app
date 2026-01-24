@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LocalStorageProvider(this) {
+            LocalStorageProvider(applicationContext) {
                 Screens {
                     ILoppisTheme {
                         Scaffold(

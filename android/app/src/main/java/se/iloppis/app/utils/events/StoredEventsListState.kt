@@ -16,11 +16,8 @@ import se.iloppis.app.domain.model.Event
 import se.iloppis.app.network.API_URL
 import se.iloppis.app.network.ApiClient
 import se.iloppis.app.network.EventApi
-import se.iloppis.app.network.EventFilter
-import se.iloppis.app.network.EventFilterRequest
-import se.iloppis.app.network.getTodayTime
+import se.iloppis.app.network.EventsFromID
 import se.iloppis.app.utils.storage.LocalStorage
-import java.time.LocalDate
 
 /**
  * Stored events list state data class
@@ -111,26 +108,20 @@ class StoredEventsListState(val storage: LocalStorage) {
             data = data.copy(isLoading = true, errorMessage = null)
             try {
                 val api = ApiClient.create<EventApi>()
-                Log.d(TAG, "API client created, making filterEvents request")
-                val today = getTodayTime()
-                val filterRequest = EventFilterRequest(
-                    filter = EventFilter(
-                        dateFrom = today,
-                        lifecycleStates = listOf("OPEN")
-                    )
-                )
-                Log.d(TAG, "Filter request: dateFrom=$today, states=[OPEN]")
-                val response = api.filterEvents(filterRequest)
-                Log.d(TAG, "Response received, events count: ${response.events.size}")
+
+                Log.d(TAG, "Fetching events: [${getIDString()}]")
+                val res = api.getEventsByIds(getIDString())
+                Log.d(TAG, "Response received, events count: ${res.total}")
+
+                val handled = handleEventsResponse(res)
+
                 data = data.copy(
                     isLoading = false,
                     errorMessage = null,
-                    events = response.events.mapNotNull {
-                        val event = it.toDomain()
-                        if (ids.contains(event.id)) event
-                        else null
-                    }
+                    events = handled.first,
+                    ids = handled.second
                 )
+
             } catch (e: Exception) {
                 val errorMsg = when (e) {
                     is HttpException -> "HTTP ${e.code()}: ${e.message()}"
@@ -148,6 +139,30 @@ class StoredEventsListState(val storage: LocalStorage) {
 
 
     /**
+     * Handles event response
+     *
+     * This will clear the list if unwanted events
+     * and update the local IDs list if there are
+     * old events stored but not available.
+     */
+    private fun handleEventsResponse(response: EventsFromID) : Pair<List<Event>, Set<String>> {
+        val idsToKeep = mutableSetOf<String>()
+        val result = response.events.mapNotNull {
+            if(it.lifecycleState == "OPEN") {
+                idsToKeep.add(it.id)
+                it.toDomain()
+            } else null
+        }
+
+        return Pair(
+            result,
+            data.ids.mapNotNull { if(idsToKeep.contains(it)) it else null }.toSet()
+        )
+    }
+
+
+
+    /**
      * Reloads the events list
      *
      * This will fetch all the open events
@@ -155,6 +170,26 @@ class StoredEventsListState(val storage: LocalStorage) {
      * present in the events id list stored locally
      */
     fun reload() { getEvents() }
+
+    /**
+     * Gets IDs list as a string
+     *
+     * The format drops the surrounding square brackets
+     * and removes all spaces.
+     *
+     * #### Example
+     * ```kt
+     * [one, two, three] // Input
+     * one,two,three     // Out
+     * ```
+     */
+    fun getIDString() : String {
+        return ids
+            .toString()
+            .replace(" ", "")
+            .drop(1)
+            .dropLast(1)
+    }
 
     /**
      * Removes event from list
@@ -189,7 +224,7 @@ class StoredEventsListState(val storage: LocalStorage) {
  * a locally saved events id list.
  */
 @Composable
-fun rememberStoredEventsListState(storage: LocalStorage, key: Any? = Unit): StoredEventsListState {
+fun rememberStoredEventsListState(storage: LocalStorage, key: Any? = Unit) : StoredEventsListState {
     return remember(key1 = key) {
         StoredEventsListState(storage)
     }

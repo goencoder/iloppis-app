@@ -18,6 +18,7 @@ import se.iloppis.app.network.ApiClient
 import se.iloppis.app.network.EventApi
 import se.iloppis.app.network.EventFilter
 import se.iloppis.app.network.EventFilterRequest
+import se.iloppis.app.network.getTodayTime
 import se.iloppis.app.utils.storage.LocalStorage
 import java.time.LocalDate
 
@@ -111,7 +112,7 @@ class StoredEventsListState(val storage: LocalStorage) {
             try {
                 val api = ApiClient.create<EventApi>()
                 Log.d(TAG, "API client created, making filterEvents request")
-                val today = "${LocalDate.now()}T00:00:00Z"
+                val today = getTodayTime()
                 val filterRequest = EventFilterRequest(
                     filter = EventFilter(
                         dateFrom = today,

@@ -32,7 +32,9 @@ fun EventListScreen() {
 
     EventListContent(
         state = state,
-        onReload = { viewModel.onAction(EventListAction.LoadEvents) },
+        onReload = {
+            if(!viewModel.uiState.isLoading) viewModel.onAction(EventListAction.LoadEvents)
+        },
         onEventClick = { viewModel.onAction(EventListAction.SelectEvent(it)) }
     )
 }

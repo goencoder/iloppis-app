@@ -4,6 +4,11 @@
     <string name="app_name">iLoppis</string>
     <string name="app_title">iLoppis</string>
 
+    <!-- Navigation -->
+    <string name="nav_home">Hem</string>
+    <string name="nav_cashier">Kassa</string>
+    <string name="nav_scanner">Skanner</string>
+
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>
     <string name="filter_all">Alla</string>
@@ -22,6 +27,8 @@
     <!-- Event Detail Dialog -->
     <string name="opening_hours_label">Öppettider: %1$s</string>
     <string name="select_mode">Välj läge:</string>
+    <string name="store_event_locally">Följ event</string>
+    <string name="remove_event_locally">Sluta följa event</string>
     <string name="button_open_cashier">Öppna kassa</string>
     <string name="button_ticket_scanner">Biljettskanner</string>
     <string name="button_cancel">Avbryt</string>
@@ -36,6 +43,9 @@
     <string name="code_separator">-</string>
     <string name="code_invalid">Ogiltig kod. Kontrollera och försök igen.</string>
     <string name="code_validating">Verifierar…</string>
+
+    <!-- Cashier Selection Screen -->
+    <string name="cashier_selection_header">Välj event att öppna kassa för</string>
 
     <!-- Cashier Screen -->
     <string name="cashier_title">Kassa</string>
@@ -57,6 +67,9 @@
     <!-- Numeric Keypad -->
     <string name="keypad_clear">C</string>
     <string name="keypad_ok">OK</string>
+
+    <!-- Scanner Selection Screen -->
+    <string name="scanner_selection_header">Välj event att öppna skannare för</string>
 
     <!-- Scanner Screen -->
     <string name="scanner_title">Biljettskanner</string>
@@ -117,7 +130,7 @@
     <string name="scanner_manual_error_event">Biljetten hör inte till %1$s.</string>
     <string name="scanner_manual_error_format">Koden kunde inte tolkas.</string>
     <string name="scanner_manual_confirm">Verifiera</string>
-    
+
     <!-- Group scanning strings -->
     <string name="scanner_group_no_email">Ingen e-post</string>
     <string name="scanner_group_unknown_type">Okänd typ</string>
@@ -202,4 +215,8 @@
     <!-- Cashier Screen - Additional -->
     <string name="cashier_pending_info_title">Utestående köp</string>
     <string name="cashier_pending_info_message">Siffran visar hur många köp som är sparade lokalt och ännu inte har bekräftats uppladdade till servern. Den ska gå ner när synk lyckas.</string>
+
+    <!-- Swipe to dismiss box -->
+    <string name="swipe_box_remove">Ta bort</string>
+    <string name="swipe_box_archive">Arkivera</string>
 </resources>

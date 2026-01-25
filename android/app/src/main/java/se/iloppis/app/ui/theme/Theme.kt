@@ -17,7 +17,7 @@ private val LightColorScheme = lightColorScheme(
     background = PinkBackground,
     surface = PinkCard,
     onBackground = Color.Black,
-    onSurface = Color.Black
+    onSurfaceVariant = Color.Gray,
 )
 
 @Composable

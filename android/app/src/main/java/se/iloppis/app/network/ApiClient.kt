@@ -11,10 +11,25 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
+import kotlin.time.Clock
+
+/**
+ * iLoppis API base url
+ */
+const val API_URL = "https://iloppis-staging.fly.dev/"
+
+
+
+/**
+ * Gets today time
+ */
+fun getTodayTime(clock: Clock = Clock.System): String {
+    return "${clock.now().toString().split("T")[0]}T00:00:00Z"
+}
+
+
 
 object ApiClient {
-    private const val BASE_URL = "https://iloppis-staging.fly.dev/"
-
     /**
      * Logging interceptor that:
      * - Uses BODY level only in debug builds (full request/response)
@@ -35,7 +50,7 @@ object ApiClient {
         .build()
 
     val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(API_URL)
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
@@ -44,6 +59,38 @@ object ApiClient {
 }
 
 // ============ Events API ============
+
+data class EventFID(
+    val id: String,
+    val marketId: String,
+    val name: String,
+    val description: String?,
+    val startTime: String?,
+    val endTime: String?,
+    val addressStreet: String?,
+    val addressCity: String?,
+    val addressState: String?,
+    val addressZip: Int?,
+    val latitude: Int?,
+    val longitude: Int?,
+    val maxVendors: Int?,
+    val vendorApplicationStartTime: String?,
+    val publishTime: String?,
+    val maxTicketsPerVisitor: Int?,
+    val availableTickets: Int?,
+    val soldTickets: Int?,
+    val acceptVendorApplications: Boolean?,
+    val ownerEmail: String?,
+    val lifecycleState: String?,
+    val sellerInfoSummary: String?,
+    val sellerLetter: String?
+)
+
+data class EventsFromID(
+    val events: List<EventFID>,
+    val total: Int
+)
+
 
 data class EventDto(
     val id: String,
@@ -77,6 +124,12 @@ interface EventApi {
 
     @POST("v1/events:filter")
     suspend fun filterEvents(@Body request: EventFilterRequest): EventListResponse
+
+    @GET("v1/events")
+    suspend fun getEventsByIds(@Query("eventIds") ids: String): EventsFromID
+
+    @GET("v1/events")
+    suspend fun getMarketsByIds(@Query("marketIds") ids: String): EventsFromID
 }
 
 // ============ API Key API ============
@@ -151,7 +204,7 @@ interface VendorApi {
         @Query("pageSize") pageSize: Int = 100,
         @Query("nextPageToken") nextPageToken: String? = null
     ): ListVendorsResponse
-    
+
     @POST("v1/events/{event_id}/vendors:filter")
     suspend fun filterVendors(
         @Header("Authorization") authorization: String,

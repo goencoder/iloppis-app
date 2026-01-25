@@ -9,6 +9,9 @@
       "name": "ApiKeyService"
     },
     {
+      "name": "AttachmentService"
+    },
+    {
       "name": "AuthCodeService"
     },
     {
@@ -650,6 +653,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "eventIds",
+            "description": "Optional: specific event IDs to fetch (CSV of UUIDs)",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -931,7 +941,7 @@
           },
           {
             "name": "alias",
-            "description": "Alias of the requested API key (kassakod format: XXX-YYY)",
+            "description": "Alias of the requested API key. Maintained for backward compatibility.",
             "in": "path",
             "required": true,
             "type": "string"
@@ -984,7 +994,7 @@
           },
           {
             "name": "alias",
-            "description": "Alias of the requested API key (kassakod format: XXX-YYY)",
+            "description": "Alias of the requested API key. Maintained for backward compatibility.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1976,6 +1986,43 @@
         "tags": [
           "VisitorTicketService"
         ]
+      },
+      "delete": {
+        "summary": "Avboka (ta bort) en biljett.\nAuthorization: Ticket holder (authenticated visitor) or event owner can delete the ticket.",
+        "operationId": "VisitorTicketService_DeleteVisitorTicket",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteVisitorTicketResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event that owns the ticket",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "Ticket identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
       }
     },
     "/v1/events/{eventId}/visitor_tickets/{id}/scan": {
@@ -2125,7 +2172,6 @@
         "parameters": [
           {
             "name": "body",
-            "description": "Request for filtering events.\n\nMOBILE CLIENT USAGE:\nPOST /v1/events:filter\nNo authentication required for listing public events.\nFilter by date_from and lifecycle_states=[\"OPEN\"] to show active events.",
             "in": "body",
             "required": true,
             "schema": {
@@ -2813,6 +2859,171 @@
         ]
       }
     },
+    "/v1/resources/{key.resourceType}/{key.resourceId}/{key.attachmentType}": {
+      "get": {
+        "summary": "Get a download link for the attachment.\nAuthorization: event owner/platform admin; approved vendors for the event.\nClients should call this to receive a short-lived presigned URL (or a 302 redirect) to the blob; do not cache for long-term use.",
+        "operationId": "AttachmentService_GetAttachmentDownload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAttachmentDownloadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "key.resourceType",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "ATTACHMENT_RESOURCE_TYPE_UNSPECIFIED",
+              "event",
+              "ATTACHMENT_RESOURCE_TYPE_EVENT"
+            ]
+          },
+          {
+            "name": "key.resourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "key.attachmentType",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "ATTACHMENT_KIND_UNSPECIFIED",
+              "letter",
+              "ATTACHMENT_KIND_SELLER_LETTER"
+            ]
+          }
+        ],
+        "tags": [
+          "AttachmentService"
+        ]
+      },
+      "delete": {
+        "summary": "Delete the attachment blob and clear metadata.\nAuthorization: event owner or platform admin.",
+        "operationId": "AttachmentService_DeleteAttachment",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteAttachmentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "key.resourceType",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "ATTACHMENT_RESOURCE_TYPE_UNSPECIFIED",
+              "event",
+              "ATTACHMENT_RESOURCE_TYPE_EVENT"
+            ]
+          },
+          {
+            "name": "key.resourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "key.attachmentType",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "ATTACHMENT_KIND_UNSPECIFIED",
+              "letter",
+              "ATTACHMENT_KIND_SELLER_LETTER"
+            ]
+          }
+        ],
+        "tags": [
+          "AttachmentService"
+        ]
+      }
+    },
+    "/v1/resources/{key.resourceType}/{key.resourceId}/{key.attachmentType}:prepareUpload": {
+      "post": {
+        "summary": "Prepare an upload for an attachment.\nAuthorization: event owner or platform admin.",
+        "operationId": "AttachmentService_PrepareAttachmentUpload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PrepareAttachmentUploadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "key.resourceType",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "ATTACHMENT_RESOURCE_TYPE_UNSPECIFIED",
+              "event",
+              "ATTACHMENT_RESOURCE_TYPE_EVENT"
+            ]
+          },
+          {
+            "name": "key.resourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "key.attachmentType",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "ATTACHMENT_KIND_UNSPECIFIED",
+              "letter",
+              "ATTACHMENT_KIND_SELLER_LETTER"
+            ]
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AttachmentServicePrepareAttachmentUploadBody"
+            }
+          }
+        ],
+        "tags": [
+          "AttachmentService"
+        ]
+      }
+    },
     "/v1/stats:aggregate": {
       "get": {
         "summary": "Retrieve aggregate statistics across all matching events.\nAuthorization: authenticated user.",
@@ -3094,6 +3305,30 @@
       },
       "description": "Request to create a new API key for an event."
     },
+    "AttachmentServicePrepareAttachmentUploadBody": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "object",
+          "description": "Identifies a single attachment."
+        },
+        "contentType": {
+          "type": "string",
+          "title": "MIME type, e.g. application/pdf"
+        },
+        "sizeBytes": {
+          "type": "string",
+          "format": "int64",
+          "description": "Declared size in bytes (default limit 10 MB)."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional storage expiry (if supported by backend); max/validation is enforced server-side."
+        }
+      },
+      "description": "Prepare upload request (presigned URL)."
+    },
     "ChatServiceFlagMessageBody": {
       "type": "object",
       "title": "Request to flag a chat message by its ID"
@@ -3166,10 +3401,9 @@
             "type": "object",
             "$ref": "#/definitions/v1SoldItem"
           },
-          "description": "Items being created. Mobile clients should provide item_id and purchase_id for each item."
+          "title": "Items being created"
         }
-      },
-      "description": "Request to create sold items for an event.\n\nMOBILE CLIENT USAGE:\n1. Generate unique item_id (ULID) for each item before sending\n2. Generate common purchase_id (ULID) for all items in same purchase\n3. Save items locally before sending (offline-first)\n4. Send to server when network available\n5. If network fails, retry with same IDs - backend will detect duplicates\n6. Handle rejected_items: DUPLICATE_RECEIPT means already saved (safe to mark uploaded)\n\nExample:\n{\n  \"event_id\": \"evt_abc123\",\n  \"items\": [\n    {\"item_id\": \"01JHRM8YFZA1B2C3D4E5F6G7H8\", \"purchase_id\": \"01JHRM8YFZA1B2C3D4E5F6G7H0\", \"seller\": 42, \"price\": 50, \"payment_method\": 1},\n    {\"item_id\": \"01JHRM8YFZA1B2C3D4E5F6G7H9\", \"purchase_id\": \"01JHRM8YFZA1B2C3D4E5F6G7H0\", \"seller\": 42, \"price\": 75, \"payment_method\": 1}\n  ]\n}"
+      }
     },
     "SoldItemsServicePayoutBody": {
       "type": "object",
@@ -3545,6 +3779,64 @@
         }
       }
     },
+    "v1AttachmentKey": {
+      "type": "object",
+      "properties": {
+        "resourceType": {
+          "$ref": "#/definitions/v1AttachmentResourceType"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "attachmentType": {
+          "$ref": "#/definitions/v1AttachmentKind"
+        }
+      },
+      "description": "Identifies a single attachment."
+    },
+    "v1AttachmentKind": {
+      "type": "string",
+      "enum": [
+        "ATTACHMENT_KIND_UNSPECIFIED",
+        "letter",
+        "ATTACHMENT_KIND_SELLER_LETTER"
+      ],
+      "default": "ATTACHMENT_KIND_UNSPECIFIED",
+      "description": "Attachment kinds supported by attachment service (seller letter only for now)."
+    },
+    "v1AttachmentMetadata": {
+      "type": "object",
+      "properties": {
+        "hasAttachment": {
+          "type": "boolean",
+          "description": "Flag indicating attachment presence."
+        },
+        "contentType": {
+          "type": "string",
+          "description": "Current content type (if any)."
+        },
+        "sizeBytes": {
+          "type": "string",
+          "format": "int64",
+          "description": "Stored size in bytes (if known)."
+        },
+        "uploadedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp for latest upload."
+        }
+      }
+    },
+    "v1AttachmentResourceType": {
+      "type": "string",
+      "enum": [
+        "ATTACHMENT_RESOURCE_TYPE_UNSPECIFIED",
+        "event",
+        "ATTACHMENT_RESOURCE_TYPE_EVENT"
+      ],
+      "default": "ATTACHMENT_RESOURCE_TYPE_UNSPECIFIED",
+      "description": "Resource types supported by attachment service (scoped to events only for now)."
+    },
     "v1BulkUpdateSaleStartResponse": {
       "type": "object",
       "properties": {
@@ -3822,7 +4114,7 @@
             "type": "object",
             "$ref": "#/definitions/v1SoldItem"
           },
-          "title": "Items successfully accepted and saved by the server"
+          "title": "Newly created items with server-generated fields"
         },
         "rejectedItems": {
           "type": "array",
@@ -3830,10 +4122,9 @@
             "type": "object",
             "$ref": "#/definitions/v1RejectedItem"
           },
-          "title": "Items that were rejected with error details"
+          "title": "Items that were rejected together with reasons"
         }
-      },
-      "description": "Response from creating sold items.\n\nMOBILE CLIENT HANDLING:\n- accepted_items: Successfully saved, mark as uploaded in local storage\n- rejected_items: Check error_code:\n  - DUPLICATE_RECEIPT: Item already exists (safe to mark uploaded)\n  - INVALID_SELLER: Seller not approved (store error, show to user)"
+      }
     },
     "v1CreateTicketTypeResponse": {
       "type": "object",
@@ -3846,6 +4137,9 @@
     "v1DeleteApiKeyResponse": {
       "type": "object",
       "description": "Response for a successful API key deletion. Empty on success."
+    },
+    "v1DeleteAttachmentResponse": {
+      "type": "object"
     },
     "v1DeleteChatMessageResponse": {
       "type": "object",
@@ -3876,6 +4170,9 @@
           "title": "Deleted vendor information"
         }
       }
+    },
+    "v1DeleteVisitorTicketResponse": {
+      "type": "object"
     },
     "v1DraftMarketServiceUpdateMarketBody": {
       "type": "object",
@@ -3940,8 +4237,7 @@
           "title": "Address fields"
         },
         "addressCity": {
-          "type": "string",
-          "title": "Event-specific city; inherits from Market if not provided"
+          "type": "string"
         },
         "addressState": {
           "type": "string",
@@ -4000,6 +4296,15 @@
         "lifecycleState": {
           "$ref": "#/definitions/v1EventLifecycleState",
           "description": "*\nThe event’s lifecycle state controls whether the event is open for new transactions.\n\nAlthough the start and end dates imply a timeline (coming, ongoing, completed),\nif the event has not been explicitly closed or finalized, it is treated as OPEN.\n\nAllowed explicit state transitions:\n - OPEN -\u003e CLOSED: When the market owner stops further sales.\n - CLOSED -\u003e FINALIZED: When sold items are archived and payouts are complete."
+        },
+        "sellerInfoSummary": {
+          "type": "string",
+          "description": "Seller info shown to applicants (max 500 chars). Optional."
+        },
+        "sellerLetter": {
+          "$ref": "#/definitions/v1SellerLetter",
+          "description": "Seller letter metadata (output-only, derived from platform resource).",
+          "readOnly": true
         }
       },
       "title": "Event messages"
@@ -4114,7 +4419,7 @@
           "title": "Filter by lifecycle state(s) - e.g., only show OPEN events"
         }
       },
-      "description": "Filter criteria for events.\n\nMOBILE CLIENT USAGE:\nOn app startup, fetch open events for today:\n{\n  \"filter\": {\n    \"date_from\": \"2026-01-18T00:00:00Z\",\n    \"lifecycle_states\": [\"OPEN\"]\n  }\n}\nThis returns events that are currently accepting cashier operations."
+      "title": "Filter criteria for events"
     },
     "v1EventLifecycleState": {
       "type": "string",
@@ -4171,7 +4476,7 @@
           "$ref": "#/definitions/v1Pagination"
         }
       },
-      "description": "Request for filtering events.\n\nMOBILE CLIENT USAGE:\nPOST /v1/events:filter\nNo authentication required for listing public events.\nFilter by date_from and lifecycle_states=[\"OPEN\"] to show active events."
+      "title": "Request for filtering events"
     },
     "v1FilterEventsResponse": {
       "type": "object",
@@ -4194,7 +4499,7 @@
           "format": "int32"
         }
       },
-      "description": "Response for filtering events.\nReturns matching events that user can select for cashier or scanner operations."
+      "title": "Response for filtering events"
     },
     "v1FilterMarketsRequest": {
       "type": "object",
@@ -4389,11 +4694,11 @@
       "properties": {
         "alias": {
           "type": "string",
-          "title": "Alias of the API key (XXX-YYY format)"
+          "description": "Alias of the API key."
         },
         "apiKey": {
           "type": "string",
-          "title": "The secret API key to use in Bearer token authentication"
+          "description": "The secret API key."
         },
         "isActive": {
           "type": "boolean",
@@ -4401,7 +4706,7 @@
         },
         "type": {
           "$ref": "#/definitions/v1ApiKeyType",
-          "title": "Type of the API key (WEB_CASHIER, TICKET_SCANNER, etc.)"
+          "description": "Type of the API key."
         },
         "tags": {
           "type": "array",
@@ -4415,7 +4720,23 @@
           "description": "Unique identifier of the API key."
         }
       },
-      "description": "Response containing details of a specific API key.\n\nMOBILE CLIENT: Store api_key in memory (not persistent storage) and use for\nall subsequent API calls via Authorization: Bearer {api_key} header."
+      "description": "Response containing details of a specific API key."
+    },
+    "v1GetAttachmentDownloadResponse": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/v1AttachmentMetadata"
+        },
+        "downloadUrl": {
+          "type": "string",
+          "description": "Time-bound URL for downloading the blob."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
     },
     "v1GetEventResponse": {
       "type": "object",
@@ -4914,7 +5235,7 @@
         "pageSize": {
           "type": "integer",
           "format": "int32",
-          "description": "Number of items to return per page. Default and maximum vary by endpoint.\nTypical defaults: 100 for most endpoints."
+          "title": "Number of items to return per page"
         },
         "pageToken": {
           "type": "string",
@@ -4922,14 +5243,14 @@
         },
         "nextPageToken": {
           "type": "string",
-          "description": "Token for fetching the next page. Include this value from the previous\nresponse to get the next page of results. Empty string means no more pages."
+          "title": "Token for the next page returned by the server"
         },
         "prevPageToken": {
           "type": "string",
-          "description": "Token for fetching the previous page. Include this value to navigate backwards.\nEmpty string means this is the first page."
+          "title": "Token for the previous page returned by the server"
         }
       },
-      "description": "Pagination information for list requests.\nAll paginated APIs follow the same pattern for consistency."
+      "title": "Pagination information"
     },
     "v1PaidFilter": {
       "type": "string",
@@ -5083,6 +5404,20 @@
         }
       },
       "description": "Response containing the preferences."
+    },
+    "v1PrepareAttachmentUploadResponse": {
+      "type": "object",
+      "properties": {
+        "uploadUrl": {
+          "type": "string",
+          "description": "One-time URL to upload directly to storage (presigned PUT/POST)."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the URL expires."
+        }
+      }
     },
     "v1Profile": {
       "type": "object",
@@ -5281,6 +5616,34 @@
       },
       "title": "Response containing search results for chat messages"
     },
+    "v1SellerLetter": {
+      "type": "object",
+      "properties": {
+        "pdfUrl": {
+          "type": "string",
+          "description": "URL to the attachment endpoint (not a long-lived blob URL; clients should call this to obtain a short-lived download link via AttachmentService)."
+        },
+        "hasLetter": {
+          "type": "boolean",
+          "description": "Flag indicating a letter is available."
+        },
+        "uploadedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp for latest PDF upload."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Optional expiry if storage lifecycle applies."
+        },
+        "infoSummary": {
+          "type": "string",
+          "description": "Optional summary text shown to sellers during application (mirrors seller_info_summary on Event)."
+        }
+      },
+      "description": "Metadata for a seller letter resource."
+    },
     "v1SellerSales": {
       "type": "object",
       "properties": {
@@ -5302,21 +5665,23 @@
       "properties": {
         "itemId": {
           "type": "string",
-          "description": "Unique identifier for this sold item. Can be client-generated (ULID) for idempotency.\nIf empty, server generates a ULID. Mobile clients should always provide this for offline support."
+          "description": "Unique ID (UUID) for each item",
+          "title": "Output-only fields (server sets these):",
+          "readOnly": true
         },
         "eventId": {
           "type": "string",
-          "description": "Event this item belongs to. Set by server based on request path.",
+          "title": "The event this item belongs to",
           "readOnly": true
         },
         "cashierAlias": {
           "type": "string",
-          "description": "Alias from the API key used to create this item. Set by server from authentication context.",
+          "title": "Output-only: alias from the API key used to create this item",
           "readOnly": true
         },
         "purchaseId": {
           "type": "string",
-          "description": "ULID used to group multiple items into one purchase. Can be client-generated.\nAll items with the same purchase_id are part of the same transaction.\nIf all items in request have empty purchase_id, server generates one common ID.\nMobile clients should provide this to maintain purchase grouping across retries."
+          "description": "Client-settable fields:\nULID used to group multiple items into one purchase."
         },
         "seller": {
           "type": "integer",
@@ -5351,7 +5716,7 @@
           "title": "If true, item is read-only"
         }
       },
-      "description": "SoldItem represents a single sold record.\n\nIMPORTANT FOR MOBILE CLIENTS:\nTo support offline operation and ensure idempotency (safe retries), mobile clients\nMUST generate and provide both item_id and purchase_id before sending items to the server.\n\n- item_id: Unique identifier for each item (ULID format). If not provided, server generates one.\n  Client-generated IDs enable duplicate detection: if network fails and client retries,\n  the backend will reject duplicates (error code: DUPLICATE_RECEIPT) rather than creating duplicates.\n  \n- purchase_id: Groups multiple items into one purchase (ULID format). All items with the same\n  purchase_id are considered part of the same transaction. If not provided by client, server\n  generates one common purchase_id for all items in the request.\n\nULID format: 26 uppercase alphanumeric characters (0-9, A-Z excluding I, L, O, U)\nExample: \"01JHRM8YFZA1B2C3D4E5F6G7H8\""
+      "title": "SoldItem represents a single sold record"
     },
     "v1SoldItemErrorCode": {
       "type": "string",

@@ -1,23 +1,30 @@
 package se.iloppis.app.ui.screens.events
 
 import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.AppScreen
+import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.network.ApiClient
 import se.iloppis.app.network.ApiKeyApi
 import se.iloppis.app.network.EventApi
 import se.iloppis.app.network.EventFilter
 import se.iloppis.app.network.EventFilterRequest
+import se.iloppis.app.ui.screens.ScreenModel
+import se.iloppis.app.ui.states.ScreenAction
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 private const val TAG = "EventListViewModel"
 
@@ -41,9 +48,8 @@ class EventListViewModel : ViewModel() {
             is EventListAction.DismissEventDetail -> dismissEventDetail()
             is EventListAction.StartCodeEntry -> startCodeEntry(action.mode, action.event)
             is EventListAction.DismissCodeEntry -> dismissCodeEntry()
-            is EventListAction.SubmitCode -> submitCode(action.code)
-            is EventListAction.ValidateCode -> validateCode(action.code)
-            is EventListAction.NavigateBack -> navigateBack()
+            is EventListAction.SubmitCode -> submitCode(action.state, action.code)
+            is EventListAction.ValidateCode -> validateCode(action.state, action.code)
         }
     }
 
@@ -54,7 +60,7 @@ class EventListViewModel : ViewModel() {
             try {
                 val api = ApiClient.create<EventApi>()
                 Log.d(TAG, "API client created, making filterEvents request")
-                // Filtrera på dagens datum och endast OPEN evenemang  
+                // Filtrera på dagens datum och endast OPEN evenemang
                 val today = "${LocalDate.now()}T00:00:00Z"
                 val filterRequest = EventFilterRequest(
                     filter = EventFilter(
@@ -108,9 +114,9 @@ class EventListViewModel : ViewModel() {
      * Validate the code as the user types (implicit validation).
      * Shows error message when code is complete but invalid.
      */
-    private fun validateCode(code: String) {
+    private fun validateCode(state: ScreenModel, code: String) {
         val codeEntry = uiState.codeEntryState ?: return
-        
+
         // Format: XXX-YYY (3 chars, dash, 3 chars) = 7 chars total
         // But we receive it without dash as 6 chars
         if (code.length < 6) {
@@ -126,19 +132,19 @@ class EventListViewModel : ViewModel() {
             uiState = uiState.copy(
                 codeEntryState = codeEntry.copy(isValidating = true, errorMessage = null)
             )
-            
+
             // Format code as XXX-YYY for API
             val formattedCode = "${code.substring(0, 3)}-${code.substring(3, 6)}".uppercase()
             val eventId = codeEntry.event.id
-            
+
             Log.d(TAG, "Validating code: $formattedCode for event: $eventId")
-            
+
             try {
                 val api = ApiClient.create<ApiKeyApi>()
                 val response = api.getApiKeyByAlias(eventId, formattedCode)
-                
+
                 Log.d(TAG, "API Response - alias: ${response.alias}, isActive: ${response.isActive}, type: ${response.type}")
-                
+
                 if (!response.isActive) {
                     Log.w(TAG, "API key is not active")
                     uiState = uiState.copy(
@@ -149,16 +155,16 @@ class EventListViewModel : ViewModel() {
                     )
                     return@launch
                 }
-                
+
                 // Check if type matches mode (if type is available)
-                // API returns types like: API_KEY_TYPE_CASHIER, API_KEY_TYPE_WEB_CASHIER, 
+                // API returns types like: API_KEY_TYPE_CASHIER, API_KEY_TYPE_WEB_CASHIER,
                 // API_KEY_TYPE_SCANNER, API_KEY_TYPE_WEB_SCANNER
                 val responseType = response.type?.uppercase() ?: ""
                 val isValidType = when (codeEntry.mode) {
                     CodeEntryMode.CASHIER -> responseType.contains("CASHIER")
                     CodeEntryMode.SCANNER -> responseType.contains("SCANNER")
                 }
-                
+
                 if (responseType.isNotEmpty() && !isValidType) {
                     Log.w(TAG, "API key type mismatch. Expected type containing: ${codeEntry.mode}, Got: $responseType")
                     uiState = uiState.copy(
@@ -169,29 +175,27 @@ class EventListViewModel : ViewModel() {
                     )
                     return@launch
                 }
-                
+
                 // Success - navigate to the appropriate screen
                 Log.i(TAG, "Code validated successfully! Navigating to ${codeEntry.mode}")
                 val screen = when (codeEntry.mode) {
-                    CodeEntryMode.CASHIER -> AppScreen.Cashier(codeEntry.event, response.apiKey)
-                    CodeEntryMode.SCANNER -> AppScreen.Scanner(codeEntry.event, response.apiKey)
+                    CodeEntryMode.CASHIER -> ScreenPage.Cashier(codeEntry.event, response.apiKey)
+                    CodeEntryMode.SCANNER -> ScreenPage.Scanner(codeEntry.event, response.apiKey)
                 }
-                uiState = uiState.copy(
-                    codeEntryState = null,
-                    currentScreen = screen
-                )
-                
+                state.onAction(ScreenAction.NavigateToPage(screen, false))
+                uiState = uiState.copy(codeEntryState = null)
+
             } catch (e: HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
                 Log.e(TAG, "HTTP Error ${e.code()}: ${e.message()}")
                 Log.e(TAG, "Error body: $errorBody")
-                
+
                 val errorKey = when (e.code()) {
                     404 -> "not_found"
                     401, 403 -> "unauthorized"
                     else -> "invalid"
                 }
-                
+
                 uiState = uiState.copy(
                     codeEntryState = codeEntry.copy(
                         isValidating = false,
@@ -214,11 +218,39 @@ class EventListViewModel : ViewModel() {
      * Submit code (when user clicks verify button).
      * Same as validateCode but user-initiated.
      */
-    private fun submitCode(code: String) {
-        validateCode(code)
+    private fun submitCode(state: ScreenModel, code: String) {
+        validateCode(state, code)
     }
+}
 
-    private fun navigateBack() {
-        uiState = uiState.copy(currentScreen = AppScreen.EventList)
+
+
+/**
+ * Event view model context
+ */
+private val localEventScreenViewModel = compositionLocalOf<EventListViewModel> {
+    error("No events view model provider is present in this context")
+}
+
+
+
+/**
+ * Event screen state provider
+ */
+@Composable
+fun EventScreenProvider(screen: EventListViewModel = viewModel(), content: @Composable () -> Unit) {
+    val state = remember { screen }
+    CompositionLocalProvider(localEventScreenViewModel provides state) {
+        content()
     }
+}
+
+
+
+/**
+ * Event screen state context
+ */
+@Composable
+fun eventContext(): EventListViewModel {
+    return localEventScreenViewModel.current
 }

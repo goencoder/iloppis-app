@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateSetOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -14,6 +16,7 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
+import se.iloppis.app.utils.storage.localStorage
 
 /**
  * Dialog showing event details with options to open cashier or scanner mode.
@@ -21,9 +24,7 @@ import se.iloppis.app.ui.theme.AppColors
 @Composable
 fun EventDetailDialog(
     event: Event,
-    onDismiss: () -> Unit,
-    onCashierClick: () -> Unit,
-    onScannerClick: () -> Unit
+    onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -42,17 +43,13 @@ fun EventDetailDialog(
             }
         },
         text = {
-            EventDetailContent(
-                event = event,
-                onCashierClick = onCashierClick,
-                onScannerClick = onScannerClick
-            )
+            EventDetailContent(event = event)
         },
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    text = stringResource(R.string.button_cancel),
+                    text = stringResource(R.string.button_back),
                     color = AppColors.ButtonDanger
                 )
             }
@@ -61,11 +58,7 @@ fun EventDetailDialog(
 }
 
 @Composable
-private fun EventDetailContent(
-    event: Event,
-    onCashierClick: () -> Unit,
-    onScannerClick: () -> Unit
-) {
+private fun EventDetailContent(event: Event) {
     Column {
         LazyColumn(modifier = Modifier.heightIn(max = 250.dp)) {
             item {
@@ -112,39 +105,42 @@ private fun EventDetailContent(
         //
 
         Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            text = stringResource(R.string.select_mode),
-            fontWeight = FontWeight.Medium,
-            color = AppColors.TextPrimary
-        )
 
-        Spacer(modifier = Modifier.height(12.dp))
 
-        // Action buttons - full width, stacked
-        Column(
+
+        // ======================
+        // Save event as interest
+        // ======================
+
+        val storage = localStorage()
+
+        val key = "stored-events"
+        val storedEvents = remember {
+            mutableStateSetOf<String>().apply {
+                addAll(storage.getJson<Set<String>>(key, "[]"))
+            }
+        }
+
+        Button(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            colors = ButtonDefaults.buttonColors().copy(
+                containerColor = if(!storedEvents.contains(event.id))
+                    MaterialTheme.colorScheme.onSecondary
+                else MaterialTheme.colorScheme.primary
+            ),
+            onClick = {
+                if(!storedEvents.contains(event.id)) storedEvents.add(event.id)
+                else storedEvents.remove(event.id)
+                storage.putJson(key, storedEvents.toSet())
+            }
         ) {
-            Button(
-                onClick = onCashierClick,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonSuccess)
-            ) {
-                Text(
-                    text = stringResource(R.string.button_open_cashier),
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            Button(
-                onClick = onScannerClick,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonInfo)
-            ) {
-                Text(
-                    text = stringResource(R.string.button_ticket_scanner),
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            Text(
+                text = if(!storedEvents.contains(event.id))
+                    stringResource(R.string.store_event_locally)
+                else
+                    stringResource(R.string.remove_event_locally),
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

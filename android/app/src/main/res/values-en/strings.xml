@@ -4,6 +4,11 @@
     <string name="app_name">iLoppis</string>
     <string name="app_title">iLoppis</string>
 
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_cashier">Cashier</string>
+    <string name="nav_scanner">Scanner</string>
+
     <!-- Event List Screen -->
     <string name="search_placeholder">Search flea market…</string>
     <string name="filter_all">All</string>
@@ -22,6 +27,8 @@
     <!-- Event Detail Dialog -->
     <string name="opening_hours_label">Opening hours: %1$s</string>
     <string name="select_mode">Select mode:</string>
+    <string name="store_event_locally">Follow event</string>
+    <string name="remove_event_locally">Unfollow event</string>
     <string name="button_open_cashier">Open cashier</string>
     <string name="button_ticket_scanner">Ticket scanner</string>
     <string name="button_cancel">Cancel</string>
@@ -36,6 +43,9 @@
     <string name="code_separator">-</string>
     <string name="code_invalid">Invalid code. Check and try again.</string>
     <string name="code_validating">Verifying…</string>
+
+    <!-- Cashier Selection Screen -->
+    <string name="cashier_selection_header">Choose an event to act cashier for</string>
 
     <!-- Cashier Screen -->
     <string name="cashier_title">Cashier</string>
@@ -57,6 +67,9 @@
     <!-- Numeric Keypad -->
     <string name="keypad_clear">C</string>
     <string name="keypad_ok">OK</string>
+
+    <!-- Scanner Selection Screen -->
+    <string name="scanner_selection_header">Choose an event to act scanner for</string>
 
     <!-- Scanner Screen -->
     <string name="scanner_title">Ticket scanner</string>
@@ -117,7 +130,7 @@
     <string name="scanner_manual_error_event">The ticket does not belong to %1$s.</string>
     <string name="scanner_manual_error_format">Could not parse the code.</string>
     <string name="scanner_manual_confirm">Verify</string>
-    
+
     <!-- Group scanning strings -->
     <string name="scanner_group_no_email">No email</string>
     <string name="scanner_group_unknown_type">Unknown type</string>
@@ -202,4 +215,8 @@
     <!-- Cashier Screen - Additional -->
     <string name="cashier_pending_info_title">Outstanding purchases</string>
     <string name="cashier_pending_info_message">The number shows how many purchases are saved locally and have not yet been confirmed uploaded to the server. It should decrease when sync succeeds.</string>
+
+    <!-- Swipe to dismiss box -->
+    <string name="swipe_box_remove">Remove</string>
+    <string name="swipe_box_archive">Archive</string>
 </resources>

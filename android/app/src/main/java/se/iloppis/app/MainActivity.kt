@@ -5,11 +5,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import se.iloppis.app.ui.screens.events.EventListScreen
+import se.iloppis.app.ui.components.navigation.Navigator
+import se.iloppis.app.ui.components.navigation.PageManager
+import se.iloppis.app.ui.screens.Screens
 import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.ui.theme.ILoppisTheme
+import se.iloppis.app.utils.storage.LocalStorageProvider
 
 /**
  * Main entry point for the iLoppis app.
@@ -20,12 +25,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ILoppisTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = AppColors.Background
-                ) {
-                    EventListScreen()
+            LocalStorageProvider(applicationContext) {
+                Screens {
+                    ILoppisTheme {
+                        Scaffold(
+                            modifier = Modifier,
+                            bottomBar = { Navigator() }
+                        ) {
+                            Surface(
+                                modifier = Modifier.padding(it).fillMaxSize(),
+                                color = AppColors.Background
+                            ) {
+                                PageManager()
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,15 +13,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.navigation.AppScreen
 import se.iloppis.app.ui.components.EventCard
 import se.iloppis.app.ui.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.dialogs.EventDetailDialog
-import se.iloppis.app.ui.screens.cashier.CashierScreen
-import se.iloppis.app.ui.screens.scanner.ScannerScreen
+import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.theme.AppColors
 
 /**
@@ -28,75 +26,46 @@ import se.iloppis.app.ui.theme.AppColors
  * Also handles navigation to cashier/scanner screens.
  */
 @Composable
-fun EventListScreen(
-    viewModel: EventListViewModel = viewModel()
-) {
+fun EventListScreen() {
+    val viewModel = eventContext()
     val state = viewModel.uiState
 
-    // Navigate based on current screen
-    when (val screen = state.currentScreen) {
-        is AppScreen.EventList -> {
-            // Dialogs
-            EventDialogs(
-                state = state,
-                onAction = viewModel::onAction
-            )
-
-            // Main content
-            EventListContent(
-                state = state,
-                onEventClick = { viewModel.onAction(EventListAction.SelectEvent(it)) }
-            )
-        }
-        is AppScreen.Cashier -> {
-            CashierScreen(
-                event = screen.event,
-                apiKey = screen.apiKey,
-                onBack = { viewModel.onAction(EventListAction.NavigateBack) }
-            )
-        }
-        is AppScreen.Scanner -> {
-            ScannerScreen(
-                event = screen.event,
-                apiKey = screen.apiKey,
-                onBack = { viewModel.onAction(EventListAction.NavigateBack) }
-            )
-        }
-    }
+    EventListContent(
+        state = state,
+        onReload = {
+            if(!viewModel.uiState.isLoading) viewModel.onAction(EventListAction.LoadEvents)
+        },
+        onEventClick = { viewModel.onAction(EventListAction.SelectEvent(it)) }
+    )
 }
 
 /**
  * Handles dialog display based on current state.
  */
 @Composable
-private fun EventDialogs(
-    state: EventListUiState,
-    onAction: (EventListAction) -> Unit
-) {
+fun EventDialogs() {
+    val screen = screenContext()
+    val events = eventContext()
+
+
     // Code entry dialog
-    state.codeEntryState?.let { codeEntry ->
+    events.uiState.codeEntryState?.let { codeEntry ->
         CodeEntryDialog(
             mode = codeEntry.mode,
             eventName = codeEntry.event.name,
             isValidating = codeEntry.isValidating,
             errorMessage = codeEntry.errorMessage,
-            onDismiss = { onAction(EventListAction.DismissCodeEntry) },
-            onCodeChange = { code -> onAction(EventListAction.ValidateCode(code)) },
-            onCodeEntered = { code -> onAction(EventListAction.SubmitCode(code)) }
+            onDismiss = { events.onAction(EventListAction.DismissCodeEntry) },
+            onCodeChange = { code -> events.onAction(EventListAction.ValidateCode(screen, code)) },
+            onCodeEntered = { code -> events.onAction(EventListAction.SubmitCode(screen, code)) }
         )
     }
 
     // Event detail dialog
-    state.selectedEvent?.let { event ->
+    events.uiState.selectedEvent?.let { event ->
         EventDetailDialog(
             event = event,
-            onDismiss = { onAction(EventListAction.DismissEventDetail) },
-            onCashierClick = {
-                onAction(EventListAction.StartCodeEntry(CodeEntryMode.CASHIER, event))
-            },
-            onScannerClick = {
-                onAction(EventListAction.StartCodeEntry(CodeEntryMode.SCANNER, event))
-            }
+            onDismiss = { events.onAction(EventListAction.DismissEventDetail) },
         )
     }
 }
@@ -107,6 +76,7 @@ private fun EventDialogs(
 @Composable
 private fun EventListContent(
     state: EventListUiState,
+    onReload: () -> Unit,
     onEventClick: (Event) -> Unit
 ) {
     Column(
@@ -127,13 +97,14 @@ private fun EventListContent(
         // Content based on state
         EventListBody(
             state = state,
+            onReload = onReload,
             onEventClick = onEventClick
         )
     }
 }
 
 @Composable
-private fun EventListHeader() {
+fun EventListHeader() {
     Text(
         text = stringResource(R.string.app_title),
         fontSize = 28.sp,
@@ -173,18 +144,24 @@ private fun FilterChips() {
 @Composable
 private fun EventListBody(
     state: EventListUiState,
+    onReload: () -> Unit,
     onEventClick: (Event) -> Unit
 ) {
-    when {
-        state.isLoading -> LoadingState()
-        state.errorMessage != null -> ErrorState(state.errorMessage)
-        state.events.isEmpty() -> EmptyState()
-        else -> EventList(events = state.events, onEventClick = onEventClick)
+    PullToRefreshBox(
+        isRefreshing = false,
+        onRefresh = onReload
+    ) {
+        when {
+            state.isLoading -> LoadingState()
+            state.errorMessage != null -> ErrorState(state.errorMessage)
+            state.events.isEmpty() -> EmptyState()
+            else -> EventList(events = state.events, onEventClick = onEventClick)
+        }
     }
 }
 
 @Composable
-private fun LoadingState() {
+fun LoadingState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -194,7 +171,7 @@ private fun LoadingState() {
 }
 
 @Composable
-private fun ErrorState(message: String) {
+fun ErrorState(message: String) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -207,7 +184,7 @@ private fun ErrorState(message: String) {
 }
 
 @Composable
-private fun EmptyState() {
+fun EmptyState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

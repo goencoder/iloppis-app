@@ -1,10 +1,11 @@
 package se.iloppis.app.network
 
 import android.content.Context
-import android.util.Log
 import kotlinx.serialization.json.Json.Default.decodeFromString
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import se.iloppis.app.R
 import java.util.concurrent.TimeUnit
 
@@ -28,6 +29,32 @@ class iLoppisApiClient(val context: Context, configFile: Int = R.raw.client) {
 
 
     /**
+     * Applies client connection configuration to [OkHttpClient.Builder]
+     */
+    private fun OkHttpClient.Builder.clientConnection(config: ClientConnectionConfiguration) : OkHttpClient.Builder {
+        connectTimeout(config.timeout, TimeUnit.SECONDS)
+        return this
+    }
+
+    /**
+     * Applies client reading configuration to [OkHttpClient.Builder]
+     */
+    private fun OkHttpClient.Builder.clientReading(config: ClientReadingConfiguration) : OkHttpClient.Builder {
+        readTimeout(config.timeout, TimeUnit.SECONDS)
+        return this
+    }
+
+    /**
+     * Applies client writing configuration to [OkHttpClient.Builder]
+     */
+    private fun OkHttpClient.Builder.clientWriting(config: ClientWritingConfiguration) : OkHttpClient.Builder {
+        writeTimeout(config.timeout, TimeUnit.SECONDS)
+        return this
+    }
+
+
+
+    /**
      * Logging interceptor that:
      * - Uses BODY level only in debug builds (full request/response)
      * - Uses BASIC level in release builds (method + URL only)
@@ -39,7 +66,46 @@ class iLoppisApiClient(val context: Context, configFile: Int = R.raw.client) {
         redactHeader("X-API-Key")
     }
 
+    /**
+     * API HTTP(S) client
+     */
     private val client = OkHttpClient.Builder()
         .addInterceptor(logging)
-        .connectTimeout(config.connection.timeout, TimeUnit.SECONDS)
+        .clientConnection(config.connection)
+        .clientReading(config.reading)
+        .clientWriting(config.writing)
+        .build()
+
+    /**
+     * API client retrofitter
+     *
+     * Allows the creation of API extension interfaces
+     * that builds on this API client object.
+     */
+    val retrofit: Retrofit = Retrofit.Builder()
+        .baseUrl(config.url)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+
+
+    /**
+     * Creates [se.iloppis.app.network.iLoppisApiClient] instance
+     * with extension interface.
+     *
+     * This will create an instance of this [se.iloppis.app.network.iLoppisApiClient]
+     * object built upon the specified API interface.
+     */
+    inline fun <reified T : iLoppisApiInterface> create(): T = retrofit.create(T::class.java)
 }
+
+
+
+/**
+ * iLoppis API interface
+ *
+ * All interfaces used with the [iLoppisApiClient] must
+ * implement this interface.
+ */
+interface iLoppisApiInterface {}

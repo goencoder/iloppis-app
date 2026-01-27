@@ -34,7 +34,7 @@ data class ClientConnectionConfiguration(
     /**
      * Connection timeout
      */
-    val timeout: Int
+    val timeout: Long
 )
 
 /**
@@ -44,7 +44,7 @@ data class ClientReadingConfiguration(
     /**
      * Reading timeout
      */
-    val timeout: Int
+    val timeout: Long
 )
 
 /**
@@ -54,5 +54,5 @@ data class ClientWritingConfiguration(
     /**
      * Writing timeout
      */
-    val timeout: Int
+    val timeout: Long
 )

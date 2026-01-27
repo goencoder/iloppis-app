@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json.Default.decodeFromString
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import se.iloppis.app.R
+import java.util.concurrent.TimeUnit
 
 /**
  * iLoppis API Client object
@@ -40,5 +41,5 @@ class iLoppisApiClient(val context: Context, configFile: Int = R.raw.client) {
 
     private val client = OkHttpClient.Builder()
         .addInterceptor(logging)
-        .connectTimeout()
+        .connectTimeout(config.connection.timeout, TimeUnit.SECONDS)
 }

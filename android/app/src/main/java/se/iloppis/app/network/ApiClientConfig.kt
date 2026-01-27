@@ -1,4 +1,11 @@
 package se.iloppis.app.network
 
-class ApiClientConfig {
-}
+/**
+ * API Client configuration
+ */
+data class ApiClientConfig(
+    /**
+     * API URL endpoint
+     */
+    val url: String
+)

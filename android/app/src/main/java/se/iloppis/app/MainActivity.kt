@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import se.iloppis.app.network.iLoppisApiClient
 import se.iloppis.app.ui.components.navigation.Navigator
 import se.iloppis.app.ui.components.navigation.PageManager
 import se.iloppis.app.ui.screens.Screens
@@ -27,9 +26,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LocalStorageProvider(applicationContext) {
-
-                iLoppisApiClient(applicationContext)
-
                 Screens {
                     ILoppisTheme {
                         Scaffold(

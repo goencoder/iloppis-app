@@ -1,4 +1,4 @@
-package se.iloppis.app.data.network
+package se.iloppis.app.network
 
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert

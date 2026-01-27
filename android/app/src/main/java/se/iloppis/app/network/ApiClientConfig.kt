@@ -1,8 +1,11 @@
 package se.iloppis.app.network
 
+import kotlinx.serialization.Serializable
+
 /**
  * API Client configuration
  */
+@Serializable
 data class ApiClientConfig(
     /**
      * API URL endpoint
@@ -30,6 +33,7 @@ data class ApiClientConfig(
 /**
  * Client connection configuration
  */
+@Serializable
 data class ClientConnectionConfiguration(
     /**
      * Connection timeout
@@ -40,6 +44,7 @@ data class ClientConnectionConfiguration(
 /**
  * Client reading configuration
  */
+@Serializable
 data class ClientReadingConfiguration(
     /**
      * Reading timeout
@@ -50,6 +55,7 @@ data class ClientReadingConfiguration(
 /**
  * Client writing configuration
  */
+@Serializable
 data class ClientWritingConfiguration(
     /**
      * Writing timeout

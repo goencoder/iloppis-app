@@ -28,7 +28,13 @@ fun getTodayTime(clock: Clock = Clock.System): String {
 }
 
 
-
+/**
+ * API Client to connect to the iLoppis backend
+ */
+@Deprecated(
+    message = "Old API Client use the new one",
+    replaceWith = ReplaceWith("iLoppisApiClient")
+)
 object ApiClient {
     /**
      * Logging interceptor that:

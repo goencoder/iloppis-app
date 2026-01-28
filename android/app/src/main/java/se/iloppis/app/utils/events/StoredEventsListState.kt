@@ -1,5 +1,6 @@
 package se.iloppis.app.utils.events
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -51,7 +52,7 @@ data class StoredEventsListStateData(
  * This uses [LocalStorage] to access locally stored
  * events.
  */
-class StoredEventsListState(val storage: LocalStorage) {
+class StoredEventsListState(val context: Context, val storage: LocalStorage) {
     /**
      * State data
      *
@@ -206,8 +207,8 @@ class StoredEventsListState(val storage: LocalStorage) {
  * a locally saved events id list.
  */
 @Composable
-fun rememberStoredEventsListState(storage: LocalStorage, key: Any? = Unit) : StoredEventsListState {
+fun rememberStoredEventsListState(context: Context, storage: LocalStorage, key: Any? = Unit) : StoredEventsListState {
     return remember(key1 = key) {
-        StoredEventsListState(storage)
+        StoredEventsListState(context, storage)
     }
 }

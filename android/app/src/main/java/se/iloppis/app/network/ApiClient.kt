@@ -66,6 +66,7 @@ object ApiClient {
 
 // ============ Events API ============
 
+@Deprecated("use new api")
 data class EventFID(
     val id: String,
     val marketId: String,
@@ -92,12 +93,14 @@ data class EventFID(
     val sellerLetter: String?
 )
 
+@Deprecated("use new api")
 data class EventsFromID(
     val events: List<EventFID>,
     val total: Int
 )
 
 
+@Deprecated("use new api")
 data class EventDto(
     val id: String,
     val name: String,
@@ -109,13 +112,16 @@ data class EventDto(
     val lifecycleState: String?
 )
 
+@Deprecated("use new api")
 data class EventListResponse(val events: List<EventDto>)
 
+@Deprecated("Use new api")
 data class EventFilterRequest(
     val filter: EventFilter,
     val pagination: Map<String, Any> = emptyMap()
 )
 
+@Deprecated("Use new api")
 data class EventFilter(
     val city: String? = null,
     val dateFrom: String? = null,

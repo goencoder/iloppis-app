@@ -124,6 +124,7 @@ data class EventFilter(
     val lifecycleStates: List<String>? = null
 )
 
+@Deprecated("use new api client")
 interface EventApi {
     @GET("v1/events")
     suspend fun listEvents(): EventListResponse

@@ -17,6 +17,8 @@ import se.iloppis.app.network.API_URL
 import se.iloppis.app.network.ApiClient
 import se.iloppis.app.network.EventApi
 import se.iloppis.app.network.EventsFromID
+import se.iloppis.app.network.events.EventAPI
+import se.iloppis.app.network.events.convertCollection
 import se.iloppis.app.utils.storage.LocalStorage
 
 /**
@@ -109,8 +111,8 @@ class StoredEventsListState(val storage: LocalStorage) {
             try {
                 val api = ApiClient.create<EventApi>()
 
-                Log.d(TAG, "Fetching events: [${getIDString()}]")
-                val res = api.getEventsByIds(getIDString())
+                Log.d(TAG, "Fetching events: [${EventAPI.convertCollection(ids)}]")
+                val res = api.getEventsByIds(EventAPI.convertCollection(ids))
                 Log.d(TAG, "Response received, events count: ${res.total}")
 
                 val handled = handleEventsResponse(res)
@@ -170,26 +172,6 @@ class StoredEventsListState(val storage: LocalStorage) {
      * present in the events id list stored locally
      */
     fun reload() { getEvents() }
-
-    /**
-     * Gets IDs list as a string
-     *
-     * The format drops the surrounding square brackets
-     * and removes all spaces.
-     *
-     * #### Example
-     * ```kt
-     * [one, two, three] // Input
-     * one,two,three     // Out
-     * ```
-     */
-    fun getIDString() : String {
-        return ids
-            .toString()
-            .replace(" ", "")
-            .drop(1)
-            .dropLast(1)
-    }
 
     /**
      * Removes event from list

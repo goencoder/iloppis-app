@@ -11,21 +11,12 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
-import kotlin.time.Clock
 
 /**
  * iLoppis API base url
  */
 const val API_URL = "https://iloppis-staging.fly.dev/"
 
-
-
-/**
- * Gets today time
- */
-fun getTodayTime(clock: Clock = Clock.System): String {
-    return "${clock.now().toString().split("T")[0]}T00:00:00Z"
-}
 
 
 /**

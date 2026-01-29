@@ -104,11 +104,11 @@ data class ApiEvent(
     /**
      * Event latitude coordinates
      */
-    val latitude: Int?,
+    val latitude: Double?,
     /**
      * Event longitude coordinates
      */
-    val longitude: Int?,
+    val longitude: Double?,
 
     /**
      * Events max vendors

@@ -1,4 +1,4 @@
-package se.iloppis.app.network
+package se.iloppis.app.network.config
 
 import kotlinx.serialization.Serializable
 
@@ -15,17 +15,17 @@ data class ClientConfig(
     /**
      * Connection configuration
      */
-    val connection: ClientConnectionConfiguration,
+    val connection: ClientConnectionConfiguration = ClientConnectionConfiguration(),
 
     /**
      * Reading configuration
      */
-    val reading: ClientReadingConfiguration,
+    val reading: ClientReadingConfiguration = ClientReadingConfiguration(),
 
     /**
      * Writing configuration
      */
-    val writing: ClientWritingConfiguration,
+    val writing: ClientWritingConfiguration = ClientWritingConfiguration(),
 )
 
 
@@ -38,7 +38,7 @@ data class ClientConnectionConfiguration(
     /**
      * Connection timeout
      */
-    val timeout: Long
+    val timeout: Long = 30
 )
 
 /**
@@ -49,7 +49,7 @@ data class ClientReadingConfiguration(
     /**
      * Reading timeout
      */
-    val timeout: Long
+    val timeout: Long = 60
 )
 
 /**
@@ -60,5 +60,5 @@ data class ClientWritingConfiguration(
     /**
      * Writing timeout
      */
-    val timeout: Long
+    val timeout: Long = 60
 )

@@ -138,6 +138,7 @@ interface EventApi {
 
 // ============ API Key API ============
 
+@Deprecated("Use new api")
 data class ApiKeyResponse(
     val alias: String,
     val apiKey: String,

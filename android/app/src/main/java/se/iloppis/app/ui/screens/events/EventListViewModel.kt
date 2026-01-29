@@ -1,5 +1,6 @@
 package se.iloppis.app.ui.screens.events
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -15,15 +16,16 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.navigation.AppScreen
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.network.ApiClient
 import se.iloppis.app.network.ApiKeyApi
-import se.iloppis.app.network.EventApi
-import se.iloppis.app.network.EventFilter
-import se.iloppis.app.network.EventFilterRequest
+import se.iloppis.app.network.events.EventAPI
+import se.iloppis.app.network.events.EventFilter
+import se.iloppis.app.network.events.EventFilterRequest
+import se.iloppis.app.network.iLoppisClient
 import se.iloppis.app.ui.screens.ScreenModel
 import se.iloppis.app.ui.states.ScreenAction
+import se.iloppis.app.utils.context.localContext
 import java.time.LocalDate
 
 private const val TAG = "EventListViewModel"
@@ -36,6 +38,8 @@ class EventListViewModel : ViewModel() {
 
     var uiState by mutableStateOf(EventListUiState())
         private set
+
+    private var api: iLoppisClient? = null
 
     init {
         loadEvents()
@@ -58,7 +62,7 @@ class EventListViewModel : ViewModel() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null)
             try {
-                val api = ApiClient.create<EventApi>()
+                val eventApi = api?.create<EventAPI>()
                 Log.d(TAG, "API client created, making filterEvents request")
                 // Filtrera på dagens datum och endast OPEN evenemang
                 val today = "${LocalDate.now()}T00:00:00Z"
@@ -69,11 +73,11 @@ class EventListViewModel : ViewModel() {
                     )
                 )
                 Log.d(TAG, "Filter request: dateFrom=$today, states=[OPEN]")
-                val response = api.filterEvents(filterRequest)
-                Log.d(TAG, "Response received, events count: ${response.events.size}")
-                val events = response.events.map { it.toDomain() }
+                val response = eventApi?.get(filterRequest)
+                Log.d(TAG, "Response received, events count: ${response?.events?.size}")
+                val events = response?.events?.map { it.toDomain() }
                 uiState = uiState.copy(
-                    events = events,
+                    events = events ?: emptyList(),
                     isLoading = false,
                     errorMessage = null
                 )
@@ -221,6 +225,16 @@ class EventListViewModel : ViewModel() {
     private fun submitCode(state: ScreenModel, code: String) {
         validateCode(state, code)
     }
+
+
+
+    /**
+     * Creates API Client instance
+     */
+    fun createAPI(context: Context) {
+        assert(api == null) { "API already created can not create it again" }
+        api = iLoppisClient(context)
+    }
 }
 
 
@@ -240,6 +254,7 @@ private val localEventScreenViewModel = compositionLocalOf<EventListViewModel> {
 @Composable
 fun EventScreenProvider(screen: EventListViewModel = viewModel(), content: @Composable () -> Unit) {
     val state = remember { screen }
+    state.createAPI(localContext())
     CompositionLocalProvider(localEventScreenViewModel provides state) {
         content()
     }

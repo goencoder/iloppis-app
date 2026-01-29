@@ -147,7 +147,8 @@ data class ApiKeyResponse(
     val id: String? = null
 )
 
-interface ApiKeyApi {
+@Deprecated("use new API Key API")
+interface ApiKeyApi : iLoppisApiInterface {
     @GET("v1/events/{event_id}/api-keys/alias/{alias}")
     suspend fun getApiKeyByAlias(
         @Path("event_id") eventId: String,

@@ -159,6 +159,7 @@ interface ApiKeyApi : iLoppisApiInterface {
 
 // ============ Vendors API ============
 
+@Deprecated("use new api")
 data class VendorDto(
     val id: String,
     val sellerNumber: Int,
@@ -169,11 +170,13 @@ data class VendorDto(
     val status: String?
 )
 
+@Deprecated("use new api")
 data class ListVendorsResponse(
     val vendors: List<VendorDto>,
     val nextPageToken: String?
 )
 
+@Deprecated("use new api")
 data class VendorFilter(
     val status: String? = null,
     val sellerNumber: Int? = null,
@@ -181,27 +184,32 @@ data class VendorFilter(
     val searchText: String? = null
 )
 
+@Deprecated("use new api")
 data class VendorSortOrder(
     val field: String = "seller_number",
     val ascending: Boolean = true
 )
 
+@Deprecated("use new api")
 data class VendorPagination(
     val pageSize: Int = 100,
     val nextPageToken: String? = null
 )
 
+@Deprecated("use new api")
 data class FilterVendorsRequest(
     val filter: VendorFilter = VendorFilter(),
     val sort: VendorSortOrder? = null,
     val pagination: VendorPagination = VendorPagination()
 )
 
+@Deprecated("use new api")
 data class FilterVendorsResponse(
     val vendors: List<VendorDto>,
     val nextPageToken: String?
 )
 
+@Deprecated("use new api")
 interface VendorApi {
     @GET("v1/events/{event_id}/vendors")
     suspend fun listVendors(

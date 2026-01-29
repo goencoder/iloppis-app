@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
  * API Client configuration
  */
 @Serializable
-data class ApiClientConfig(
+data class ClientConfig(
     /**
      * API URL endpoint
      */

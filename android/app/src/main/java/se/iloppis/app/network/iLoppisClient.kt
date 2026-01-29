@@ -12,18 +12,18 @@ import java.util.concurrent.TimeUnit
 /**
  * iLoppis API Client object
  */
-class iLoppisApiClient(val context: Context, configFile: Int = R.raw.client) {
+class iLoppisClient(val context: Context, configFile: Int = R.raw.client) {
     /**
      * iLoppis API Client configuration
      */
-    var config: ApiClientConfig
+    var config: ClientConfig
         private set
 
 
 
     init {
         val stream = context.resources.openRawResource(configFile)
-        config = decodeFromString<ApiClientConfig>(stream.readBytes().decodeToString())
+        config = decodeFromString<ClientConfig>(stream.readBytes().decodeToString())
     }
 
 
@@ -91,10 +91,10 @@ class iLoppisApiClient(val context: Context, configFile: Int = R.raw.client) {
 
 
     /**
-     * Creates [se.iloppis.app.network.iLoppisApiClient] instance
+     * Creates [se.iloppis.app.network.iLoppisClient] instance
      * with extension interface.
      *
-     * This will create an instance of this [se.iloppis.app.network.iLoppisApiClient]
+     * This will create an instance of this [se.iloppis.app.network.iLoppisClient]
      * object built upon the specified API interface.
      */
     inline fun <reified T : iLoppisApiInterface> create(): T = retrofit.create(T::class.java)
@@ -105,7 +105,7 @@ class iLoppisApiClient(val context: Context, configFile: Int = R.raw.client) {
 /**
  * iLoppis API interface
  *
- * All interfaces used with the [iLoppisApiClient] must
+ * All interfaces used with the [iLoppisClient] must
  * implement this interface.
  */
 interface iLoppisApiInterface {}

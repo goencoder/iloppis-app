@@ -14,8 +14,7 @@ import se.iloppis.app.ui.components.navigation.PageManager
 import se.iloppis.app.ui.screens.Screens
 import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.ui.theme.ILoppisTheme
-import se.iloppis.app.utils.context.ContextProvider
-import se.iloppis.app.utils.storage.LocalStorageProvider
+import se.iloppis.app.utils.provider.Provider
 
 /**
  * Main entry point for the iLoppis app.
@@ -26,20 +25,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ContextProvider(applicationContext) {
-                LocalStorageProvider(applicationContext) {
-                    Screens {
-                        ILoppisTheme {
-                            Scaffold(
-                                modifier = Modifier,
-                                bottomBar = { Navigator() }
+            Provider(applicationContext) {
+                Screens {
+                    ILoppisTheme {
+                        Scaffold(
+                            modifier = Modifier,
+                            bottomBar = { Navigator() }
+                        ) {
+                            Surface(
+                                modifier = Modifier.padding(it).fillMaxSize(),
+                                color = AppColors.Background
                             ) {
-                                Surface(
-                                    modifier = Modifier.padding(it).fillMaxSize(),
-                                    color = AppColors.Background
-                                ) {
-                                    PageManager()
-                                }
+                                PageManager()
                             }
                         }
                     }

@@ -33,14 +33,17 @@ private const val TAG = "EventListViewModel"
  * ViewModel for the event list screen.
  * Handles all business logic and state management.
  */
+@Deprecated("This will be replaced with a remember event list state in the near future")
 class EventListViewModel : ViewModel() {
 
     var uiState by mutableStateOf(EventListUiState())
         private set
 
-    lateinit var config: ClientConfig
+    var config: ClientConfig? = null
 
-    init {
+    fun lateinit(config: ClientConfig) {
+        if(this.config != null) return /* Temporary until there is an event list state */
+        this.config = config
         loadEvents()
     }
 
@@ -61,7 +64,7 @@ class EventListViewModel : ViewModel() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null)
             try {
-                val api = iLoppisClient(config).create<EventAPI>()
+                val api = iLoppisClient(config!!).create<EventAPI>()
                 Log.d(TAG, "API client created, making filterEvents request")
                 // Filtrera på dagens datum och endast OPEN evenemang
                 val today = "${LocalDate.now()}T00:00:00Z"
@@ -143,7 +146,7 @@ class EventListViewModel : ViewModel() {
             Log.d(TAG, "Validating code: $formattedCode for event: $eventId")
 
             try {
-                val api = iLoppisClient(config).create<ApiKeyApi>()
+                val api = iLoppisClient(config!!).create<ApiKeyApi>()
                 val response = api.getApiKeyByAlias(eventId, formattedCode)
 
                 Log.d(TAG, "API Response - alias: ${response.alias}, isActive: ${response.isActive}, type: ${response.type}")
@@ -246,7 +249,8 @@ fun EventScreenProvider(
     config: ClientConfig = clientConfig(),
     content: @Composable () -> Unit
 ) {
-    val state = remember { screen.apply { this.config = config } }
+    screen.lateinit(config)
+    val state = remember { screen }
     CompositionLocalProvider(localEventScreenViewModel provides state) {
         content()
     }

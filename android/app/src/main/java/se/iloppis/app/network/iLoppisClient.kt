@@ -4,13 +4,12 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import se.iloppis.app.R
 import java.util.concurrent.TimeUnit
 
 /**
  * iLoppis API Client object
  */
-class iLoppisClient(val config: ClientConfig, configFile: Int = R.raw.client) {
+class iLoppisClient(config: ClientConfig) {
     /**
      * Applies client connection configuration to [OkHttpClient.Builder]
      */

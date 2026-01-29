@@ -19,6 +19,7 @@ import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.network.ApiClient
 import se.iloppis.app.network.ApiKeyApi
+import se.iloppis.app.network.ClientConfig
 import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.events.EventFilter
 import se.iloppis.app.network.events.EventFilterRequest
@@ -39,7 +40,7 @@ class EventListViewModel : ViewModel() {
     var uiState by mutableStateOf(EventListUiState())
         private set
 
-    private var api: iLoppisClient? = null
+    private var config: ClientConfig? = null
 
     init {
         loadEvents()

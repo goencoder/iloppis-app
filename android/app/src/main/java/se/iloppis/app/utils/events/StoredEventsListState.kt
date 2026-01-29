@@ -15,11 +15,10 @@ import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.network.API_URL
-import se.iloppis.app.network.ApiClient
-import se.iloppis.app.network.EventApi
-import se.iloppis.app.network.EventsFromID
+import se.iloppis.app.network.events.ApiEventListResponse
 import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.events.convertCollection
+import se.iloppis.app.network.iLoppisApiClient
 import se.iloppis.app.utils.storage.LocalStorage
 
 /**
@@ -110,10 +109,10 @@ class StoredEventsListState(val context: Context, val storage: LocalStorage) {
         CoroutineScope(Dispatchers.Main).launch {
             data = data.copy(isLoading = true, errorMessage = null)
             try {
-                val api = ApiClient.create<EventApi>()
+                val api = iLoppisApiClient(context).create<EventAPI>()
 
                 Log.d(TAG, "Fetching events: [${EventAPI.convertCollection(ids)}]")
-                val res = api.getEventsByIds(EventAPI.convertCollection(ids))
+                val res = api.get(EventAPI.convertCollection(ids))
                 Log.d(TAG, "Response received, events count: ${res.total}")
 
                 val handled = handleEventsResponse(res)
@@ -148,7 +147,7 @@ class StoredEventsListState(val context: Context, val storage: LocalStorage) {
      * and update the local IDs list if there are
      * old events stored but not available.
      */
-    private fun handleEventsResponse(response: EventsFromID) : Pair<List<Event>, Set<String>> {
+    private fun handleEventsResponse(response: ApiEventListResponse) : Pair<List<Event>, Set<String>> {
         val idsToKeep = mutableSetOf<String>()
         val result = response.events.mapNotNull {
             if(it.lifecycleState == "OPEN") {

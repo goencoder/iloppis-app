@@ -4,6 +4,7 @@ import se.iloppis.app.domain.model.Event
 import se.iloppis.app.domain.model.EventState
 import se.iloppis.app.network.EventDto
 import se.iloppis.app.network.EventFID
+import se.iloppis.app.network.events.ApiEvent
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -16,6 +17,9 @@ object EventMapper {
     private val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", svLocale)
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", svLocale)
 
+
+
+    @Deprecated("use new api")
     fun EventDto.toDomain(): Event {
         val startParsed = startTime?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }
         val endParsed = endTime?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }
@@ -44,6 +48,7 @@ object EventMapper {
      * Note that this will drop a lot of data in
      * the conversion.
      */
+    @Deprecated("use new api")
     fun EventFID.toDomain(): Event {
         val startParsed = startTime?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }
         val endParsed = endTime?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }
@@ -65,6 +70,31 @@ object EventMapper {
             state = state
         )
     }
+
+
+    fun ApiEvent.toDomain() : Event {
+        val startParsed = startTime?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }
+        val endParsed = endTime?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }
+
+        val dates = formatDateRange(startParsed, endParsed)
+        val startTimeStr = startParsed?.format(timeFormatter) ?: ""
+        val endTimeStr = endParsed?.format(timeFormatter) ?: ""
+        val location = formatLocation(addressStreet, addressCity)
+        val state = mapEventState(lifecycleState)
+
+        return Event(
+            id = id,
+            name = name,
+            description = description ?: "",
+            dates = dates,
+            startTimeFormatted = startTimeStr,
+            endTimeFormatted = endTimeStr,
+            location = location,
+            state = state
+        )
+    }
+
+
 
     private fun mapEventState(apiState: String?): EventState = when (apiState) {
         "OPEN" -> EventState.OPEN

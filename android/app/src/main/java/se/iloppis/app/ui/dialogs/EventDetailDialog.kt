@@ -12,6 +12,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.m3.markdownTypography
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.StateBadge
@@ -89,10 +91,38 @@ private fun EventDetailContent(event: Event) {
             if (event.description.isNotBlank()) {
                 item {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = event.description,
-                        fontSize = 14.sp,
-                        color = AppColors.TextDark
+                    Markdown(
+                        content = event.description,
+                        typography = markdownTypography(
+                            h1 = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 38.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            h2 = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 34.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            h3 = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 30.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            h4 = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 26.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            h5 = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 22.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            h6 = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            paragraph = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
                     )
                 }
             }

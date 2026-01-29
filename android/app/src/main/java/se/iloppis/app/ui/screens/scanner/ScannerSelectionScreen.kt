@@ -26,11 +26,9 @@ import se.iloppis.app.ui.screens.events.EventListAction
 import se.iloppis.app.ui.screens.events.EventListHeader
 import se.iloppis.app.ui.screens.events.LoadingState
 import se.iloppis.app.ui.screens.events.eventContext
-import se.iloppis.app.utils.context.localContext
 import se.iloppis.app.utils.events.StoredEventsListState
 import se.iloppis.app.utils.events.rememberStoredEventsListState
 import se.iloppis.app.utils.storage.LocalStorage
-import se.iloppis.app.utils.storage.localStorage
 
 /**
  * Scanner selection screen
@@ -40,8 +38,7 @@ import se.iloppis.app.utils.storage.localStorage
  */
 @Composable
 fun ScannerSelectionScreen() {
-    val storage = localStorage()
-    val state = rememberStoredEventsListState(localContext(), storage)
+    val state = rememberStoredEventsListState()
 
     Column(modifier = Modifier.fillMaxSize()
         .padding(horizontal = 16.dp)

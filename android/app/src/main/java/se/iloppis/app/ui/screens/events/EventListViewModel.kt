@@ -12,21 +12,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json.Default.decodeFromString
 import retrofit2.HttpException
-import se.iloppis.app.R
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.network.ApiKeyApi
-import se.iloppis.app.network.ClientConfig
+import se.iloppis.app.network.config.ClientConfig
+import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.events.EventFilter
 import se.iloppis.app.network.events.EventFilterRequest
 import se.iloppis.app.network.iLoppisClient
 import se.iloppis.app.ui.screens.ScreenModel
 import se.iloppis.app.ui.states.ScreenAction
-import se.iloppis.app.utils.context.localContext
 import java.time.LocalDate
 
 private const val TAG = "EventListViewModel"
@@ -243,11 +241,12 @@ private val localEventScreenViewModel = compositionLocalOf<EventListViewModel> {
  * Event screen state provider
  */
 @Composable
-fun EventScreenProvider(screen: EventListViewModel = viewModel(), content: @Composable () -> Unit) {
-    val stream = localContext().resources.openRawResource(R.raw.client)
-    val conf = decodeFromString<ClientConfig>(stream.readBytes().decodeToString())
-
-    val state = remember { screen.apply { config = conf } }
+fun EventScreenProvider(
+    screen: EventListViewModel = viewModel(),
+    config: ClientConfig = clientConfig(),
+    content: @Composable () -> Unit
+) {
+    val state = remember { screen.apply { this.config = config } }
     CompositionLocalProvider(localEventScreenViewModel provides state) {
         content()
     }

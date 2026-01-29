@@ -1,6 +1,5 @@
 package se.iloppis.app.utils.events
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -15,11 +14,14 @@ import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.network.API_URL
+import se.iloppis.app.network.config.ClientConfig
+import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.events.ApiEventListResponse
 import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.events.convertCollection
 import se.iloppis.app.network.iLoppisClient
 import se.iloppis.app.utils.storage.LocalStorage
+import se.iloppis.app.utils.storage.localStorage
 
 /**
  * Stored events list state data class
@@ -51,7 +53,7 @@ data class StoredEventsListStateData(
  * This uses [LocalStorage] to access locally stored
  * events.
  */
-class StoredEventsListState(val context: Context, val storage: LocalStorage) {
+class StoredEventsListState(val config: ClientConfig, val storage: LocalStorage) {
     /**
      * State data
      *
@@ -109,7 +111,7 @@ class StoredEventsListState(val context: Context, val storage: LocalStorage) {
         CoroutineScope(Dispatchers.Main).launch {
             data = data.copy(isLoading = true, errorMessage = null)
             try {
-                val api = iLoppisClient(context).create<EventAPI>()
+                val api = iLoppisClient(config).create<EventAPI>()
 
                 Log.d(TAG, "Fetching events: [${EventAPI.convertCollection(ids)}]")
                 val res = api.get(EventAPI.convertCollection(ids))
@@ -206,8 +208,12 @@ class StoredEventsListState(val context: Context, val storage: LocalStorage) {
  * a locally saved events id list.
  */
 @Composable
-fun rememberStoredEventsListState(context: Context, storage: LocalStorage, key: Any? = Unit) : StoredEventsListState {
+fun rememberStoredEventsListState(
+    config: ClientConfig = clientConfig(),
+    storage: LocalStorage = localStorage(),
+    key: Any? = Unit
+) : StoredEventsListState {
     return remember(key1 = key) {
-        StoredEventsListState(context, storage)
+        StoredEventsListState(config, storage)
     }
 }

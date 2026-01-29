@@ -1,7 +1,5 @@
 package se.iloppis.app.network
 
-import android.content.Context
-import kotlinx.serialization.json.Json.Default.decodeFromString
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -12,22 +10,7 @@ import java.util.concurrent.TimeUnit
 /**
  * iLoppis API Client object
  */
-class iLoppisClient(val context: Context, configFile: Int = R.raw.client) {
-    /**
-     * iLoppis API Client configuration
-     */
-    var config: ClientConfig
-        private set
-
-
-
-    init {
-        val stream = context.resources.openRawResource(configFile)
-        config = decodeFromString<ClientConfig>(stream.readBytes().decodeToString())
-    }
-
-
-
+class iLoppisClient(val config: ClientConfig, configFile: Int = R.raw.client) {
     /**
      * Applies client connection configuration to [OkHttpClient.Builder]
      */

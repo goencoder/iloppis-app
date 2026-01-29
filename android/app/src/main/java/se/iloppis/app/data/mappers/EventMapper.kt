@@ -72,6 +72,9 @@ object EventMapper {
     }
 
 
+    /**
+     * Converts API Event object to Event object
+     */
     fun ApiEvent.toDomain() : Event {
         val startParsed = startTime?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }
         val endParsed = endTime?.let { runCatching { ZonedDateTime.parse(it) }.getOrNull() }

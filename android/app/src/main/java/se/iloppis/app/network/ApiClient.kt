@@ -229,12 +229,14 @@ interface VendorApi {
 
 // ============ Sold Items API ============
 
+@Deprecated("use new api")
 enum class PaymentMethod {
     PAYMENT_METHOD_UNSPECIFIED,
     SWISH,
     KONTANT
 }
 
+@Deprecated("use new api")
 data class SoldItemRequest(
     val itemId: String,
     val purchaseId: String,
@@ -243,10 +245,12 @@ data class SoldItemRequest(
     val paymentMethod: String  // "SWISH" or "KONTANT"
 )
 
+@Deprecated("use new api")
 data class CreateSoldItemsRequest(
     val items: List<SoldItemRequest>
 )
 
+@Deprecated("use new api")
 data class SoldItemDto(
     val itemId: String?,
     val eventId: String?,
@@ -261,23 +265,27 @@ data class SoldItemDto(
     val isArchived: Boolean?
 )
 
+@Deprecated("use new api")
 data class RejectedItem(
     val item: SoldItemDto,
     val reason: String,
     val errorCode: String? = null  // Maps to SoldItemErrorCode enum from proto
 )
 
+@Deprecated("use new api")
 data class CreateSoldItemsResponse(
     val acceptedItems: List<SoldItemDto>?,
     val rejectedItems: List<RejectedItem>?
 )
 
+@Deprecated("use new api")
 data class ListSoldItemsResponse(
     val items: List<SoldItemDto>?,
     val nextPageToken: String?,
     val prevPageToken: String?
 )
 
+@Deprecated("use new api")
 interface SoldItemsApi {
     @POST("v1/events/{event_id}/sold-items")
     suspend fun createSoldItems(

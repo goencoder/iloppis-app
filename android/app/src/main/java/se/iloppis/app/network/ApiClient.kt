@@ -349,6 +349,7 @@ interface VisitorTicketApi {
 
 // ============ Ticket Types API ============
 
+@Deprecated("use new api")
 data class TicketTypeDto(
     val id: String,
     val eventId: String,
@@ -361,10 +362,12 @@ data class TicketTypeDto(
     val validUntil: String?
 )
 
+@Deprecated("use new api")
 data class ListTicketTypesResponse(
     val types: List<TicketTypeDto>
 )
 
+@Deprecated("use new api")
 interface TicketTypeApi {
     @GET("v1/events/{event_id}/ticket_types")
     suspend fun listTicketTypes(

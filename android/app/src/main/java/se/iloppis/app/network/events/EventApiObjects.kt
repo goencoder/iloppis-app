@@ -9,9 +9,38 @@ enum class EventLifecycle {
      */
     OPEN,
     /**
-     * Lifecycle close
+     * Lifecycle state open
+     *
+     * @see OPEN
      */
-    CLOSE,
+    LIFECYCLE_STATE_OPEN,
+
+    /**
+     * Lifecycle closed
+     */
+    CLOSED,
+    /**
+     * Lifecycle state closed
+     *
+     * @see CLOSED
+     */
+    LIFECYCLE_STATE_CLOSED,
+
+    /**
+     * Lifecycle finalized
+     */
+    FINALIZED,
+
+    /**
+     * Lifecycle pending
+     */
+    PENDING,
+    /**
+     * Lifecycle state pending
+     *
+     * @see PENDING
+     */
+    LIFECYCLE_STATE_PENDING,
 }
 
 /**

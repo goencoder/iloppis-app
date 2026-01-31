@@ -2,7 +2,6 @@ package se.iloppis.app.data.mappers
 
 import se.iloppis.app.domain.model.VisitorTicket
 import se.iloppis.app.domain.model.VisitorTicketStatus
-import se.iloppis.app.network.VisitorTicketDto
 import se.iloppis.app.network.visitor.ApiVisitorTicket
 import java.time.Instant
 
@@ -10,20 +9,6 @@ import java.time.Instant
  * Maps visitor ticket DTOs to domain models.
  */
 object VisitorTicketMapper {
-
-    @Deprecated("use new api")
-    fun VisitorTicketDto.toDomain(): VisitorTicket = VisitorTicket(
-        id = id,
-        eventId = eventId,
-        ticketType = ticketType,
-        email = email,
-        status = mapTicketStatus(status),
-        issuedAt = issuedAt.toInstantOrNull(),
-        validFrom = validFrom.toInstantOrNull(),
-        validUntil = validUntil.toInstantOrNull(),
-        scannedAt = scannedAt.toInstantOrNull()
-    )
-
     /**
      * Converts visitor ticket API object to [VisitorTicket]
      */

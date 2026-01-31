@@ -5,6 +5,7 @@ import se.iloppis.app.domain.model.EventState
 import se.iloppis.app.network.EventDto
 import se.iloppis.app.network.EventFID
 import se.iloppis.app.network.events.ApiEvent
+import se.iloppis.app.network.events.EventLifecycle
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -83,7 +84,6 @@ object EventMapper {
         val startTimeStr = startParsed?.format(timeFormatter) ?: ""
         val endTimeStr = endParsed?.format(timeFormatter) ?: ""
         val location = formatLocation(addressStreet, addressCity)
-        val state = mapEventState(lifecycleState.toString())
 
         return Event(
             id = id,
@@ -93,7 +93,7 @@ object EventMapper {
             startTimeFormatted = startTimeStr,
             endTimeFormatted = endTimeStr,
             location = location,
-            state = state
+            state = lifecycleState?.toEventState() ?: EventState.UNKNOWN
         )
     }
 
@@ -109,6 +109,24 @@ object EventMapper {
         "LIFECYCLE_STATE_PENDING" -> EventState.UPCOMING  // Legacy format
         else -> EventState.UNKNOWN
     }
+
+
+    /**
+     * Converts [EventLifecycle] to [EventState]
+     */
+    private fun EventLifecycle.toEventState() : EventState = when(this) {
+        EventLifecycle.OPEN -> EventState.OPEN
+        EventLifecycle.LIFECYCLE_STATE_OPEN -> EventState.OPEN
+
+        EventLifecycle.CLOSED -> EventState.CLOSED
+        EventLifecycle.LIFECYCLE_STATE_CLOSED -> EventState.CLOSED
+
+        EventLifecycle.FINALIZED -> EventState.CLOSED
+
+        EventLifecycle.PENDING -> EventState.UPCOMING
+        EventLifecycle.LIFECYCLE_STATE_PENDING -> EventState.UPCOMING
+    }
+
 
     private fun formatDateRange(start: ZonedDateTime?, end: ZonedDateTime?): String = when {
         start != null && end != null && start.toLocalDate() == end.toLocalDate() ->

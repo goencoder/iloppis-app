@@ -1,6 +1,5 @@
 package se.iloppis.app.network.config
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 
 /**
@@ -26,9 +25,6 @@ private object LocalClientConfig {
 @Composable
 fun ClientConfigProvider(config: ClientConfig, content: @Composable () -> Unit) {
     LocalClientConfig.config = config
-
-    Log.d("TAG", "updated config")
-
     content()
 }
 

@@ -17,7 +17,7 @@ enum class PaymentMethod {
     /**
      * Cash payment method
      */
-    CASH
+    KONTANT
 }
 
 /**

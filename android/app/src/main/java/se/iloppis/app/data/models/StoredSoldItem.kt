@@ -1,6 +1,7 @@
 package se.iloppis.app.data.models
 
 import kotlinx.serialization.Serializable
+import se.iloppis.app.network.cashier.PaymentMethod
 
 /**
  * StoredSoldItem represents a sold item that is persisted to local storage.
@@ -22,7 +23,7 @@ data class StoredSoldItem(
     val purchaseId: String,
     val seller: Int,
     val price: Int,
-    val paymentMethod: String,
+    val paymentMethod: PaymentMethod,
     val soldTime: Long,
     val uploaded: Boolean = false
 )

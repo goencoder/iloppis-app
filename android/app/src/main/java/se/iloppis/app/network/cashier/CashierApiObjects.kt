@@ -1,26 +1,23 @@
 package se.iloppis.app.network.cashier
 
-import kotlinx.serialization.Serializable
-
 /**
  * Payment method types enum
  */
-@Serializable
-enum class PaymentMethod(val value: String) {
+enum class PaymentMethod {
     /**
      * Unspecified payment method
      */
-    PAYMENT_METHOD_UNSPECIFIED("PAYMENT_METHOD_UNSPECIFIED"),
+    PAYMENT_METHOD_UNSPECIFIED,
 
     /**
      * Swish payment method
      */
-    SWISH("SWISH"),
+    SWISH,
 
     /**
      * Cash payment method
      */
-    CASH("KONTANT")
+    CASH
 }
 
 /**

@@ -44,4 +44,39 @@ class iLoppisClientTest {
             resMarket.total
         )
     }
+
+
+    @Test
+    fun `Tests API client with serialization of enum class`() = runTest {
+
+        // ==================================
+        // This may use an outdated market
+        // ==================================
+
+        val client = iLoppisClient(config).create<EventAPI>()
+
+        val market = "ed71222f-36ad-40a6-a102-2fb821bed1c0"
+        val events = "66af78e4-be70-4145-be55-0c3cdfe6637c,66af78e4-be70-4145-be55-0c3cdfe6637d"
+
+        val resMarket = client.getEventsFromMarkets(market)
+        val resEvents = client.get(events)
+
+        println("\nMarkets: $resMarket")
+        println("Events: $resEvents\n")
+
+        assertEquals(
+            "\n========= Market =========\n" +
+                    "\t resMarket.total != 1\n" +
+                    "\n========= Market =========\n\n",
+            1,
+            resMarket.total
+        )
+        assertEquals(
+            "\n========= Events =========\n" +
+                    "\t resEvents.total != 1\n" +
+                    "\n========= Events =========\n\n",
+            1,
+            resMarket.total
+        )
+    }
 }

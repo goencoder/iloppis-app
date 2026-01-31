@@ -16,35 +16,27 @@ import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
-import se.iloppis.app.network.ApiKeyApi
-import se.iloppis.app.network.config.ClientConfig
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.events.EventFilter
 import se.iloppis.app.network.events.EventFilterRequest
 import se.iloppis.app.network.events.EventLifecycle
 import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.keys.KeyAPI
 import se.iloppis.app.ui.screens.ScreenModel
 import se.iloppis.app.ui.states.ScreenAction
 import java.time.LocalDate
-
-private const val TAG = "EventListViewModel"
 
 /**
  * ViewModel for the event list screen.
  * Handles all business logic and state management.
  */
-@Deprecated("This will be replaced with a remember event list state in the near future")
 class EventListViewModel : ViewModel() {
 
     var uiState by mutableStateOf(EventListUiState())
         private set
 
-    var config: ClientConfig? = null
-
-    fun lateinit(config: ClientConfig) {
-        if(this.config != null) return /* Temporary until there is an event list state */
-        this.config = config
+    init {
         loadEvents()
     }
 
@@ -65,7 +57,7 @@ class EventListViewModel : ViewModel() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null)
             try {
-                val api = iLoppisClient(config!!).create<EventAPI>()
+                val api = iLoppisClient(clientConfig()).create<EventAPI>()
                 Log.d(TAG, "API client created, making filterEvents request")
                 // Filtrera på dagens datum och endast OPEN evenemang
                 val today = "${LocalDate.now()}T00:00:00Z"
@@ -147,7 +139,7 @@ class EventListViewModel : ViewModel() {
             Log.d(TAG, "Validating code: $formattedCode for event: $eventId")
 
             try {
-                val api = iLoppisClient(config!!).create<ApiKeyApi>()
+                val api = iLoppisClient(clientConfig()).create<KeyAPI>()
                 val response = api.getApiKeyByAlias(eventId, formattedCode)
 
                 Log.d(TAG, "API Response - alias: ${response.alias}, isActive: ${response.isActive}, type: ${response.type}")
@@ -228,6 +220,17 @@ class EventListViewModel : ViewModel() {
     private fun submitCode(state: ScreenModel, code: String) {
         validateCode(state, code)
     }
+
+
+
+
+
+    companion object {
+        /**
+         * Event list view model TAG used for debugging
+         */
+        val TAG: String = EventListViewModel::class.java.simpleName
+    }
 }
 
 
@@ -247,10 +250,8 @@ private val localEventScreenViewModel = compositionLocalOf<EventListViewModel> {
 @Composable
 fun EventScreenProvider(
     screen: EventListViewModel = viewModel(),
-    config: ClientConfig = clientConfig(),
     content: @Composable () -> Unit
 ) {
-    screen.lateinit(config)
     val state = remember { screen }
     CompositionLocalProvider(localEventScreenViewModel provides state) {
         content()

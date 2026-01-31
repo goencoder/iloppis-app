@@ -10,6 +10,7 @@ import retrofit2.HttpException
 import se.iloppis.app.network.cashier.CashierAPI
 import se.iloppis.app.network.cashier.RejectedItem
 import se.iloppis.app.network.cashier.SoldItemObject
+import se.iloppis.app.network.cashier.SoldItemsRequest
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.iLoppisClient
 import java.io.IOException
@@ -149,7 +150,7 @@ class PurchaseRecoveryManager(
             val response = soldItemsApi.createSoldItems(
                 authorization = "Bearer $apiKey",
                 eventId = eventId,
-                request = CreateSoldItemsRequest(requestItems)
+                request = SoldItemsRequest(requestItems)
             )
 
             // Check if upload succeeded

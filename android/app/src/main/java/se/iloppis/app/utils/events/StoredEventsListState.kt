@@ -18,6 +18,7 @@ import se.iloppis.app.network.config.ClientConfig
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.events.ApiEventListResponse
 import se.iloppis.app.network.events.EventAPI
+import se.iloppis.app.network.events.EventLifecycle
 import se.iloppis.app.network.events.convertCollection
 import se.iloppis.app.network.iLoppisClient
 import se.iloppis.app.utils.storage.LocalStorage
@@ -152,7 +153,7 @@ class StoredEventsListState(val config: ClientConfig, val storage: LocalStorage)
     private fun handleEventsResponse(response: ApiEventListResponse) : Pair<List<Event>, Set<String>> {
         val idsToKeep = mutableSetOf<String>()
         val result = response.events.mapNotNull {
-            if(it.lifecycleState == "OPEN") {
+            if(it.lifecycleState == EventLifecycle.OPEN) {
                 idsToKeep.add(it.id)
                 it.toDomain()
             } else null

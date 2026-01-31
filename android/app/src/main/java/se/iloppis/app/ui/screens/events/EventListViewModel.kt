@@ -22,6 +22,7 @@ import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.events.EventFilter
 import se.iloppis.app.network.events.EventFilterRequest
+import se.iloppis.app.network.events.EventLifecycle
 import se.iloppis.app.network.iLoppisClient
 import se.iloppis.app.ui.screens.ScreenModel
 import se.iloppis.app.ui.states.ScreenAction
@@ -71,7 +72,7 @@ class EventListViewModel : ViewModel() {
                 val filterRequest = EventFilterRequest(
                     filter = EventFilter(
                         dateFrom = today,
-                        lifecycleStates = listOf("OPEN")
+                        lifecycleStates = listOf(EventLifecycle.OPEN)
                     )
                 )
                 Log.d(TAG, "Filter request: dateFrom=$today, states=[OPEN]")

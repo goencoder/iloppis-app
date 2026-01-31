@@ -83,7 +83,7 @@ object EventMapper {
         val startTimeStr = startParsed?.format(timeFormatter) ?: ""
         val endTimeStr = endParsed?.format(timeFormatter) ?: ""
         val location = formatLocation(addressStreet, addressCity)
-        val state = mapEventState(lifecycleState)
+        val state = mapEventState(lifecycleState.toString())
 
         return Event(
             id = id,

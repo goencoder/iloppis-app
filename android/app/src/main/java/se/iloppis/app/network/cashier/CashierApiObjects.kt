@@ -130,35 +130,38 @@ data class CashierApiResponse(
     val prevPageToken: String?,
 )
 
-
-
-data class SoldItemRequest(
+/**
+ * Sold item object for [SoldItemsRequest]
+ */
+data class SoldItemObject(
+    /**
+     * Item ID
+     */
     val itemId: String,
+    /**
+     * Purchase ID
+     */
     val purchaseId: String,
+    /**
+     * Seller number
+     */
     val seller: Int,
+    /**
+     * Item price
+     */
     val price: Int,
-    val paymentMethod: String  // "SWISH" or "KONTANT"
+    /**
+     * Payment method
+     */
+    val paymentMethod: PaymentMethod
 )
 
-data class CreateSoldItemsRequest(
-    val items: List<SoldItemRequest>
+/**
+ * Request for sold items
+ */
+data class SoldItemsRequest(
+    /**
+     * List of items
+     */
+    val items: List<SoldItemObject>
 )
-
-
-
-//interface SoldItemsApi {
-//    @POST("v1/events/{event_id}/sold-items")
-//    suspend fun createSoldItems(
-//        @Header("Authorization") authorization: String,
-//        @Path("event_id") eventId: String,
-//        @Body request: CreateSoldItemsRequest
-//    ): CreateSoldItemsResponse
-//
-//    @GET("v1/events/{event_id}/sold-items")
-//    suspend fun listSoldItems(
-//        @Header("Authorization") authorization: String,
-//        @Path("event_id") eventId: String,
-//        @Query("purchaseId") purchaseId: String? = null,
-//        @Query("pageSize") pageSize: Int = 100
-//    ): ListSoldItemsResponse
-//}

@@ -1,6 +1,20 @@
 package se.iloppis.app.network.events
 
 /**
+ * Events lifecycle enum types
+ */
+enum class EventLifecycle {
+    /**
+     * Lifecycle open
+     */
+    OPEN,
+    /**
+     * Lifecycle close
+     */
+    CLOSE,
+}
+
+/**
  * Event filter object
  */
 data class EventFilter(
@@ -32,7 +46,7 @@ data class EventFilter(
     /**
      * Filter after events lifecycle state
      */
-    val lifecycleStates: List<String>? = null
+    val lifecycleStates: List<EventLifecycle>? = null
 )
 
 /**
@@ -151,7 +165,7 @@ data class ApiEvent(
     /**
      * Event lifecycle state
      */
-    val lifecycleState: String?,
+    val lifecycleState: EventLifecycle?,
 
     /**
      * Seller information summary

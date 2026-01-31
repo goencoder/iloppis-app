@@ -1,14 +1,17 @@
 package se.iloppis.app.network.config
 
+import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 
 /**
- * Local client config composition
+ * Local client config stored as a static
+ * object for static instance data getting.
  */
-private val localClientConfig = compositionLocalOf<ClientConfig> {
-    error("No client config provider is present in this context")
+private object LocalClientConfig {
+    /**
+     * Config object
+     */
+    var config: ClientConfig = ClientConfig("")
 }
 
 
@@ -22,9 +25,11 @@ private val localClientConfig = compositionLocalOf<ClientConfig> {
  */
 @Composable
 fun ClientConfigProvider(config: ClientConfig, content: @Composable () -> Unit) {
-    CompositionLocalProvider(localClientConfig provides config) {
-        content()
-    }
+    LocalClientConfig.config = config
+
+    Log.d("TAG", "updated config")
+
+    content()
 }
 
 
@@ -36,5 +41,4 @@ fun ClientConfigProvider(config: ClientConfig, content: @Composable () -> Unit) 
  * provide the local context with a
  * client configuration for the [se.iloppis.app.network.iLoppisClient]
  */
-@Composable
-fun clientConfig() : ClientConfig = localClientConfig.current
+fun clientConfig() : ClientConfig = LocalClientConfig.config

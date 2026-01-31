@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.network.API_URL
 import se.iloppis.app.network.config.ClientConfig
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.events.ApiEventListResponse
@@ -108,7 +107,7 @@ class StoredEventsListState(val config: ClientConfig, val storage: LocalStorage)
             return
         }
 
-        Log.d(TAG, "Loading events from: $API_URL")
+        Log.d(TAG, "Loading events from: ${clientConfig().url}")
         CoroutineScope(Dispatchers.Main).launch {
             data = data.copy(isLoading = true, errorMessage = null)
             try {
@@ -135,7 +134,7 @@ class StoredEventsListState(val config: ClientConfig, val storage: LocalStorage)
                 Log.e(TAG, "Error loading events", e)
                 data = data.copy(
                     isLoading = false,
-                    errorMessage = "API: $API_URL - $errorMsg"
+                    errorMessage = "API: ${clientConfig().url} - $errorMsg"
                 )
             }
         }

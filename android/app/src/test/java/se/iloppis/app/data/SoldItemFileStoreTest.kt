@@ -222,14 +222,14 @@ class SoldItemFileStoreTest {
     @Test
     fun testPaymentMethod_kontant() {
         // Arrange
-        val item = createTestItem("item1", seller = 1, price = 100, paymentMethod = PaymentMethod.KONTANT)
+        val item = createTestItem("item1", seller = 1, price = 100, paymentMethod = PaymentMethod.CASH)
 
         // Act
         SoldItemFileStore.appendSoldItems(listOf(item))
         val result = SoldItemFileStore.getAllSoldItems()
 
         // Assert
-        assertEquals(PaymentMethod.KONTANT, result[0].paymentMethod)
+        assertEquals(PaymentMethod.CASH, result[0].paymentMethod)
     }
 
     @Test
@@ -343,7 +343,7 @@ class SoldItemFileStoreTest {
         purchaseId: String = "purchase-ulid-123",
         seller: Int,
         price: Int,
-        paymentMethod: PaymentMethod = PaymentMethod.KONTANT,
+        paymentMethod: PaymentMethod = PaymentMethod.CASH,
         soldTime: Long = System.currentTimeMillis(),
         uploaded: Boolean = false
     ): StoredSoldItem {

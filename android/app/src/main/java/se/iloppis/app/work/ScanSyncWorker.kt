@@ -9,13 +9,14 @@ import kotlinx.coroutines.withTimeout
 import retrofit2.HttpException
 import se.iloppis.app.data.CommittedScansStore
 import se.iloppis.app.data.PendingScansStore
-import se.iloppis.app.network.ApiClient
-import se.iloppis.app.network.VisitorTicketApi
+import se.iloppis.app.network.config.clientConfig
+import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.visitor.VisitorAPI
 import java.io.IOException
 
 /**
  * Background worker for syncing pending scans to the server.
- * 
+ *
  * Process:
  * 1. Read all pending scans from pending_scans.jsonl
  * 2. Upload each scan to server with 5s timeout
@@ -47,30 +48,30 @@ class ScanSyncWorker(
 
             Log.d(TAG, "Processing ${allScans.size} pending scans")
 
-            val api = ApiClient.create<VisitorTicketApi>()
+            val api = iLoppisClient(clientConfig()).create<VisitorAPI>()
             var hasNetworkError = false
 
             for (scan in allScans) {
                 try {
                     // Upload scan with 5s timeout
                     withTimeout(5000) {
-                        api.scanVisitorTicket(
+                        api.scanTicket(
                             authorization = "Bearer $apiKey",
                             eventId = scan.eventId,
                             ticketId = scan.ticketId
                         )
                     }
-                    
+
                     // Success: Remove from pending
                     Log.d(TAG, "Scan ${scan.scanId} uploaded successfully")
                     PendingScansStore.removeScan(scan.scanId)
-                    
+
                 } catch (timeout: TimeoutCancellationException) {
                     // Timeout: Keep for retry
                     Log.w(TAG, "Sync timeout for scan ${scan.scanId}")
                     hasNetworkError = true
                     break  // Stop processing on timeout
-                    
+
                 } catch (http: HttpException) {
                     when (http.code()) {
                         412 -> {
@@ -85,7 +86,7 @@ class ScanSyncWorker(
                             PendingScansStore.updateError(scan.scanId, errorMsg)
                         }
                     }
-                    
+
                 } catch (io: IOException) {
                     // Network error: Keep for retry
                     Log.w(TAG, "Network error for scan ${scan.scanId}: ${io.message}")

@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit
 /**
  * iLoppis API base url
  */
+@Deprecated("use client configuration to get URL")
 const val API_URL = "https://iloppis-staging.fly.dev/"
 
 
@@ -305,6 +306,7 @@ interface SoldItemsApi {
 
 // ============ Visitor Tickets API ============
 
+@Deprecated("use new api")
 data class VisitorTicketDto(
     val id: String,
     val eventId: String,
@@ -317,14 +319,17 @@ data class VisitorTicketDto(
     val scannedAt: String?
 )
 
+@Deprecated("use new api")
 data class ScanVisitorTicketResponse(
     val ticket: VisitorTicketDto?
 )
 
+@Deprecated("use new api")
 data class GetVisitorTicketResponse(
     val ticket: VisitorTicketDto?
 )
 
+@Deprecated("use new api")
 interface VisitorTicketApi {
     @POST("v1/events/{event_id}/visitor_tickets/{ticket_id}/scan")
     suspend fun scanVisitorTicket(

@@ -20,15 +20,7 @@ import se.iloppis.app.data.SoldItemFileStore
 import se.iloppis.app.data.VendorRepository
 import se.iloppis.app.data.models.PendingItem
 import se.iloppis.app.data.models.SerializableSoldItemErrorCode
-import se.iloppis.app.data.models.StoredSoldItem
-import se.iloppis.app.network.ApiClient
-import se.iloppis.app.network.CreateSoldItemsRequest
-import se.iloppis.app.network.SoldItemRequest
-import se.iloppis.app.network.SoldItemsApi
-import se.iloppis.app.network.VendorApi
-import se.iloppis.app.ui.screens.cashier.CashierAction
 import se.iloppis.app.work.SyncScheduler
-import java.util.UUID
 import kotlin.math.ceil
 
 private const val TAG = "CashierViewModel"
@@ -78,33 +70,33 @@ enum class ActiveField {
 data class CashierUiState(
     val eventName: String = "",
     val eventStatus: String = "",
-    
+
     // Input state
     val sellerNumber: String = "",
     val priceString: String = "",
     val activeField: ActiveField = ActiveField.SELLER,
-    
+
     // Transaction state
     val transactions: List<TransactionItem> = emptyList(),
     val paidAmount: String = "0",
-    
+
     // Valid seller numbers for this event
     val validSellers: Set<Int> = emptySet(),
-    
+
     // Last completed purchase (for showing receipt)
     val lastPurchase: CompletedPurchase? = null,
 
     // Offline sync state
     val pendingSoldItemsCount: Int = 0,
     val lastCheckoutQueuedOffline: Boolean = false,
-    
+
     // Rejected purchase state (for badge and popups)
     val rejectedPurchasesCount: Int = 0,
     val rejectedPurchases: List<se.iloppis.app.data.models.RejectedPurchase> = emptyList(),
     val showServerErrorDialog: Boolean = false,
     val showInvalidSellerDialog: Boolean = false,
     val invalidSellerDialogData: InvalidSellerDialogData? = null,
-    
+
     // Loading/error states
     val isLoading: Boolean = false,
     val isProcessingPayment: Boolean = false,
@@ -114,11 +106,11 @@ data class CashierUiState(
     val total: Int get() = transactions.sumOf { it.price }
     val change: Int get() = (paidAmount.toIntOrNull() ?: 0) - total
     val nextHundred: Int get() = (ceil(total / 100.0) * 100).toInt()
-    
+
     // Check if kassa is idle (all fields empty, not processing)
-    val isIdle: Boolean get() = sellerNumber.isEmpty() && 
-                                 priceString.isEmpty() && 
-                                 transactions.isEmpty() && 
+    val isIdle: Boolean get() = sellerNumber.isEmpty() &&
+                                 priceString.isEmpty() &&
+                                 transactions.isEmpty() &&
                                  !isProcessingPayment
 }
 
@@ -166,7 +158,7 @@ class CashierViewModel(
 
     private val toastGatekeeper = OfflineToastGatekeeper()
     private var workObserverRegistered = false
-    
+
     // Rejected purchase popup management
     private var lastPopupShown: Long = 0
     private var serverErrorShownThisSession = false
@@ -178,7 +170,7 @@ class CashierViewModel(
         PendingItemsStore.initialize(context, eventId)
         SoldItemFileStore.initialize(context, eventId)
         RejectedPurchaseStore.initialize(context, eventId)
-        
+
         // Initialize global VendorRepository singleton
         if (!VendorRepository.isInitialized()) {
             VendorRepository.initialize(eventId, apiKey)
@@ -187,7 +179,7 @@ class CashierViewModel(
         refreshPendingCount()
         refreshRejectedPurchasesCount()
         registerSyncObserverIfPossible()
-        
+
         // Observe pending items changes for reactive badge updates
         viewModelScope.launch {
             PendingItemsStore.itemsUpdated.collect {
@@ -247,7 +239,7 @@ class CashierViewModel(
                     .count()
             }
             uiState = uiState.copy(pendingSoldItemsCount = pending)
-            
+
             // If we successfully refreshed and count is 0, we can consider ourselves online
             if (pending == 0) {
                 toastGatekeeper.recordSuccessfulUpload()
@@ -336,7 +328,7 @@ class CashierViewModel(
                 Log.d(TAG, "Loading vendors from VendorRepository...")
                 // Use global VendorRepository singleton - this updates the shared cache
                 val allSellers = VendorRepository.refresh()
-                
+
                 Log.d(TAG, "Loaded ${allSellers.size} valid seller numbers from VendorRepository")
                 withContext(Dispatchers.Main) {
                     uiState = uiState.copy(
@@ -480,7 +472,7 @@ class CashierViewModel(
         val updatedTransactions = uiState.transactions.filter { it.id != id }
         val newTotal = updatedTransactions.sumOf { it.price }
         val nextHundred = if (newTotal > 0) (ceil(newTotal / 100.0) * 100).toInt() else 0
-        
+
         uiState = uiState.copy(
             transactions = updatedTransactions,
             paidAmount = nextHundred.toString()
@@ -502,62 +494,62 @@ class CashierViewModel(
 
     /**
      * Process checkout and register purchase locally.
-     * 
+     *
      * ## GUARANTEE: Purchase registration cannot be lost
-     * 
+     *
      * This method ensures that once user completes payment, the purchase data
      * is ALWAYS registered locally before any UI feedback is shown.
-     * 
+     *
      * **Execution flow with guarantees**:
-     * 
+     *
      * 1. **Validate input** (line 407-411)
      *    - Check transactions exist
      *    - Return early if validation fails
-     * 
+     *
      * 2. **Generate stable IDs** (line 414)
      *    - purchaseId: Random UUID (26 chars, uppercase)
      *    - itemId: Already assigned in TransactionItem.id (UUID)
      *    - These IDs are stable and never regenerated
-     * 
+     *
      * 3. **Create purchase record** (line 420-425)
      *    - Snapshot current state for receipt display
      *    - Includes all transaction items with their stable IDs
-     * 
+     *
      * 4. **Clear UI immediately** (line 427-437)
      *    - UI cleared BEFORE persistence starts
      *    - Allows cashier to start next transaction immediately
      *    - Receipt shown in lastPurchase (not blocking)
-     * 
+     *
      * 5. **Persist purchase synchronously** (line 440-463)
      *    - Runs on IO dispatcher (background thread)
      *    - `appendSoldItems()` is SYNCHRONOUS and blocks until file write completes
      *    - If write fails, exception is logged but caught (line 462)
      *    - GUARANTEE: If no exception, data is on disk and survives app crash
-     * 
+     *
      * 6. **Trigger background upload** (line 465-466)
      *    - Enqueue WorkManager job (best-effort, non-blocking)
      *    - Upload happens asynchronously in background
      *    - If upload fails, WorkManager will retry automatically
-     * 
+     *
      * **Data loss scenarios - answered**:
-     * 
+     *
      * Q: What if app crashes during checkout?
      * A: Depends on exact timing:
      *    - Before line 459 returns: Purchase not saved (but user hasn't seen receipt)
      *    - After line 459 returns: Purchase saved to disk, will upload on app restart
-     * 
+     *
      * Q: What if device loses power during file write?
      * A: OS-level atomic write guarantees:
      *    - File.writeText() either completes fully or fails
      *    - No partial writes that corrupt file
      *    - If power lost mid-write, old file content remains intact
-     * 
+     *
      * Q: What if storage is full?
      * A: IOException thrown from appendSoldItems():
      *    - Exception logged (line 462)
      *    - UI not updated with receipt (user can retry)
      *    - No silent data loss
-     * 
+     *
      * **End-to-end guarantee**:
      * ```
      * User presses "Betala KONTANT"
@@ -568,7 +560,7 @@ class CashierViewModel(
      *   → If failure: Exception logged, no receipt shown
      * Result: Either purchase is saved OR user knows it failed
      * ```
-     * 
+     *
      * @param method Payment method (CASH or SWISH)
      */
     private fun checkout(method: PaymentMethodType) {
@@ -646,7 +638,7 @@ class CashierViewModel(
             // STEP 5: Trigger background upload (best-effort)
             // WorkManager will handle retries if this fails
             val syncEnqueued = tryTriggerSync(purchaseId = purchaseId)
-            
+
             viewModelScope.launch {
                 refreshPendingCount()
                 refreshRejectedPurchasesCount()
@@ -665,7 +657,7 @@ class CashierViewModel(
     private fun dismissError() {
         uiState = uiState.copy(errorMessage = null)
     }
-    
+
     /**
      * Refresh count of pending purchases from PendingItemsStore.
      */
@@ -673,7 +665,7 @@ class CashierViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val (infoCount, warningCount, criticalCount) = PendingItemsStore.getErrorCounts()
             val count = infoCount + warningCount + criticalCount
-            
+
             // If there are any rejected items, refresh vendor list in case sellers changed
             if (count > 0) {
                 try {
@@ -683,7 +675,7 @@ class CashierViewModel(
                     Log.e(TAG, "Failed to refresh vendor list after rejected purchases", e)
                 }
             }
-            
+
             withContext(Dispatchers.Main) {
                 uiState = uiState.copy(
                     rejectedPurchasesCount = count,
@@ -692,7 +684,7 @@ class CashierViewModel(
             }
         }
     }
-    
+
     /**
      * Check if a popup should be shown and show it if conditions are met.
      */
@@ -700,24 +692,24 @@ class CashierViewModel(
         if (!uiState.isIdle) {
             return  // Never show popup when kassa is busy
         }
-        
+
         val now = System.currentTimeMillis()
         val timeSinceLastPopup = now - lastPopupShown
-        
+
         if (timeSinceLastPopup < MIN_POPUP_INTERVAL_MS) {
             return  // Too soon since last popup
         }
-        
+
         viewModelScope.launch(Dispatchers.IO) {
             val purchases = RejectedPurchaseStore.getAllRejectedPurchases()
-            
+
             // Priority 1: Server errors (if not shown this session)
             if (!serverErrorShownThisSession) {
                 val serverErrors = purchases.filter { purchase ->
                     purchase.errorMessage.contains("server", ignoreCase = true) ||
                     purchase.errorMessage.contains("5", ignoreCase = true)
                 }
-                
+
                 if (serverErrors.isNotEmpty()) {
                     withContext(Dispatchers.Main) {
                         lastPopupShown = now
@@ -727,18 +719,18 @@ class CashierViewModel(
                     return@launch
                 }
             }
-            
+
             // Priority 2: Invalid seller errors that need manual review
-            val invalidSellers = purchases.filter { 
-                it.errorCode == SerializableSoldItemErrorCode.INVALID_SELLER && 
+            val invalidSellers = purchases.filter {
+                it.errorCode == SerializableSoldItemErrorCode.INVALID_SELLER &&
                 it.needsManualReview &&
                 it.autoRecoveryAttempted
             }
-            
+
             if (invalidSellers.isNotEmpty()) {
                 val first = invalidSellers.first()
                 val invalidSellerNumbers = first.items.map { it.item.seller }.distinct()
-                
+
                 withContext(Dispatchers.Main) {
                     lastPopupShown = now
                     uiState = uiState.copy(

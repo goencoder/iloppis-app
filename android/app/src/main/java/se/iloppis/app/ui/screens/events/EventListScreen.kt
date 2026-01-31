@@ -2,6 +2,7 @@ package se.iloppis.app.ui.screens.events
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -130,14 +131,34 @@ private fun SearchBar() {
 
 @Composable
 private fun FilterChips() {
-    Row(
+    LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(bottom = 16.dp)
     ) {
-        FilterChip(selected = true, onClick = {}, label = { Text(stringResource(R.string.filter_all)) })
-        FilterChip(selected = false, onClick = {}, label = { Text(stringResource(R.string.filter_open)) })
-        FilterChip(selected = false, onClick = {}, label = { Text(stringResource(R.string.filter_upcoming)) })
-        FilterChip(selected = false, onClick = {}, label = { Text(stringResource(R.string.filter_past)) })
+        item {
+            FilterChip(
+                selected = true,
+                onClick = {},
+                label = { Text(stringResource(R.string.filter_all)) })
+        }
+        item {
+            FilterChip(
+                selected = false,
+                onClick = {},
+                label = { Text(stringResource(R.string.filter_open)) })
+        }
+        item {
+            FilterChip(
+                selected = false,
+                onClick = {},
+                label = { Text(stringResource(R.string.filter_upcoming)) })
+        }
+        item {
+            FilterChip(
+                selected = false,
+                onClick = {},
+                label = { Text(stringResource(R.string.filter_past)) })
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 package se.iloppis.app.utils.provider
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.Composable
 import kotlinx.serialization.json.Json.Default.decodeFromString
 import se.iloppis.app.R
@@ -22,12 +23,22 @@ fun Provider(
     networkConfigFile: Int = R.raw.client,
     content: @Composable () -> Unit
 ) {
-    val stream = context.resources.openRawResource(networkConfigFile)
-    val networkConfig = decodeFromString<ClientConfig>(stream.readBytes().decodeToString())
+    var networkConfig: ClientConfig? = null
+    try {
+        context.resources.openRawResource(networkConfigFile).use {
+            networkConfig = decodeFromString<ClientConfig>(it.readBytes().decodeToString())
+        }
+    }catch (e: Exception) {
+        Log.e("ProviderError", e.message ?: "Error parsing json for network client config")
+    }
 
     ContextProvider(context) {
         LocalStorageProvider(context) {
-            ClientConfigProvider(networkConfig) {
+            if(networkConfig != null) {
+                ClientConfigProvider(networkConfig) {
+                    content()
+                }
+            }else {
                 content()
             }
         }

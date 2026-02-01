@@ -10,7 +10,7 @@ private object LocalClientConfig {
     /**
      * Config object
      */
-    var config: ClientConfig = ClientConfig("")
+    var config: ClientConfig? = null
 }
 
 
@@ -24,11 +24,26 @@ private object LocalClientConfig {
  */
 @Composable
 fun ClientConfigProvider(config: ClientConfig, content: @Composable () -> Unit) {
-    LocalClientConfig.config = config
+    if(LocalClientConfig.config == null) LocalClientConfig.config = config
     content()
 }
 
-
+/**
+ * Force sets client config
+ *
+ * This should be used with caution as it may have
+ * unintended results.
+ *
+ * Consider using [ClientConfigProvider] to provide
+ * a configuration object once. But if it is needed
+ * to override the configuration after it has been
+ * set once, then this can be used.
+ *
+ * @see ClientConfigProvider
+ */
+fun forceSetClientConfig(config: ClientConfig) {
+    LocalClientConfig.config = config
+}
 
 /**
  * iLoppis client configuration
@@ -37,4 +52,8 @@ fun ClientConfigProvider(config: ClientConfig, content: @Composable () -> Unit) 
  * provide the local context with a
  * client configuration for the [se.iloppis.app.network.iLoppisClient]
  */
-fun clientConfig() : ClientConfig = LocalClientConfig.config
+fun clientConfig() : ClientConfig {
+    if(LocalClientConfig.config == null)
+        throw IllegalAccessException("No network client config provided in this context")
+    return LocalClientConfig.config!!
+}

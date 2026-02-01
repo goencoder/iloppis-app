@@ -1,5 +1,6 @@
 {
   "url" : "https://iloppis-staging.fly.dev/",
+  "debug" : true,
 
   "connection" : {
     "timeout" : 30

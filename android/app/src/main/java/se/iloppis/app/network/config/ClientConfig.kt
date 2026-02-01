@@ -13,6 +13,11 @@ data class ClientConfig(
     val url: String,
 
     /**
+     * HTTP client debug
+     */
+    val debug: Boolean = false,
+
+    /**
      * Connection configuration
      */
     val connection: ClientConnectionConfiguration = ClientConnectionConfiguration(),

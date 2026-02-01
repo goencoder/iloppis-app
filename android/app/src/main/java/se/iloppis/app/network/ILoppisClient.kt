@@ -47,7 +47,9 @@ class ILoppisClient(config: ClientConfig) {
      * - Redacts Authorization headers to prevent leaking API keys
      */
     private val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY // Force BODY logging for debugging
+        level = // Force BODY logging for debugging
+            if(config.debug) HttpLoggingInterceptor.Level.BODY
+            else HttpLoggingInterceptor.Level.NONE
         redactHeader("Authorization")
         redactHeader("X-API-Key")
     }

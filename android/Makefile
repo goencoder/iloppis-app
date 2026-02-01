@@ -2,6 +2,8 @@
 # Usage: make build | make start | make stop | make logs
 
 # Environment Setup
+ENV ?= staging
+FLAVOR_CAPITALIZED := $(shell echo $(ENV) | sed 's/^./\U&/')
 ANDROID_HOME ?= /opt/homebrew/share/android-commandlinetools
 
 # Java Version Detection and Setup
@@ -82,7 +84,7 @@ help:
 	@echo "  DEVICE       = $(DEVICE) (empty = auto-detect)"
 
 build:
-	@echo "Building debug APK..."
+	@echo "Building $(ENV) debug APK..."
 	@if [ -z "$(JAVA_HOME)" ]; then \
 		echo "❌ ERROR: No compatible Java found!"; \
 		echo "   Android development requires Java 17 or 21."; \
@@ -91,12 +93,12 @@ build:
 		exit 1; \
 	fi
 	@echo "✅ Using Java: $(JAVA_HOME)"
-	./gradlew assembleDebug --no-daemon
+	./gradlew assemble$(FLAVOR_CAPITALIZED)Debug --no-daemon
 
 release:
-	@echo "Building release APK..."
+	@echo "Building $(ENV) release APK..."
 	@echo "⚠️  Requires signing configuration in gradle.properties"
-	./gradlew assembleRelease --no-daemon
+	./gradlew assemble$(FLAVOR_CAPITALIZED)Release --no-daemon
 
 clean:
 	@echo "Cleaning build artifacts..."

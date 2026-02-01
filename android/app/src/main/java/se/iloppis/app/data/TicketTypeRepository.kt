@@ -4,7 +4,7 @@ import android.util.Log
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import se.iloppis.app.network.config.clientConfig
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.tickets.TicketsAPI
 
 private const val TAG = "TicketTypeRepository"
@@ -16,7 +16,7 @@ private const val TAG = "TicketTypeRepository"
 object TicketTypeRepository {
     private val mutex = Mutex()
     private var ticketTypeMap: Map<String, String> = emptyMap()
-    private val api: TicketsAPI = iLoppisClient(clientConfig()).create()
+    private val api: TicketsAPI = ILoppisClient(clientConfig()).create()
 
     /**
      * Initialize or refresh ticket types for a specific event.

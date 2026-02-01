@@ -6,12 +6,12 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
-import se.iloppis.app.network.iLoppisApiInterface
+import se.iloppis.app.network.ILoppisApiInterface
 
 /**
  * Cashier API interface
  */
-interface CashierAPI : iLoppisApiInterface {
+interface CashierAPI : ILoppisApiInterface {
     /**
      * Sends sold items create request
      */

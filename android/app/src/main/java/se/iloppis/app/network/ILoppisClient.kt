@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 /**
  * iLoppis API Client object
  */
-class iLoppisClient(config: ClientConfig) {
+class ILoppisClient(config: ClientConfig) {
     /**
      * Applies client connection configuration to [OkHttpClient.Builder]
      */
@@ -77,13 +77,13 @@ class iLoppisClient(config: ClientConfig) {
 
 
     /**
-     * Creates [se.iloppis.app.network.iLoppisClient] instance
+     * Creates [se.iloppis.app.network.ILoppisClient] instance
      * with extension interface.
      *
-     * This will create an instance of this [se.iloppis.app.network.iLoppisClient]
+     * This will create an instance of this [se.iloppis.app.network.ILoppisClient]
      * object built upon the specified API interface.
      */
-    inline fun <reified T : iLoppisApiInterface> create(): T = retrofit.create(T::class.java)
+    inline fun <reified T : ILoppisApiInterface> create(): T = retrofit.create(T::class.java)
 }
 
 
@@ -91,7 +91,7 @@ class iLoppisClient(config: ClientConfig) {
 /**
  * iLoppis API interface
  *
- * All interfaces used with the [iLoppisClient] must
+ * All interfaces used with the [ILoppisClient] must
  * implement this interface.
  */
-interface iLoppisApiInterface {}
+interface ILoppisApiInterface {}

@@ -19,7 +19,7 @@ import se.iloppis.app.network.events.ApiEventListResponse
 import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.events.EventLifecycle
 import se.iloppis.app.network.events.convertCollection
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.utils.storage.LocalStorage
 import se.iloppis.app.utils.storage.localStorage
 
@@ -111,7 +111,7 @@ class StoredEventsListState(val config: ClientConfig, val storage: LocalStorage)
         CoroutineScope(Dispatchers.Main).launch {
             data = data.copy(isLoading = true, errorMessage = null)
             try {
-                val api = iLoppisClient(config).create<EventAPI>()
+                val api = ILoppisClient(config).create<EventAPI>()
 
                 Log.d(TAG, "Fetching events: [${EventAPI.convertCollection(ids)}]")
                 val res = api.get(EventAPI.convertCollection(ids))

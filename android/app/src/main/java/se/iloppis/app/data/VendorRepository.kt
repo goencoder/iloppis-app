@@ -4,7 +4,7 @@ import android.util.Log
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import se.iloppis.app.network.config.clientConfig
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.vendors.VendorAPI
 import se.iloppis.app.network.vendors.VendorFilter
 import se.iloppis.app.network.vendors.VendorFilterRequest
@@ -39,7 +39,7 @@ private const val TAG = "VendorRepository"
 object VendorRepository {
     private lateinit var eventId: String
     private lateinit var apiKey: String
-    private val vendorApi: VendorAPI by lazy { iLoppisClient(clientConfig()).create<VendorAPI>() }
+    private val vendorApi: VendorAPI by lazy { ILoppisClient(clientConfig()).create<VendorAPI>() }
     private val mutex = Mutex()
 
     @Volatile

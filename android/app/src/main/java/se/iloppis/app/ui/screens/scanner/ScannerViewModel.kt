@@ -19,7 +19,7 @@ import se.iloppis.app.data.mappers.VisitorTicketMapper.toDomain
 import se.iloppis.app.domain.model.VisitorTicket
 import se.iloppis.app.domain.model.VisitorTicketStatus
 import se.iloppis.app.network.config.clientConfig
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.visitor.VisitorAPI
 import java.io.IOException
 import java.time.Instant
@@ -126,7 +126,7 @@ class ScannerViewModel(
     private val apiKey: String
 ) : ViewModel() {
 
-    private val visitorTicketApi: VisitorAPI = iLoppisClient(clientConfig()).create()
+    private val visitorTicketApi: VisitorAPI = ILoppisClient(clientConfig()).create()
     private val groupManager = GroupScanManager()
     private val recentScanIds = ArrayDeque<String>(RECENT_SCAN_BUFFER)
 

@@ -3,12 +3,12 @@ package se.iloppis.app.network.tickets
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
-import se.iloppis.app.network.iLoppisApiInterface
+import se.iloppis.app.network.ILoppisApiInterface
 
 /**
  * iLoppis Tickets API interface
  */
-interface TicketsAPI : iLoppisApiInterface {
+interface TicketsAPI : ILoppisApiInterface {
     /**
      * Lists different types of tickets available for an event.
      */

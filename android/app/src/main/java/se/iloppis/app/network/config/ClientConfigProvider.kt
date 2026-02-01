@@ -50,7 +50,7 @@ fun forceSetClientConfig(config: ClientConfig) {
  *
  * This uses the [ClientConfigProvider] to
  * provide the local context with a
- * client configuration for the [se.iloppis.app.network.iLoppisClient]
+ * client configuration for the [se.iloppis.app.network.ILoppisClient]
  */
 fun clientConfig() : ClientConfig {
     if(LocalClientConfig.config == null)

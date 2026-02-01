@@ -10,7 +10,7 @@ import se.iloppis.app.network.cashier.PaymentMethod
 import se.iloppis.app.network.cashier.SoldItemObject
 import se.iloppis.app.network.cashier.SoldItemsRequest
 import se.iloppis.app.network.config.clientConfig
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 
 /**
  * Simplified SyncWorker using pending_items.jsonl with mutex protection.
@@ -53,7 +53,7 @@ class SoldItemsSyncWorker(
 
             Log.d(TAG, "Processing ${byPurchase.size} purchases with ${allItems.size} total items")
 
-            val api = iLoppisClient(clientConfig()).create<CashierAPI>()
+            val api = ILoppisClient(clientConfig()).create<CashierAPI>()
 
             for ((purchaseId, items) in byPurchase) {
                 try {

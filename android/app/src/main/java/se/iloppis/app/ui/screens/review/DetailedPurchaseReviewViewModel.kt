@@ -21,7 +21,7 @@ import se.iloppis.app.network.cashier.CashierAPI
 import se.iloppis.app.network.cashier.SoldItemObject
 import se.iloppis.app.network.cashier.SoldItemsRequest
 import se.iloppis.app.network.config.clientConfig
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 
 private const val TAG = "DetailedPurchaseReviewVM"
 
@@ -44,7 +44,7 @@ class DetailedPurchaseReviewViewModel(
     var uiState by mutableStateOf(DetailedPurchaseUiState())
         private set
 
-    private val api: CashierAPI = iLoppisClient(clientConfig()).create()
+    private val api: CashierAPI = ILoppisClient(clientConfig()).create()
     // Use global singleton VendorRepository (initialized by CashierViewModel)
 
     init {

@@ -10,7 +10,7 @@ import retrofit2.HttpException
 import se.iloppis.app.data.CommittedScansStore
 import se.iloppis.app.data.PendingScansStore
 import se.iloppis.app.network.config.clientConfig
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.visitor.VisitorAPI
 import java.io.IOException
 
@@ -48,7 +48,7 @@ class ScanSyncWorker(
 
             Log.d(TAG, "Processing ${allScans.size} pending scans")
 
-            val api = iLoppisClient(clientConfig()).create<VisitorAPI>()
+            val api = ILoppisClient(clientConfig()).create<VisitorAPI>()
             var hasNetworkError = false
 
             for (scan in allScans) {

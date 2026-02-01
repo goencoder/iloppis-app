@@ -4,12 +4,12 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
-import se.iloppis.app.network.iLoppisApiInterface
+import se.iloppis.app.network.ILoppisApiInterface
 
 /**
  * iLoppis event API
  */
-interface EventAPI : iLoppisApiInterface {
+interface EventAPI : ILoppisApiInterface {
     /**
      * Gets all events without filtering the search
      *

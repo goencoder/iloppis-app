@@ -21,7 +21,7 @@ import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.events.EventFilter
 import se.iloppis.app.network.events.EventFilterRequest
 import se.iloppis.app.network.events.EventLifecycle
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.keys.KeyAPI
 import se.iloppis.app.ui.screens.ScreenModel
 import se.iloppis.app.ui.states.ScreenAction
@@ -57,7 +57,7 @@ class EventListViewModel : ViewModel() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null)
             try {
-                val api = iLoppisClient(clientConfig()).create<EventAPI>()
+                val api = ILoppisClient(clientConfig()).create<EventAPI>()
                 Log.d(TAG, "API client created, making filterEvents request")
                 // Filtrera på dagens datum och endast OPEN evenemang
                 val today = "${LocalDate.now()}T00:00:00Z"
@@ -139,7 +139,7 @@ class EventListViewModel : ViewModel() {
             Log.d(TAG, "Validating code: $formattedCode for event: $eventId")
 
             try {
-                val api = iLoppisClient(clientConfig()).create<KeyAPI>()
+                val api = ILoppisClient(clientConfig()).create<KeyAPI>()
                 val response = api.getApiKeyByAlias(eventId, formattedCode)
 
                 Log.d(TAG, "API Response - alias: ${response.alias}, isActive: ${response.isActive}, type: ${response.type}")

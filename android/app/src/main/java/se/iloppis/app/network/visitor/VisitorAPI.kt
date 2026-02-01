@@ -5,12 +5,12 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
-import se.iloppis.app.network.iLoppisApiInterface
+import se.iloppis.app.network.ILoppisApiInterface
 
 /**
  * iLoppis visitor API interface
  */
-interface VisitorAPI : iLoppisApiInterface {
+interface VisitorAPI : ILoppisApiInterface {
     /**
      * Scans a visitors ticket and reports it as scanned
      */

@@ -2,12 +2,12 @@ package se.iloppis.app.network.keys
 
 import retrofit2.http.GET
 import retrofit2.http.Path
-import se.iloppis.app.network.iLoppisApiInterface
+import se.iloppis.app.network.ILoppisApiInterface
 
 /**
  * iLoppis Key API
  */
-interface KeyAPI : iLoppisApiInterface {
+interface KeyAPI : ILoppisApiInterface {
     /**
      * Gets iLoppis API key by alias
      */

@@ -19,7 +19,7 @@ class iLoppisClientTest {
         // This may use an outdated market
         // ==================================
 
-        val client = iLoppisClient(config).create<EventAPI>()
+        val client = ILoppisClient(config).create<EventAPI>()
 
         val market = "ed71222f-36ad-40a6-a102-2fb821bed1c0"
         val events = "66af78e4-be70-4145-be55-0c3cdfe6637c,66af78e4-be70-4145-be55-0c3cdfe6637d"
@@ -54,7 +54,7 @@ class iLoppisClientTest {
         // This may use an outdated market
         // ==================================
 
-        val client = iLoppisClient(config).create<EventAPI>()
+        val client = ILoppisClient(config).create<EventAPI>()
         val events = "66af78e4-be70-4145-be55-0c3cdfe6637c"
         val resEvents = client.get(events)
 

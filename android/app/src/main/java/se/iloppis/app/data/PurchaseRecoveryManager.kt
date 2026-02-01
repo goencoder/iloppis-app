@@ -12,7 +12,7 @@ import se.iloppis.app.network.cashier.RejectedItem
 import se.iloppis.app.network.cashier.SoldItemObject
 import se.iloppis.app.network.cashier.SoldItemsRequest
 import se.iloppis.app.network.config.clientConfig
-import se.iloppis.app.network.iLoppisClient
+import se.iloppis.app.network.ILoppisClient
 import java.io.IOException
 import java.net.SocketTimeoutException
 
@@ -33,7 +33,7 @@ class PurchaseRecoveryManager(
     private val eventId: String,
     private val apiKey: String
 ) {
-    private val soldItemsApi = iLoppisClient(clientConfig()).create<CashierAPI>()
+    private val soldItemsApi = ILoppisClient(clientConfig()).create<CashierAPI>()
     // Use global singleton VendorRepository (initialized by CashierViewModel)
 
     /**

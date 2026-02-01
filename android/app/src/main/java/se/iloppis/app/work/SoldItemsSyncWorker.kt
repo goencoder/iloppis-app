@@ -68,7 +68,7 @@ class SoldItemsSyncWorker(
                                     purchaseId = it.purchaseId,
                                     seller = it.sellerId,
                                     price = it.price,
-                                    paymentMethod = PaymentMethod.CASH
+                                    paymentMethod = PaymentMethod.KONTANT
                                 )
                             }
                         )

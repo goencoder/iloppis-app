@@ -9,6 +9,19 @@ android {
     namespace = "se.iloppis.app"
     compileSdk = 36
 
+    flavorDimensions += "environment"
+    productFlavors {
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            resValue("string", "app_name", "iLoppis ( Staging )")
+        }
+        create("production") {
+            dimension = "environment"
+        }
+    }
+
     defaultConfig {
         applicationId = "se.iloppis.app"
         minSdk = 26

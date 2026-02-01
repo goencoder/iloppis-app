@@ -14,7 +14,9 @@ JAVA_HOME_CANDIDATES := \
 	/Users/goranengdahl/Library/Java/JavaVirtualMachines/corretto-21.0.9/Contents/Home \
 	/opt/homebrew/Cellar/openjdk@21/*/libexec/openjdk.jdk/Contents/Home \
 	/Users/goranengdahl/Library/Java/JavaVirtualMachines/ms-17.0.11/Contents/Home \
-	/opt/homebrew/Cellar/openjdk@17/*/libexec/openjdk.jdk/Contents/Home
+	/opt/homebrew/Cellar/openjdk@17/*/libexec/openjdk.jdk/Contents/Home \
+	/usr/lib/jvm/java-21-openjdk \
+	/usr/lib/jvm/java-17-openjdk
 
 # Find first available compatible Java version
 JAVA_HOME := $(shell \

@@ -34,13 +34,6 @@ fun Provider(
 
 
 
-    Log.d(
-        "ProviderDEBUG",
-        "Loaded config ${networkConfig?.url} && debug ${networkConfig?.debug}"
-    )
-
-
-
     ContextProvider(context) {
         LocalStorageProvider(context) {
             if(networkConfig != null) {

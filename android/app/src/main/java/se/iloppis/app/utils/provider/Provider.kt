@@ -32,6 +32,15 @@ fun Provider(
         Log.e("ProviderError", e.message ?: "Error parsing json for network client config")
     }
 
+
+
+    Log.d(
+        "ProviderDEBUG",
+        "Loaded config ${networkConfig?.url} && debug ${networkConfig?.debug}"
+    )
+
+
+
     ContextProvider(context) {
         LocalStorageProvider(context) {
             if(networkConfig != null) {

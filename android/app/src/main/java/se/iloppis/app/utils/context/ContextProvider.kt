@@ -37,4 +37,4 @@ fun ContextProvider(context: Context, content: @Composable () -> Unit) {
  * the local context instance.
  */
 @Composable
-fun localContext() : Context = localContext.current
+fun currentContext() : Context = localContext.current

@@ -1,0 +1,16 @@
+{
+  "url" : "https://iloppis.se/",
+  "debug" : false,
+
+  "connection" : {
+    "timeout" : 30
+  },
+
+  "reading" : {
+    "timeout" : 60
+  },
+
+  "writing" : {
+    "timeout" : 60
+  }
+}

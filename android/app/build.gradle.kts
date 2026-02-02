@@ -9,6 +9,19 @@ android {
     namespace = "se.iloppis.app"
     compileSdk = 36
 
+    flavorDimensions += "environment"
+    productFlavors {
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-staging"
+            resValue("string", "app_name", "iLoppis ( Staging )")
+        }
+        create("production") {
+            dimension = "environment"
+        }
+    }
+
     defaultConfig {
         applicationId = "se.iloppis.app"
         minSdk = 26
@@ -42,11 +55,11 @@ android {
     lint {
         // Disable buggy detector (crashes in Kotlin 2.1)
         disable += "NullSafeMutableLiveData"
-        
+
         // Enable critical checks for store submission
         checkReleaseBuilds = true
         abortOnError = true  // Block build on any issues - maintain zero tolerance
-        
+
         // Security and privacy - these are CRITICAL for store approval
         fatal += listOf(
             "SetJavaScriptEnabled",      // WebView JavaScript enabled
@@ -59,13 +72,13 @@ android {
             "ExportedContentProvider",
             "PermissionImpliesUnsupportedChromeOsHardware"
         )
-        
+
         // Warnings we care about
         warning += listOf(
             "UnsafeOptInUsageError",     // Experimental APIs
             "ObsoleteSdkInt"             // Old SDK checks
         )
-        
+
         // Allow missing translations for now (can add later)
         disable += "MissingTranslation"
     }
@@ -96,7 +109,8 @@ dependencies {
 
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
-    
+    implementation(libs.multiplatform.markdown.renderer.m3)
+
     // Protobuf Lite runtime (Java proto classes in src/main/java/com/iloppis/v1/)
     implementation(libs.protobuf.javalite)
 

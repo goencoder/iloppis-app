@@ -17,16 +17,17 @@ import se.iloppis.app.data.models.RejectedItemWithDetails
 import se.iloppis.app.data.models.RejectedPurchase
 import se.iloppis.app.data.models.SerializableSoldItemErrorCode
 import se.iloppis.app.data.models.StoredSoldItem
-import se.iloppis.app.network.ApiClient
-import se.iloppis.app.network.CreateSoldItemsRequest
-import se.iloppis.app.network.SoldItemRequest
-import se.iloppis.app.network.SoldItemsApi
+import se.iloppis.app.network.cashier.CashierAPI
+import se.iloppis.app.network.cashier.SoldItemObject
+import se.iloppis.app.network.cashier.SoldItemsRequest
+import se.iloppis.app.network.config.clientConfig
+import se.iloppis.app.network.ILoppisClient
 
 private const val TAG = "DetailedPurchaseReviewVM"
 
 /**
  * ViewModel for detailed purchase review screen.
- * 
+ *
  * Handles:
  * - Loading a specific rejected purchase by ID
  * - Editing seller numbers on individual items
@@ -43,7 +44,7 @@ class DetailedPurchaseReviewViewModel(
     var uiState by mutableStateOf(DetailedPurchaseUiState())
         private set
 
-    private val api: SoldItemsApi = ApiClient.create()
+    private val api: CashierAPI = ILoppisClient(clientConfig()).create()
     // Use global singleton VendorRepository (initialized by CashierViewModel)
 
     init {
@@ -209,7 +210,7 @@ class DetailedPurchaseReviewViewModel(
             try {
                 // Convert RejectedItemWithDetails back to SoldItemRequest
                 val itemRequests = uiState.items.map { rejectedItem ->
-                    SoldItemRequest(
+                    SoldItemObject(
                         itemId = rejectedItem.item.itemId,
                         purchaseId = "", // Let backend generate new ID
                         seller = rejectedItem.item.seller,
@@ -218,7 +219,7 @@ class DetailedPurchaseReviewViewModel(
                     )
                 }
 
-                val request = CreateSoldItemsRequest(
+                val request = SoldItemsRequest(
                     items = itemRequests
                 )
 
@@ -261,14 +262,14 @@ class DetailedPurchaseReviewViewModel(
                                 purchaseId = rejectedItem.item.purchaseId,
                                 seller = rejectedItem.item.seller,
                                 price = rejectedItem.item.price,
-                                paymentMethod = rejectedItem.item.paymentMethod ?: "SWISH",
+                                paymentMethod = rejectedItem.item.paymentMethod,
                                 soldTime = System.currentTimeMillis(),
                                 uploaded = false
                             ),
                             reason = rejectedItem.reason,
                             errorCode = SerializableSoldItemErrorCode.fromString(rejectedItem.errorCode)
                         )
-                    } ?: emptyList()
+                    }
 
                     // Update the rejected purchase with new error info
                     val firstError = response.rejectedItems.firstOrNull()
@@ -326,7 +327,7 @@ data class DetailedPurchaseUiState(
     val purchaseNotFound: Boolean = false,
     val purchaseDeleted: Boolean = false,
     val uploadSuccess: Boolean = false,
-    
+
     // Seller editor dialog state
     val showSellerEditor: Boolean = false,
     val editingItemIndex: Int? = null,

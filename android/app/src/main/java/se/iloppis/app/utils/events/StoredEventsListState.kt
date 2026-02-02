@@ -13,11 +13,15 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.network.API_URL
-import se.iloppis.app.network.ApiClient
-import se.iloppis.app.network.EventApi
-import se.iloppis.app.network.EventsFromID
+import se.iloppis.app.network.config.ClientConfig
+import se.iloppis.app.network.config.clientConfig
+import se.iloppis.app.network.events.ApiEventListResponse
+import se.iloppis.app.network.events.EventAPI
+import se.iloppis.app.network.events.EventLifecycle
+import se.iloppis.app.network.events.convertCollection
+import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.utils.storage.LocalStorage
+import se.iloppis.app.utils.storage.localStorage
 
 /**
  * Stored events list state data class
@@ -49,7 +53,7 @@ data class StoredEventsListStateData(
  * This uses [LocalStorage] to access locally stored
  * events.
  */
-class StoredEventsListState(val storage: LocalStorage) {
+class StoredEventsListState(val config: ClientConfig, val storage: LocalStorage) {
     /**
      * State data
      *
@@ -103,14 +107,14 @@ class StoredEventsListState(val storage: LocalStorage) {
             return
         }
 
-        Log.d(TAG, "Loading events from: $API_URL")
+        Log.d(TAG, "Loading events from: ${clientConfig().url}")
         CoroutineScope(Dispatchers.Main).launch {
             data = data.copy(isLoading = true, errorMessage = null)
             try {
-                val api = ApiClient.create<EventApi>()
+                val api = ILoppisClient(config).create<EventAPI>()
 
-                Log.d(TAG, "Fetching events: [${getIDString()}]")
-                val res = api.getEventsByIds(getIDString())
+                Log.d(TAG, "Fetching events: [${EventAPI.convertCollection(ids)}]")
+                val res = api.get(EventAPI.convertCollection(ids))
                 Log.d(TAG, "Response received, events count: ${res.total}")
 
                 val handled = handleEventsResponse(res)
@@ -130,7 +134,7 @@ class StoredEventsListState(val storage: LocalStorage) {
                 Log.e(TAG, "Error loading events", e)
                 data = data.copy(
                     isLoading = false,
-                    errorMessage = "API: $API_URL - $errorMsg"
+                    errorMessage = "API: ${clientConfig().url} - $errorMsg"
                 )
             }
         }
@@ -145,10 +149,10 @@ class StoredEventsListState(val storage: LocalStorage) {
      * and update the local IDs list if there are
      * old events stored but not available.
      */
-    private fun handleEventsResponse(response: EventsFromID) : Pair<List<Event>, Set<String>> {
+    private fun handleEventsResponse(response: ApiEventListResponse) : Pair<List<Event>, Set<String>> {
         val idsToKeep = mutableSetOf<String>()
         val result = response.events.mapNotNull {
-            if(it.lifecycleState == "OPEN") {
+            if(it.lifecycleState == EventLifecycle.OPEN) {
                 idsToKeep.add(it.id)
                 it.toDomain()
             } else null
@@ -170,26 +174,6 @@ class StoredEventsListState(val storage: LocalStorage) {
      * present in the events id list stored locally
      */
     fun reload() { getEvents() }
-
-    /**
-     * Gets IDs list as a string
-     *
-     * The format drops the surrounding square brackets
-     * and removes all spaces.
-     *
-     * #### Example
-     * ```kt
-     * [one, two, three] // Input
-     * one,two,three     // Out
-     * ```
-     */
-    fun getIDString() : String {
-        return ids
-            .toString()
-            .replace(" ", "")
-            .drop(1)
-            .dropLast(1)
-    }
 
     /**
      * Removes event from list
@@ -224,8 +208,12 @@ class StoredEventsListState(val storage: LocalStorage) {
  * a locally saved events id list.
  */
 @Composable
-fun rememberStoredEventsListState(storage: LocalStorage, key: Any? = Unit) : StoredEventsListState {
+fun rememberStoredEventsListState(
+    config: ClientConfig = clientConfig(),
+    storage: LocalStorage = localStorage(),
+    key: Any? = Unit
+) : StoredEventsListState {
     return remember(key1 = key) {
-        StoredEventsListState(storage)
+        StoredEventsListState(config, storage)
     }
 }

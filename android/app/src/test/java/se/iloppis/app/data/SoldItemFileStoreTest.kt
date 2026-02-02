@@ -5,6 +5,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
 import se.iloppis.app.data.models.StoredSoldItem
+import se.iloppis.app.network.cashier.PaymentMethod
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -28,7 +29,7 @@ class SoldItemFileStoreTest {
         // Initialize with a test context that points to our temp directory
         SoldItemFileStore.initializeForTesting(testDir)
         testFile = SoldItemFileStore.getFile()
-        
+
         // Ensure clean state
         if (testFile.exists()) {
             testFile.delete()
@@ -221,27 +222,27 @@ class SoldItemFileStoreTest {
     @Test
     fun testPaymentMethod_kontant() {
         // Arrange
-        val item = createTestItem("item1", seller = 1, price = 100, paymentMethod = "KONTANT")
+        val item = createTestItem("item1", seller = 1, price = 100, paymentMethod = PaymentMethod.CASH)
 
         // Act
         SoldItemFileStore.appendSoldItems(listOf(item))
         val result = SoldItemFileStore.getAllSoldItems()
 
         // Assert
-        assertEquals("KONTANT", result[0].paymentMethod)
+        assertEquals(PaymentMethod.CASH, result[0].paymentMethod)
     }
 
     @Test
     fun testPaymentMethod_swish() {
         // Arrange
-        val item = createTestItem("item1", seller = 1, price = 100, paymentMethod = "SWISH")
+        val item = createTestItem("item1", seller = 1, price = 100, paymentMethod = PaymentMethod.SWISH)
 
         // Act
         SoldItemFileStore.appendSoldItems(listOf(item))
         val result = SoldItemFileStore.getAllSoldItems()
 
         // Assert
-        assertEquals("SWISH", result[0].paymentMethod)
+        assertEquals(PaymentMethod.SWISH, result[0].paymentMethod)
     }
 
     @Test
@@ -322,14 +323,14 @@ class SoldItemFileStoreTest {
         // Assert - Should have 5 unique items (3 original + 2 new)
         val result = SoldItemFileStore.getAllSoldItems()
         assertEquals(5, result.size)
-        
+
         // Verify originals are unchanged
         val item1 = result.find { it.itemId == "item1" }!!
         assertEquals(1, item1.seller) // Original value
-        
+
         val item2 = result.find { it.itemId == "item2" }!!
         assertEquals(2, item2.seller) // Original value
-        
+
         // Verify new items were added
         assertTrue(result.any { it.itemId == "item4" })
         assertTrue(result.any { it.itemId == "item5" })
@@ -342,7 +343,7 @@ class SoldItemFileStoreTest {
         purchaseId: String = "purchase-ulid-123",
         seller: Int,
         price: Int,
-        paymentMethod: String = "KONTANT",
+        paymentMethod: PaymentMethod = PaymentMethod.CASH,
         soldTime: Long = System.currentTimeMillis(),
         uploaded: Boolean = false
     ): StoredSoldItem {

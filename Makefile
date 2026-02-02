@@ -1,3 +1,10 @@
+#
+# Build or debug environment
+#
+ENV ?= staging
+
+
+
 # iLoppis Mobile App
 # Root Makefile for Android and iOS development
 #
@@ -47,21 +54,21 @@ help:
 
 # Deploy to physical Android device
 android-device:
-	@echo "📱 Deploying to connected Android device..."
-	@cd android && $(MAKE) run
+	@echo "📱 Deploying $(ENV) to connected Android device..."
+	@cd android && ENV=$(ENV) $(MAKE) run
 
 # Run in Android emulator
 android-emulator:
-	@echo "🖥️  Starting Android emulator and deploying app..."
-	@cd android && $(MAKE) start
+	@echo "🖥️  Starting Android emulator with $(ENV) and deploying app..."
+	@cd android && ENV=$(ENV) $(MAKE) start
 
 # Build Android APK
 android-build:
-	@cd android && $(MAKE) build
+	@cd android && ENV=$(ENV) $(MAKE) build
 
 # Build release APK
 android-release:
-	@cd android && $(MAKE) release
+	@cd android && ENV=$(ENV) $(MAKE) release
 
 # Clean Android build
 android-clean:

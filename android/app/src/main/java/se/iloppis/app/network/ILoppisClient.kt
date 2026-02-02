@@ -1,0 +1,99 @@
+package se.iloppis.app.network
+
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import se.iloppis.app.network.config.ClientConfig
+import se.iloppis.app.network.config.ClientConnectionConfiguration
+import se.iloppis.app.network.config.ClientReadingConfiguration
+import se.iloppis.app.network.config.ClientWritingConfiguration
+import java.util.concurrent.TimeUnit
+
+/**
+ * iLoppis API Client object
+ */
+class ILoppisClient(config: ClientConfig) {
+    /**
+     * Applies client connection configuration to [OkHttpClient.Builder]
+     */
+    private fun OkHttpClient.Builder.clientConnection(config: ClientConnectionConfiguration) : OkHttpClient.Builder {
+        connectTimeout(config.timeout, TimeUnit.SECONDS)
+        return this
+    }
+
+    /**
+     * Applies client reading configuration to [OkHttpClient.Builder]
+     */
+    private fun OkHttpClient.Builder.clientReading(config: ClientReadingConfiguration) : OkHttpClient.Builder {
+        readTimeout(config.timeout, TimeUnit.SECONDS)
+        return this
+    }
+
+    /**
+     * Applies client writing configuration to [OkHttpClient.Builder]
+     */
+    private fun OkHttpClient.Builder.clientWriting(config: ClientWritingConfiguration) : OkHttpClient.Builder {
+        writeTimeout(config.timeout, TimeUnit.SECONDS)
+        return this
+    }
+
+
+
+    /**
+     * Logging interceptor that:
+     * - Uses BODY level only in debug builds (full request/response)
+     * - Uses BASIC level in release builds (method + URL only)
+     * - Redacts Authorization headers to prevent leaking API keys
+     */
+    private val logging = HttpLoggingInterceptor().apply {
+        level = // Force BODY logging for debugging
+            if(config.debug) HttpLoggingInterceptor.Level.BODY
+            else HttpLoggingInterceptor.Level.NONE
+        redactHeader("Authorization")
+        redactHeader("X-API-Key")
+    }
+
+    /**
+     * API HTTP(S) client
+     */
+    private val client = OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .clientConnection(config.connection)
+        .clientReading(config.reading)
+        .clientWriting(config.writing)
+        .build()
+
+    /**
+     * API client retrofitter
+     *
+     * Allows the creation of API extension interfaces
+     * that builds on this API client object.
+     */
+    val retrofit: Retrofit = Retrofit.Builder()
+        .baseUrl(config.url)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+
+
+    /**
+     * Creates [se.iloppis.app.network.ILoppisClient] instance
+     * with extension interface.
+     *
+     * This will create an instance of this [se.iloppis.app.network.ILoppisClient]
+     * object built upon the specified API interface.
+     */
+    inline fun <reified T : ILoppisApiInterface> create(): T = retrofit.create(T::class.java)
+}
+
+
+
+/**
+ * iLoppis API interface
+ *
+ * All interfaces used with the [ILoppisClient] must
+ * implement this interface.
+ */
+interface ILoppisApiInterface {}

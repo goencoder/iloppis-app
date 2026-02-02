@@ -5,14 +5,16 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import se.iloppis.app.data.PendingItemsStore
-import se.iloppis.app.network.ApiClient
-import se.iloppis.app.network.CreateSoldItemsRequest
-import se.iloppis.app.network.SoldItemRequest
-import se.iloppis.app.network.SoldItemsApi
+import se.iloppis.app.network.cashier.CashierAPI
+import se.iloppis.app.network.cashier.PaymentMethod
+import se.iloppis.app.network.cashier.SoldItemObject
+import se.iloppis.app.network.cashier.SoldItemsRequest
+import se.iloppis.app.network.config.clientConfig
+import se.iloppis.app.network.ILoppisClient
 
 /**
  * Simplified SyncWorker using pending_items.jsonl with mutex protection.
- * 
+ *
  * Process:
  * 1. Read all pending items from JSONL
  * 2. Group by purchaseId (oldest first)
@@ -20,7 +22,7 @@ import se.iloppis.app.network.SoldItemsApi
  * 4. On success: delete accepted items, update errorText for rejected
  * 5. On network error: keep items with errorText="" for retry
  * 6. On server error: mark items with errorText="serverfel"
- * 
+ *
  * ~100 lines vs 370 lines in old implementation.
  */
 class SoldItemsSyncWorker(
@@ -51,7 +53,7 @@ class SoldItemsSyncWorker(
 
             Log.d(TAG, "Processing ${byPurchase.size} purchases with ${allItems.size} total items")
 
-            val api = ApiClient.create<SoldItemsApi>()
+            val api = ILoppisClient(clientConfig()).create<CashierAPI>()
 
             for ((purchaseId, items) in byPurchase) {
                 try {
@@ -59,14 +61,14 @@ class SoldItemsSyncWorker(
                     val response = api.createSoldItems(
                         authorization = "Bearer $apiKey",
                         eventId = eventId,
-                        request = CreateSoldItemsRequest(
-                            items.map { 
-                                SoldItemRequest(
+                        request = SoldItemsRequest(
+                            items.map {
+                                SoldItemObject(
                                     itemId = it.itemId,
                                     purchaseId = it.purchaseId,
                                     seller = it.sellerId,
                                     price = it.price,
-                                    paymentMethod = "CASH" // From cashier screen
+                                    paymentMethod = PaymentMethod.KONTANT
                                 )
                             }
                         )
@@ -85,7 +87,7 @@ class SoldItemsSyncWorker(
                     response.rejectedItems?.forEach { rejected ->
                         val reason = rejected.reason.ifBlank { "Okänt fel" }
                         Log.w(TAG, "Item ${rejected.item.itemId}: $reason")
-                        
+
                         PendingItemsStore.updateItems(purchaseId) { item ->
                             if (item.itemId == rejected.item.itemId) {
                                 item.copy(errorText = reason)

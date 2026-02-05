@@ -93,6 +93,17 @@ data class EventFilterRequest(
     val pagination: Map<String, Any> = emptyMap()
 )
 
+/**
+ * Event seller letter
+ */
+data class EventSellerLetter(
+    val pdfUrl: String?,
+    val hasLetter: Boolean?,
+    val uploadedAt: String?,
+    val expiresAt: String?,
+    val infoSummary: String?
+)
+
 
 
 /**
@@ -203,7 +214,7 @@ data class ApiEvent(
     /**
      * Seller letter
      */
-    val sellerLetter: String?
+    val sellerLetter: EventSellerLetter?
 )
 
 /**

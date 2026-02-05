@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.ui.components.events.EventCard
 import se.iloppis.app.ui.components.events.SwipeToDismissEventCard
 import se.iloppis.app.ui.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.dialogs.EventDetailDialog
@@ -237,25 +236,16 @@ private fun EventList(
         items(events) { event ->
             SwipeToDismissEventCard(
                 event,
-                enableEndToStart = stored.contains(event.id),
-                onEndToStart = {
-                    stored.remove(event.id)
-                    storage.putJson("stored-events", stored.toSet())
-                },
-
-                enableStartToEnd = !stored.contains(event.id),
+                star = stored.contains(event.id),
+                enableEndToStart = false,
+                enableStartToEnd = true,
                 onStartToEnd = {
-                    stored.add(event.id)
+                    if(stored.contains(event.id)) stored.remove(event.id)
+                    else stored.add(event.id)
                     storage.putJson("stored-events", stored.toSet())
                 },
-
                 cardAction = { onEventClick(event) }
             )
-
-//            EventCard(
-//                event = event,
-//                onClick = { onEventClick(event) }
-//            )
         }
     }
 }

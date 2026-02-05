@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -12,6 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import se.iloppis.app.R
 import se.iloppis.app.domain.model.EventState
 import se.iloppis.app.ui.theme.AppColors
 
@@ -37,6 +40,19 @@ fun StateBadge(state: EventState) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
     }
+}
+
+/**
+ * Star icon
+ */
+@Composable
+fun StarIcon() {
+    Icon(
+        imageVector = Icons.Filled.Star,
+        contentDescription = stringResource(R.string.store_event_locally),
+        tint = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(horizontal = 8.dp)
+    )
 }
 
 /**

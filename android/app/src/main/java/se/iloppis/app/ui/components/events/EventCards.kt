@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
+import se.iloppis.app.ui.components.StarIcon
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
 
@@ -48,6 +49,7 @@ import se.iloppis.app.ui.theme.AppColors
 fun SwipeToDismissEventCard(
     event: Event,
     modifier: Modifier = Modifier,
+    star: Boolean = false,
     enableStartToEnd: Boolean = false,
     enableEndToStart: Boolean = true,
     onStartToEnd: () -> Unit = {},
@@ -107,7 +109,7 @@ fun SwipeToDismissEventCard(
             scope.launch { state.reset() }
         }
     ) {
-        EventCard(event, cardAction)
+        EventCard(event, star, cardAction)
     }
 }
 
@@ -117,7 +119,7 @@ fun SwipeToDismissEventCard(
  * Card displaying event summary information.
  */
 @Composable
-fun EventCard(event: Event, onClick: () -> Unit) {
+fun EventCard(event: Event, star: Boolean = false, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -137,7 +139,13 @@ fun EventCard(event: Event, onClick: () -> Unit) {
                     fontSize = 16.sp,
                     color = AppColors.TextPrimary
                 )
-                StateBadge(event.state)
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (star) StarIcon()
+                    StateBadge(event.state)
+                }
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(

@@ -23,6 +23,7 @@ import se.iloppis.app.ui.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.dialogs.EventDetailDialog
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.theme.AppColors
+import se.iloppis.app.utils.events.localEventsStorage
 import se.iloppis.app.utils.storage.localStorage
 
 /**
@@ -225,13 +226,7 @@ private fun EventList(
     events: List<Event>,
     onEventClick: (Event) -> Unit
 ) {
-    val storage = localStorage()
-    val stored = remember { mutableStateSetOf<String>().apply {
-        addAll(
-            storage.getJson<Set<String>>("stored-events", "[]")
-        )
-    }}
-
+    val storage = localEventsStorage()
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         items(events) { event ->
             SwipeToDismissEventCard(
@@ -239,9 +234,8 @@ private fun EventList(
                 enableEndToStart = false,
                 enableStartToEnd = true,
                 onStartToEnd = {
-                    if(stored.contains(event.id)) stored.remove(event.id)
-                    else stored.add(event.id)
-                    storage.putJson("stored-events", stored.toSet())
+                    if(storage.contains(event.id)) storage.remove(event.id)
+                    else storage.add(event.id)
                 },
                 cardAction = { onEventClick(event) }
             )

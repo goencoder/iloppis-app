@@ -38,7 +38,7 @@ import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.StarIcon
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
-import se.iloppis.app.utils.events.rememberLocallyStoredEventsListState
+import se.iloppis.app.utils.events.localEventsStorage
 
 /**
  * Swipe to dismiss event card
@@ -120,7 +120,7 @@ fun SwipeToDismissEventCard(
  */
 @Composable
 fun EventCard(event: Event, onClick: () -> Unit) {
-    val state = rememberLocallyStoredEventsListState()
+    val storage = localEventsStorage()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -144,7 +144,7 @@ fun EventCard(event: Event, onClick: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if(state.contains(event.id)) StarIcon()
+                    if(storage.contains(event.id)) StarIcon()
                     StateBadge(event.state)
                 }
             }

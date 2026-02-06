@@ -8,6 +8,7 @@ import se.iloppis.app.R
 import se.iloppis.app.network.config.ClientConfig
 import se.iloppis.app.network.config.ClientConfigProvider
 import se.iloppis.app.utils.context.ContextProvider
+import se.iloppis.app.utils.events.LocalEventsListStorageProvider
 import se.iloppis.app.utils.storage.LocalStorageProvider
 
 /**
@@ -36,12 +37,14 @@ fun Provider(
 
     ContextProvider(context) {
         LocalStorageProvider(context) {
-            if(networkConfig != null) {
-                ClientConfigProvider(networkConfig) {
+            LocalEventsListStorageProvider {
+                if (networkConfig != null) {
+                    ClientConfigProvider(networkConfig) {
+                        content()
+                    }
+                } else {
                     content()
                 }
-            }else {
-                content()
             }
         }
     }

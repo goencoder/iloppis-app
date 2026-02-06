@@ -18,5 +18,7 @@ fun HomeScreen() {
             .statusBarsPadding()
     ) {
         ILoppisHeader()
+
+        /* Cashier and Scanner buttons */
     }
 }

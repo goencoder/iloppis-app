@@ -8,8 +8,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateSetOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -24,7 +22,6 @@ import se.iloppis.app.ui.dialogs.EventDetailDialog
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.utils.events.localEventsStorage
-import se.iloppis.app.utils.storage.localStorage
 
 /**
  * Main screen showing list of events (loppisar).

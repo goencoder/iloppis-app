@@ -50,7 +50,7 @@ fun StarIcon() {
     Icon(
         imageVector = Icons.Filled.Star,
         contentDescription = stringResource(R.string.store_event_locally),
-        tint = MaterialTheme.colorScheme.onSurface,
+        tint = MaterialTheme.colorScheme.onTertiaryFixed,
         modifier = Modifier.padding(horizontal = 8.dp)
     )
 }

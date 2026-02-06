@@ -10,4 +10,4 @@ val GreenText = Color(0xFF388E3C)
 val GrayBadge = Color(0xFFE0E0E0)
 val GrayText = Color(0xFF757575)
 
-val Gold = Color(0x00000000)
+val Gold = Color(0xFF757575)

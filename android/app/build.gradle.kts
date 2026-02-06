@@ -107,6 +107,8 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.kotlinx.coroutines.android)
 
+    implementation(libs.maps.compose)
+
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.multiplatform.markdown.renderer.m3)

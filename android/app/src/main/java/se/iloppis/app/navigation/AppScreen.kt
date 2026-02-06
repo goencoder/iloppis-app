@@ -33,6 +33,11 @@ sealed class ScreenPage {
      */
     data object Home : ScreenPage()
 
+    /**
+     * Search page
+     */
+    data object Search : ScreenPage()
+
 
 
     /**

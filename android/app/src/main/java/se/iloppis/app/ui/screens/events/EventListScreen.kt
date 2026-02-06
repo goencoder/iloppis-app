@@ -28,7 +28,7 @@ import se.iloppis.app.utils.events.localEventsStorage
  * Also handles navigation to cashier/scanner screens.
  */
 @Composable
-fun EventListScreen() {
+fun EventSearchScreen() {
     val viewModel = eventContext()
     val state = viewModel.uiState
 

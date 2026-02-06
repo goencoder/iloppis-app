@@ -14,8 +14,11 @@ import org.maplibre.spatialk.geojson.Position
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.utils.context.currentContext
+import se.iloppis.app.utils.map.GeoJsonDataObject
+import se.iloppis.app.utils.map.GeoJsonGeometry
+import se.iloppis.app.utils.map.GeoJsonProperty
+import se.iloppis.app.utils.map.json
 import se.iloppis.app.utils.map.loadStyle
-import se.iloppis.app.utils.map.simpleMarker
 
 /**
  * Events location map
@@ -48,7 +51,14 @@ fun Map(
     ) {
         val source = rememberGeoJsonSource(
             data = GeoJsonData.JsonString(
-                GeoJson.simpleMarker(event.latitude ?: .0, event.longitude ?: .0)
+                GeoJson.json(GeoJsonDataObject(
+                    geometry = GeoJsonGeometry(
+                        coordinates = listOf(event.latitude ?: .0, event.longitude ?: .0)
+                    ),
+                    properties = GeoJsonProperty(
+                        name = event.name
+                    )
+                ))
             )
         )
         CircleLayer(

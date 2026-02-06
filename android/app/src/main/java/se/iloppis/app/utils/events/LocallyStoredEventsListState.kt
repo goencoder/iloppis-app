@@ -1,6 +1,7 @@
 package se.iloppis.app.utils.events
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import se.iloppis.app.utils.storage.LocalStorage
 import se.iloppis.app.utils.storage.localStorage
@@ -13,16 +14,13 @@ import se.iloppis.app.utils.storage.localStorage
  *
  * @see LocalStorage
  */
+@Stable
 class LocallyStoredEventsListState(val storage: LocalStorage) {
     /**
      * Data set ( local access only )
      */
-    private val set: MutableSet<String> = mutableSetOf()
-
-    init {
-        set.apply {
-            addAll(storage.getJson<Set<String>>(BUCKET, DEFAULT))
-        }
+    private val set: MutableSet<String> = mutableSetOf<String>().apply {
+        addAll(storage.getJson<Set<String>>(BUCKET, DEFAULT))
     }
 
 

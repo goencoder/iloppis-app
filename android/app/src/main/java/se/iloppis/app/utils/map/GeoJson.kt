@@ -1,8 +1,10 @@
 package se.iloppis.app.utils.map
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json.Default.encodeToString
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.FeatureCollection
+import org.maplibre.geojson.Point
 import org.maplibre.spatialk.geojson.GeoJson
+import se.iloppis.app.domain.model.Event
 
 /**
  * GeoJson simple marker object
@@ -11,56 +13,10 @@ import org.maplibre.spatialk.geojson.GeoJson
  * the [org.maplibre.compose.map.MaplibreMap]
  * with the position specified ([latitude], [longitude])
  */
-fun GeoJson.json(data: GeoJsonDataObject) : String = encodeToString(data)
-
-
-
-/**
- * GeoJson Data for [org.maplibre.geojson.GeoJson]
- */
-@Serializable
-data class GeoJsonDataObject(
-    /**
-     * Data type
-     */
-    val type: String = "Feature",
-
-    /**
-     * GeoJson data geometry
-     */
-    val geometry: GeoJsonGeometry = GeoJsonGeometry(),
-
-    /**
-     * GeoJson data property
-     */
-    val properties: GeoJsonProperty = GeoJsonProperty()
-)
-
-/**
- * GeoJson geometry data
- */
-@Serializable
-data class GeoJsonGeometry(
-    /**
-     * Geometry object type
-     */
-    val type: String = "Point",
-
-    /**
-     * Geometry coordinates
-     */
-    val coordinates: List<Double> = emptyList()
-)
-
-/**
- * GeoJson property data
- */
-@Serializable
-data class GeoJsonProperty(
-    /**
-     * Property name
-     *
-     * The name of the location
-     */
-    val name: String = "Event location"
+fun GeoJson.fromEvent(event: Event) : FeatureCollection = FeatureCollection.fromFeature(
+    Feature.fromGeometry(
+        Point.fromLngLat(event.longitude ?: .0, event.latitude ?: .0)
+    ).apply {
+        addStringProperty("name", event.name)
+    }
 )

@@ -10,14 +10,12 @@ import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.spatialk.geojson.GeoJson
+import org.maplibre.spatialk.geojson.GeoJsonObject
 import org.maplibre.spatialk.geojson.Position
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.utils.context.currentContext
-import se.iloppis.app.utils.map.GeoJsonDataObject
-import se.iloppis.app.utils.map.GeoJsonGeometry
-import se.iloppis.app.utils.map.GeoJsonProperty
-import se.iloppis.app.utils.map.json
+import se.iloppis.app.utils.map.fromEvent
 import se.iloppis.app.utils.map.loadStyle
 
 /**
@@ -30,8 +28,8 @@ import se.iloppis.app.utils.map.loadStyle
 fun Map(
     event: Event,
     modifier: Modifier = Modifier,
-    style: Int = R.raw.maps,
-    zoom: Double = 1.0
+    style: Int = R.raw.map,
+    zoom: Double = 15.0
 ) {
     val baseStyle = BaseStyle.loadStyle(currentContext(), style)
     val camera = rememberCameraState(
@@ -50,15 +48,8 @@ fun Map(
         baseStyle = baseStyle
     ) {
         val source = rememberGeoJsonSource(
-            data = GeoJsonData.JsonString(
-                GeoJson.json(GeoJsonDataObject(
-                    geometry = GeoJsonGeometry(
-                        coordinates = listOf(event.latitude ?: .0, event.longitude ?: .0)
-                    ),
-                    properties = GeoJsonProperty(
-                        name = event.name
-                    )
-                ))
+            data = GeoJsonData.Features(
+                GeoJsonObject.fromJson(GeoJson.fromEvent(event).toJson())
             )
         )
         CircleLayer(

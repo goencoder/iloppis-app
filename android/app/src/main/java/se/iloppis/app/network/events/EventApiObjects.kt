@@ -154,7 +154,7 @@ data class ApiEvent(
     /**
      * The event address zip code
      */
-    val addressZip: Int?,
+    val addressZip: String?,
     /**
      * Event latitude coordinates
      */

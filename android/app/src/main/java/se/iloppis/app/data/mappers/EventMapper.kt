@@ -36,7 +36,9 @@ object EventMapper {
             startTimeFormatted = startTimeStr,
             endTimeFormatted = endTimeStr,
             location = location,
-            state = lifecycleState?.toEventState() ?: EventState.UNKNOWN
+            state = lifecycleState?.toEventState() ?: EventState.UNKNOWN,
+            latitude = latitude,
+            longitude = longitude,
         )
     }
 

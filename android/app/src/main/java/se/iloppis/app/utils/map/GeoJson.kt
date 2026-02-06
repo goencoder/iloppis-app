@@ -1,5 +1,6 @@
 package se.iloppis.app.utils.map
 
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json.Default.encodeToString
 import org.maplibre.spatialk.geojson.GeoJson
 
@@ -17,6 +18,7 @@ fun GeoJson.json(data: GeoJsonDataObject) : String = encodeToString(data)
 /**
  * GeoJson Data for [org.maplibre.geojson.GeoJson]
  */
+@Serializable
 data class GeoJsonDataObject(
     /**
      * Data type
@@ -37,6 +39,7 @@ data class GeoJsonDataObject(
 /**
  * GeoJson geometry data
  */
+@Serializable
 data class GeoJsonGeometry(
     /**
      * Geometry object type
@@ -52,6 +55,7 @@ data class GeoJsonGeometry(
 /**
  * GeoJson property data
  */
+@Serializable
 data class GeoJsonProperty(
     /**
      * Property name

@@ -38,6 +38,7 @@ import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.StarIcon
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
+import se.iloppis.app.utils.events.rememberLocallyStoredEventsListState
 
 /**
  * Swipe to dismiss event card
@@ -49,7 +50,6 @@ import se.iloppis.app.ui.theme.AppColors
 fun SwipeToDismissEventCard(
     event: Event,
     modifier: Modifier = Modifier,
-    star: Boolean = false,
     enableStartToEnd: Boolean = false,
     enableEndToStart: Boolean = true,
     onStartToEnd: () -> Unit = {},
@@ -109,7 +109,7 @@ fun SwipeToDismissEventCard(
             scope.launch { state.reset() }
         }
     ) {
-        EventCard(event, star, cardAction)
+        EventCard(event, cardAction)
     }
 }
 
@@ -119,7 +119,8 @@ fun SwipeToDismissEventCard(
  * Card displaying event summary information.
  */
 @Composable
-fun EventCard(event: Event, star: Boolean = false, onClick: () -> Unit) {
+fun EventCard(event: Event, onClick: () -> Unit) {
+    val state = rememberLocallyStoredEventsListState()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -143,7 +144,7 @@ fun EventCard(event: Event, star: Boolean = false, onClick: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (star) StarIcon()
+                    if(state.contains(event.id)) StarIcon()
                     StateBadge(event.state)
                 }
             }

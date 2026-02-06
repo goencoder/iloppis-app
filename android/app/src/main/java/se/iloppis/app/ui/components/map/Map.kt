@@ -2,13 +2,20 @@ package se.iloppis.app.ui.components.map
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberUpdatedMarkerState
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.layers.CircleLayer
+import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.sources.GeoJsonData
+import org.maplibre.compose.sources.rememberGeoJsonSource
+import org.maplibre.compose.style.BaseStyle
+import org.maplibre.spatialk.geojson.GeoJson
+import org.maplibre.spatialk.geojson.Position
+import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
+import se.iloppis.app.utils.context.currentContext
+import se.iloppis.app.utils.map.loadStyle
+import se.iloppis.app.utils.map.simpleMarker
 
 /**
  * Events location map
@@ -17,21 +24,36 @@ import se.iloppis.app.domain.model.Event
  * is taking place.
  */
 @Composable
-fun Map(event: Event, modifier: Modifier = Modifier, zoom: Float = 10f) {
-    val location = LatLng(event.latitude ?: .0, event.longitude ?: .0)
-    val marker = rememberUpdatedMarkerState(position = location)
-    val camera = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(location, zoom)
-    }
+fun Map(
+    event: Event,
+    modifier: Modifier = Modifier,
+    style: Int = R.raw.maps,
+    zoom: Double = 1.0
+) {
+    val baseStyle = BaseStyle.loadStyle(currentContext(), style)
+    val camera = rememberCameraState(
+        firstPosition = CameraPosition(
+            target = Position(
+                latitude = event.latitude ?: .0,
+                longitude = event.longitude ?: .0
+            ),
+            zoom = zoom
+        )
+    )
 
-    GoogleMap(
+    MaplibreMap(
         modifier = modifier,
-        cameraPositionState = camera
+        cameraState = camera,
+        baseStyle = baseStyle
     ) {
-        Marker(
-            state = marker,
-            title = event.name,
-            snippet = event.location
+        val source = rememberGeoJsonSource(
+            data = GeoJsonData.JsonString(
+                GeoJson.simpleMarker(event.latitude ?: .0, event.longitude ?: .0)
+            )
+        )
+        CircleLayer(
+            id = "events-waypoint",
+            source = source
         )
     }
 }

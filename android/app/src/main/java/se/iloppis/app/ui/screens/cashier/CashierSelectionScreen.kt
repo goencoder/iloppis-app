@@ -23,7 +23,7 @@ import se.iloppis.app.ui.screens.events.CodeEntryMode
 import se.iloppis.app.ui.screens.events.EmptyState
 import se.iloppis.app.ui.screens.events.ErrorState
 import se.iloppis.app.ui.screens.events.EventListAction
-import se.iloppis.app.ui.screens.events.EventListHeader
+import se.iloppis.app.ui.screens.events.ILoppisHeader
 import se.iloppis.app.ui.screens.events.LoadingState
 import se.iloppis.app.ui.screens.events.eventContext
 import se.iloppis.app.utils.events.StoredEventsListState
@@ -45,7 +45,7 @@ fun CashierSelectionScreen() {
         .padding(horizontal = 16.dp)
         .statusBarsPadding()
     ) {
-        EventListHeader()
+        ILoppisHeader()
         Text(
             modifier = Modifier,
             text = stringResource(R.string.cashier_selection_header),

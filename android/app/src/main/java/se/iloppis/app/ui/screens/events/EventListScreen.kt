@@ -88,7 +88,7 @@ private fun EventListContent(
             .statusBarsPadding()
     ) {
         // Header
-        EventListHeader()
+        ILoppisHeader()
 
         // Search bar
         SearchBar()
@@ -106,7 +106,7 @@ private fun EventListContent(
 }
 
 @Composable
-fun EventListHeader() {
+fun ILoppisHeader() {
     Text(
         text = stringResource(R.string.app_title),
         fontSize = 28.sp,

@@ -13,9 +13,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -81,28 +83,42 @@ fun Navigator(
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Home)) }
 
             NavigatorButton(
-                if(screen.state.page == ScreenPage.CashierSelector)
-                    Icons.Filled.Payments
-                else Icons.Outlined.Payments,
-                stringResource(R.string.nav_cashier),
+                if(screen.state.page == ScreenPage.Search)
+                    Icons.Filled.Search
+                else Icons.Outlined.Search,
+                stringResource(R.string.search_placeholder),
                 buttonSize,
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                screen.state.page == ScreenPage.CashierSelector
-            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.CashierSelector)) }
+                screen.state.page == ScreenPage.Search
+            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Search)) }
 
-            NavigatorButton(
-                if(screen.state.page == ScreenPage.ScannerSelector)
-                    Icons.Filled.QrCodeScanner
-                else Icons.Outlined.QrCodeScanner,
-                stringResource(R.string.nav_scanner),
-                buttonSize,
-                iconSize,
-                buttonCorner,
-                buttonSpacing,
-                screen.state.page == ScreenPage.ScannerSelector
-            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.ScannerSelector)) }
+
+
+//            NavigatorButton(
+//                if(screen.state.page == ScreenPage.CashierSelector)
+//                    Icons.Filled.Payments
+//                else Icons.Outlined.Payments,
+//                stringResource(R.string.nav_cashier),
+//                buttonSize,
+//                iconSize,
+//                buttonCorner,
+//                buttonSpacing,
+//                screen.state.page == ScreenPage.CashierSelector
+//            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.CashierSelector)) }
+//
+//            NavigatorButton(
+//                if(screen.state.page == ScreenPage.ScannerSelector)
+//                    Icons.Filled.QrCodeScanner
+//                else Icons.Outlined.QrCodeScanner,
+//                stringResource(R.string.nav_scanner),
+//                buttonSize,
+//                iconSize,
+//                buttonCorner,
+//                buttonSpacing,
+//                screen.state.page == ScreenPage.ScannerSelector
+//            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.ScannerSelector)) }
         }
     }
 }

@@ -6,6 +6,7 @@ import se.iloppis.app.ui.screens.cashier.CashierScreen
 import se.iloppis.app.ui.screens.cashier.CashierSelectionScreen
 import se.iloppis.app.ui.screens.events.EventDialogs
 import se.iloppis.app.ui.screens.events.EventSearchScreen
+import se.iloppis.app.ui.screens.events.EventsDetailsScreen
 import se.iloppis.app.ui.screens.home.HomeScreen
 import se.iloppis.app.ui.screens.scanner.ScannerScreen
 import se.iloppis.app.ui.screens.scanner.ScannerSelectionScreen
@@ -30,7 +31,9 @@ fun PageManager() {
     /* Main page content */
     when (val page = screen.state.page) {
         is ScreenPage.Home -> HomeScreen()
+
         is ScreenPage.Search -> EventSearchScreen()
+        is ScreenPage.EventsDetailPage -> EventsDetailsScreen(page.event)
 
 
 

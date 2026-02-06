@@ -38,6 +38,18 @@ sealed class ScreenPage {
      */
     data object Search : ScreenPage()
 
+    /**
+     * Events detail page
+     *
+     * Shows details about a specified event
+     */
+    data class EventsDetailPage(
+        /**
+         * Event to show details about
+         */
+        val event: Event
+    ) : ScreenPage()
+
 
 
     /**

@@ -70,8 +70,9 @@ fun Navigator(
             .padding(paddingValues),
             horizontalArrangement = Arrangement.Center
         ) {
+            val page = screen.state.page
             NavigatorButton(
-                if(screen.state.page == ScreenPage.Home)
+                if(page is ScreenPage.Home)
                     Icons.Filled.Home
                 else Icons.Outlined.Home,
                 stringResource(R.string.nav_home),
@@ -79,11 +80,11 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                screen.state.page == ScreenPage.Home
+                page is ScreenPage.Home
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Home)) }
 
             NavigatorButton(
-                if(screen.state.page == ScreenPage.Search)
+                if(page is ScreenPage.Search || page is ScreenPage.EventsDetailPage)
                     Icons.Filled.Search
                 else Icons.Outlined.Search,
                 stringResource(R.string.search_placeholder),
@@ -91,7 +92,7 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                screen.state.page == ScreenPage.Search
+                page is ScreenPage.Search || page is ScreenPage.EventsDetailPage
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Search)) }
 
 

@@ -16,10 +16,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
+import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.events.SwipeToDismissEventCard
 import se.iloppis.app.ui.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.dialogs.EventDetailDialog
 import se.iloppis.app.ui.screens.screenContext
+import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.utils.events.localEventsStorage
 
@@ -29,6 +31,7 @@ import se.iloppis.app.utils.events.localEventsStorage
  */
 @Composable
 fun EventSearchScreen() {
+    val screen = screenContext()
     val viewModel = eventContext()
     val state = viewModel.uiState
 
@@ -37,7 +40,13 @@ fun EventSearchScreen() {
         onReload = {
             if(!viewModel.uiState.isLoading) viewModel.onAction(EventListAction.LoadEvents)
         },
-        onEventClick = { viewModel.onAction(EventListAction.SelectEvent(it)) }
+        onEventClick = {
+            screen.onAction(
+                ScreenAction.NavigateToPage(
+                    ScreenPage.EventsDetailPage(it)
+                )
+            )
+        }
     )
 }
 

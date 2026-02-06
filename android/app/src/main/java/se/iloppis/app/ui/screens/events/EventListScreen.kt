@@ -236,7 +236,6 @@ private fun EventList(
         items(events) { event ->
             SwipeToDismissEventCard(
                 event,
-                star = stored.contains(event.id),
                 enableEndToStart = false,
                 enableStartToEnd = true,
                 onStartToEnd = {

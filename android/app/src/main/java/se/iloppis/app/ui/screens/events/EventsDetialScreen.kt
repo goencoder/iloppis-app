@@ -147,8 +147,8 @@ private fun EventDetailsContent(event: Event) {
         modifier = Modifier.fillMaxWidth(),
         colors = ButtonDefaults.buttonColors().copy(
             containerColor = if(!storage.contains(event.id))
-                MaterialTheme.colorScheme.onSecondary
-            else MaterialTheme.colorScheme.primary
+                MaterialTheme.colorScheme.secondary
+            else MaterialTheme.colorScheme.error
         ),
         onClick = {
             if(!storage.contains(event.id)) storage.add(event.id)

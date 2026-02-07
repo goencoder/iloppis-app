@@ -1,8 +1,5 @@
 # iLoppis Mobile App - Git Ignore
 
-# REMOVE OR SIMILAR WHEN A MAP STYLE IS AVAILABLE
-map.json
-
 # ============================================================================
 # Android
 # ============================================================================

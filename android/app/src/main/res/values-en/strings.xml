@@ -9,6 +9,10 @@
     <string name="nav_cashier">Cashier</string>
     <string name="nav_scanner">Scanner</string>
 
+    <!-- Home Screen -->
+    <string name="home_open_cashier">Open cashier</string>
+    <string name="home_open_scanner">Open scanner</string>
+
     <!-- Event List Screen -->
     <string name="search_placeholder">Search flea market…</string>
     <string name="filter_all">All</string>

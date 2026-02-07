@@ -9,6 +9,10 @@
     <string name="nav_cashier">Kassa</string>
     <string name="nav_scanner">Skanner</string>
 
+    <!-- Home Screen -->
+    <string name="home_open_cashier">Öppna kassa</string>
+    <string name="home_open_scanner">Öppna skanner</string>
+
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>
     <string name="filter_all">Alla</string>

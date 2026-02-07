@@ -16,5 +16,11 @@ fun EventSelectionScreen(onAction: (event: Event) -> Unit) {
             .fillMaxSize()
             .padding(horizontal = 16.dp)
             .statusBarsPadding()
-    ) { }
+    ) {
+
+        /* One page with saved events */
+
+        /* One page with all events ( load this is saved is 0 ) */
+
+    }
 }

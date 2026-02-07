@@ -39,6 +39,19 @@ sealed class ScreenPage {
     data object Search : ScreenPage()
 
     /**
+     * Event selection page
+     */
+    data class Selection(
+        /**
+         * On Action event
+         *
+         * This is called when an event has been
+         * selected on the selection page.
+         */
+        val onAction: (event: Event) -> Unit
+    ) : ScreenPage()
+
+    /**
      * Events detail page
      *
      * Shows details about a specified event
@@ -49,6 +62,8 @@ sealed class ScreenPage {
          */
         val event: Event
     ) : ScreenPage()
+
+
 
 
 

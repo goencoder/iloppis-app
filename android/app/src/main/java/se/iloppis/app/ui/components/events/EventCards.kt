@@ -74,7 +74,7 @@ fun SwipeToDismissEventCard(
                             .fillMaxSize()
                             .background(lerp(
                                 MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.onSecondary,
+                                MaterialTheme.colorScheme.secondary,
                                 state.progress
                             ), shape = RoundedCornerShape(16.dp))
                             .wrapContentSize(Alignment.CenterStart)
@@ -89,7 +89,7 @@ fun SwipeToDismissEventCard(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(lerp(
-                                MaterialTheme.colorScheme.onSurfaceVariant,
+                                MaterialTheme.colorScheme.background,
                                 MaterialTheme.colorScheme.error,
                                 state.progress
                             ), shape = RoundedCornerShape(16.dp))

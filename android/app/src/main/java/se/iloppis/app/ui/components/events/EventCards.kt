@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -136,6 +137,7 @@ fun EventCard(event: Event, onClick: () -> Unit) {
             ) {
                 Text(
                     text = event.name,
+                    modifier = Modifier.widthIn(max = 200.dp),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
                     color = AppColors.TextPrimary

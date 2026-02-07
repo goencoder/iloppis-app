@@ -98,7 +98,7 @@ private fun EventDetailsContent(event: Event) {
     ) {
         Text(
             text = event.name,
-            modifier = Modifier.widthIn(max = 275.dp),
+            modifier = Modifier.widthIn(max = 225.dp),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.tertiary

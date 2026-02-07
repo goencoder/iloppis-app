@@ -11,12 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,7 +48,7 @@ fun Navigator(
         top = 5.dp,
         end = 25.dp
     ),
-    alpha: Float = 0.2f,
+    alpha: Float = 0.5f,
     buttonSize: Dp = 75.dp,
     buttonCorner: Dp = 5.dp,
     buttonSpacing: Dp = 15.dp,

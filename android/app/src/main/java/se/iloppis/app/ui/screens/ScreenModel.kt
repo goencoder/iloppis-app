@@ -1,8 +1,10 @@
 package se.iloppis.app.ui.screens
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,6 +25,17 @@ class ScreenModel : ViewModel() {
     var state by mutableStateOf(ScreenState())
         private set
 
+    /**
+     * Screen border
+     *
+     * Provides values for the screens border
+     * such as the [se.iloppis.app.ui.components.navigation.Navigator]
+     * screen borders.
+     *
+     * @see ScreenState.borders
+     */
+    val border by derivedStateOf { state.borders }
+
 
 
     /**
@@ -34,6 +47,7 @@ class ScreenModel : ViewModel() {
             is ScreenAction.NavigateToPage -> navigateToPage(action.page, action.navigator)
             is ScreenAction.ShowNavigator -> showNavigator(action.show)
             is ScreenAction.NavigateHome -> navigateHome()
+            is ScreenAction.SetBorders -> setBorders(action.borders)
         }
     }
 
@@ -46,6 +60,7 @@ class ScreenModel : ViewModel() {
     }
     private fun showNavigator(state: Boolean) { this.state = this.state.copy(showNavigator = state) }
     private fun navigateHome() { navigateToPage(ScreenPage.Home, true) }
+    private fun setBorders(values: PaddingValues) { state = state.copy(borders = values) }
 }
 
 

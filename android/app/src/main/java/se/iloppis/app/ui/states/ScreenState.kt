@@ -1,5 +1,6 @@
 package se.iloppis.app.ui.states
 
+import androidx.compose.foundation.layout.PaddingValues
 import se.iloppis.app.navigation.ScreenPage
 
 /**
@@ -41,6 +42,16 @@ sealed class ScreenAction {
     ) : ScreenAction()
 
     /**
+     * Sets screen border values
+     */
+    data class SetBorders(
+        /**
+         * Sets screen border values
+         */
+        val borders: PaddingValues
+    ) : ScreenAction()
+
+    /**
      * Navigates home and enables the navigator if disabled
      */
     data object NavigateHome : ScreenAction()
@@ -77,4 +88,12 @@ data class ScreenState(
      * Screen state page
      */
     val page: ScreenPage = ScreenPage.Home,
+
+    /**
+     * Screen borders
+     *
+     * This provides values for different
+     * screen borders such as the [se.iloppis.app.ui.components.navigation.Navigator]
+     */
+    val borders: PaddingValues = PaddingValues(),
 )

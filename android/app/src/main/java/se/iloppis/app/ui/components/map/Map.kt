@@ -22,7 +22,31 @@ fun Map(
     modifier: Modifier = Modifier,
     zoom: Float = 17f
 ) {
-    val location = LatLng(event.latitude ?: .0, event.longitude ?: .0)
+    if(event.latitude != null && event.longitude != null) {
+        val location = LatLng(event.latitude, event.longitude)
+        MapView(
+            modifier = modifier,
+            location = location,
+            title = event.name,
+            snippet = event.location,
+            zoom = zoom
+        )
+    }
+}
+
+
+
+/**
+ * Maps view component
+ */
+@Composable
+fun MapView(
+    modifier: Modifier = Modifier,
+    location: LatLng,
+    title: String,
+    snippet: String,
+    zoom: Float = 17f
+) {
     val marker = rememberUpdatedMarkerState(position = location)
     val camera = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(location, zoom)
@@ -34,8 +58,8 @@ fun Map(
     ) {
         Marker(
             state = marker,
-            title = event.name,
-            snippet = event.location
+            title = title,
+            snippet = snippet
         )
     }
 }

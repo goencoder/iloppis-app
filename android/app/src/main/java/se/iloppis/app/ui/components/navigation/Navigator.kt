@@ -80,7 +80,11 @@ fun Navigator(
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Home)) }
 
             NavigatorButton(
-                if(page is ScreenPage.Search || page is ScreenPage.EventsDetailPage)
+                if(
+                    page is ScreenPage.Search ||
+                    page is ScreenPage.Selection ||
+                    page is ScreenPage.EventsDetailPage
+                )
                     Icons.Filled.Search
                 else Icons.Outlined.Search,
                 stringResource(R.string.search_placeholder),
@@ -88,7 +92,9 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                page is ScreenPage.Search || page is ScreenPage.EventsDetailPage
+                page is ScreenPage.Search ||
+                        page is ScreenPage.Selection ||
+                        page is ScreenPage.EventsDetailPage
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Search)) }
 
 

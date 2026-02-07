@@ -147,9 +147,9 @@ fun NavigatorButton(
                 imageVector = image,
                 contentDescription = description,
                 tint = if(enable)
-                    MaterialTheme.colorScheme.background.copy(alpha = 0.4f)
-                else
                     MaterialTheme.colorScheme.background
+                else
+                    MaterialTheme.colorScheme.background.copy(alpha = 0.4f)
             )
         }
     }

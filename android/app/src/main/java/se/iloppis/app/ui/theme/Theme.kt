@@ -18,6 +18,8 @@ private val LightColorScheme = lightColorScheme(
     surface = PinkCard,
     onBackground = Color.Black,
     onSurfaceVariant = Color.DarkGray,
+    surfaceDim = Color.Gray,
+    tertiary = Text,
     onTertiaryFixed = Gold,
 )
 

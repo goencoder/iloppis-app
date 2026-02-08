@@ -111,6 +111,18 @@ class EventListState(val storage: LocalEventsListStorage, val scope: CoroutineSc
         loadEvents()
     }
     private fun reload() = loadEvents()
+
+
+
+    /**
+     * Static state data
+     */
+    companion object {
+        /**
+         * Debug logger tag
+         */
+        val TAG: String = EventListState::class.java.simpleName
+    }
 }
 
 

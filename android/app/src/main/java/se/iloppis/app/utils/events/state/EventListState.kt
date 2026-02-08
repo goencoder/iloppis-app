@@ -10,6 +10,8 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import se.iloppis.app.domain.model.Event
+import se.iloppis.app.network.config.ClientConfig
+import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.utils.events.LocalEventsListStorage
 import se.iloppis.app.utils.events.localEventsStorage
 
@@ -21,7 +23,13 @@ import se.iloppis.app.utils.events.localEventsStorage
  *
  * @see LocalEventsListStorage
  */
-class EventListState(val storage: LocalEventsListStorage, val scope: CoroutineScope, sort: EventListSortType) {
+class EventListState(
+    val storage: LocalEventsListStorage,
+    val scope: CoroutineScope,
+    val config: ClientConfig,
+
+    sort: EventListSortType
+) {
     /**
      * Event list sorting method
      *
@@ -137,9 +145,10 @@ class EventListState(val storage: LocalEventsListStorage, val scope: CoroutineSc
 fun rememberEventListState(
     storage: LocalEventsListStorage = localEventsStorage(),
     scope: CoroutineScope = rememberCoroutineScope(),
+    config: ClientConfig = clientConfig(),
     sort: EventListSortType = if(storage.empty()) EventListSortType.ALL else EventListSortType.SAVED
 ) : EventListState {
     return remember {
-        EventListState(storage, scope, sort)
+        EventListState(storage, scope, config, sort)
     }
 }

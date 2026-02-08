@@ -47,6 +47,23 @@ class LocalEventsListStorage(val storage: LocalStorage) {
     }
 
     /**
+     * Sets the data in the storage
+     *
+     * This will clear the old data and
+     * add the new data.
+     *
+     * If [sync] is **false** the changes will not
+     * be synced with local storage.
+     *
+     * @see se.iloppis.app.utils.events.LocalEventsListStorage.save
+     */
+    fun set(ids: Set<String>, sync: Boolean = true) {
+        data.clear()
+        data.addAll(ids)
+        if(sync) save()
+    }
+
+    /**
      * Removes event [id] from local events list
      *
      * If [sync] is **false** the changes will not

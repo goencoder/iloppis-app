@@ -95,7 +95,10 @@ class EventListState(val storage: LocalEventsListStorage, val scope: CoroutineSc
      * @see EventListStateAction.SetSortingMethod
      */
     private fun loadEvents() {
-        isLoading = true // Sets loading by default for all loading types
+        events.clear() /* Clears all prior events */
+        errorMessage = null /* Removes errors */
+        isLoading = true /* Sets loading by default for all loading types */
+
         scope.launch {
             when (sort) {
                 EventListSortType.SAVED -> loadLocalEvents()

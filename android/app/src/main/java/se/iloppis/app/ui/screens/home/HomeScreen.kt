@@ -41,6 +41,10 @@ fun HomeScreen() {
 
         Spacer(modifier = Modifier.height(14.dp))
         SelectionScreenButtonsRow()
+
+        /*
+            Home page content such as the closest event
+        */
     }
 }
 

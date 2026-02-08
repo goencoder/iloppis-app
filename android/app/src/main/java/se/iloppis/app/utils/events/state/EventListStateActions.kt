@@ -22,4 +22,14 @@ sealed class EventListStateAction {
          */
         val sort: EventListSortType = EventListSortType.SAVED
     ) : EventListStateAction()
+
+    /**
+     * Reloads event list
+     *
+     * This will reload the event states list
+     * using the specified sorting method.
+     *
+     * @see SetSortingMethod
+     */
+    object Reload : EventListStateAction()
 }

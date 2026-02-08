@@ -1,4 +1,8 @@
 package se.iloppis.app.utils.events.state
 
-class EventListStateEventsLoader {
+/**
+ * Loads events from local storage
+ */
+internal suspend fun EventListState.loadLocalEvents() {
+    isLoading = false
 }

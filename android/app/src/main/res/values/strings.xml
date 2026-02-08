@@ -15,6 +15,7 @@
 
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>
+    <string name="filter_saved">Sparade</string>
     <string name="filter_all">Alla</string>
     <string name="filter_open">Öppna</string>
     <string name="filter_upcoming">Kommande</string>

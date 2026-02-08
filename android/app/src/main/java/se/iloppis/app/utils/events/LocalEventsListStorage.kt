@@ -29,6 +29,11 @@ class LocalEventsListStorage(val storage: LocalStorage) {
     fun contains(id: String) = data.contains(id)
 
     /**
+     * Checks if the storage is empty or not
+     */
+    fun empty() = data.isEmpty()
+
+    /**
      * Adds event [id] to locally stored events list
      *
      * If [sync] is **false** the changes will not

@@ -20,8 +20,10 @@ import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.buttons.IconButton
+import se.iloppis.app.ui.screens.ScreenModel
 import se.iloppis.app.ui.screens.events.CodeEntryMode
 import se.iloppis.app.ui.screens.events.EventListAction
+import se.iloppis.app.ui.screens.events.EventListViewModel
 import se.iloppis.app.ui.screens.events.ILoppisHeader
 import se.iloppis.app.ui.screens.events.eventContext
 import se.iloppis.app.ui.screens.screenContext
@@ -29,9 +31,6 @@ import se.iloppis.app.ui.states.ScreenAction
 
 @Composable
 fun HomeScreen() {
-    val screen = screenContext()
-    val event = eventContext()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -41,54 +40,67 @@ fun HomeScreen() {
         ILoppisHeader()
 
         Spacer(modifier = Modifier.height(14.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+        SelectionScreenButtonsRow()
+    }
+}
+
+
+
+/**
+ * Row with selection options buttons
+ */
+@Composable
+private fun SelectionScreenButtonsRow(
+    screen: ScreenModel = screenContext(),
+    event: EventListViewModel = eventContext()
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        IconButton(
+            text = R.string.home_open_cashier,
+            icon = Icons.Outlined.Payments
         ) {
-            IconButton(
-                text = R.string.home_open_cashier,
-                icon = Icons.Outlined.Payments
-            ) {
-                screen.onAction(
-                    ScreenAction.NavigateToPage(
-                        ScreenPage.Selection {
+            screen.onAction(
+                ScreenAction.NavigateToPage(
+                    ScreenPage.Selection {
 
-                            /* Event context */
-                            event.onAction(
-                                EventListAction.StartCodeEntry(
-                                    CodeEntryMode.CASHIER,
-                                    it
-                                )
+                        /* Event context */
+                        event.onAction(
+                            EventListAction.StartCodeEntry(
+                                CodeEntryMode.CASHIER,
+                                it
                             )
+                        )
 
-                        }
-                    )
+                    }
                 )
-            }
+            )
+        }
 
-            IconButton(
-                text = R.string.home_open_scanner,
-                colors = ButtonDefaults.buttonColors().copy(
-                    containerColor = MaterialTheme.colorScheme.secondary
-                ),
-                icon = Icons.Outlined.QrCode
-            ) {
-                screen.onAction(
-                    ScreenAction.NavigateToPage(
-                        ScreenPage.Selection {
+        IconButton(
+            text = R.string.home_open_scanner,
+            colors = ButtonDefaults.buttonColors().copy(
+                containerColor = MaterialTheme.colorScheme.secondary
+            ),
+            icon = Icons.Outlined.QrCode
+        ) {
+            screen.onAction(
+                ScreenAction.NavigateToPage(
+                    ScreenPage.Selection {
 
-                            /* Event context */
-                            event.onAction(
-                                EventListAction.StartCodeEntry(
-                                    CodeEntryMode.SCANNER,
-                                    it
-                                )
+                        /* Event context */
+                        event.onAction(
+                            EventListAction.StartCodeEntry(
+                                CodeEntryMode.SCANNER,
+                                it
                             )
+                        )
 
-                        }
-                    )
+                    }
                 )
-            }
+            )
         }
     }
 }

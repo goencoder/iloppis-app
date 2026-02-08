@@ -73,7 +73,7 @@ class EventListState(val storage: LocalEventsListStorage, sort: EventListSortTyp
 @Composable
 fun rememberEventListState(
     storage: LocalEventsListStorage = localEventsStorage(),
-    sort: EventListSortType = EventListSortType.SAVED
+    sort: EventListSortType = if(storage.empty()) EventListSortType.ALL else EventListSortType.SAVED
 ) : EventListState {
     return remember {
         EventListState(storage, sort)

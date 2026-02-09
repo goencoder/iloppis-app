@@ -6,6 +6,7 @@
 
     <!-- Navigation -->
     <string name="nav_home">Hem</string>
+    <string name="nav_library">Biblotek</string>
     <string name="nav_cashier">Kassa</string>
     <string name="nav_scanner">Skanner</string>
 

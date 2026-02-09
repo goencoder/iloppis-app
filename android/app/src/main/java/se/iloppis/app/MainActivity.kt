@@ -35,11 +35,11 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier,
                             bottomBar = { Navigator() }
                         ) { padding ->
+                            screenContext().onAction(ScreenAction.SetBorders(padding))
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
                                 color = AppColors.Background
                             ) {
-                                screenContext().onAction(ScreenAction.SetBorders(padding))
                                 PageManager()
                             }
                         }

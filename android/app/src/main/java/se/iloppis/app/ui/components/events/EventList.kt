@@ -1,7 +1,9 @@
 package se.iloppis.app.ui.components.events
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -16,6 +18,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
+import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.utils.events.state.EventListSortType
 
 /**
@@ -24,10 +27,15 @@ import se.iloppis.app.utils.events.state.EventListSortType
  * @see EventCard
  */
 @Composable
-fun EventList(events: List<Event>, onAction: (Event) -> Unit) {
+fun EventList(events: List<Event>, onAction: (Event) -> Unit, screenPadding: Boolean = true) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(events) {
+        items(events, key = { it.id }) {
             EventCard(it, onClick = { onAction(it) })
+        }
+
+        if(screenPadding) item {
+            val screen = screenContext()
+            Spacer(modifier = Modifier.height(screen.border.calculateBottomPadding()))
         }
     }
 }
@@ -40,6 +48,7 @@ fun EventList(events: List<Event>, onAction: (Event) -> Unit) {
 @Composable
 fun SwipeableEventList(
     events: List<Event>,
+    screenPadding: Boolean = true,
     enableEndToStart: Boolean = true,
     onEndToStart: (Event) -> Unit = {},
     enableStartToEnd: Boolean = false,
@@ -47,7 +56,7 @@ fun SwipeableEventList(
     onAction: (Event) -> Unit
 ) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(events) {
+        items(events, key = { it.id }) {
             SwipeToDismissEventCard(
                 event = it,
                 enableEndToStart = enableEndToStart,
@@ -56,6 +65,11 @@ fun SwipeableEventList(
                 onStartToEnd = { onStartToEnd(it) },
                 cardAction = { onAction(it) }
             )
+        }
+
+        if(screenPadding) item {
+            val screen = screenContext()
+            Spacer(modifier = Modifier.height(screen.border.calculateBottomPadding()))
         }
     }
 }

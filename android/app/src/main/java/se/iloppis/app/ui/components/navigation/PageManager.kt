@@ -8,10 +8,11 @@ import se.iloppis.app.ui.screens.events.EventDialogs
 import se.iloppis.app.ui.screens.events.EventSearchScreen
 import se.iloppis.app.ui.screens.events.EventSelectionScreen
 import se.iloppis.app.ui.screens.events.EventsDetailsScreen
-import se.iloppis.app.ui.screens.home.HomeScreen
+import se.iloppis.app.ui.screens.user.home.HomeScreen
 import se.iloppis.app.ui.screens.scanner.ScannerScreen
 import se.iloppis.app.ui.screens.scanner.ScannerSelectionScreen
 import se.iloppis.app.ui.screens.screenContext
+import se.iloppis.app.ui.screens.user.library.LibraryScreen
 import se.iloppis.app.ui.states.ScreenAction
 
 /**
@@ -38,6 +39,9 @@ fun PageManager() {
         is ScreenPage.Search -> EventSearchScreen()
         is ScreenPage.Selection -> EventSelectionScreen(page.onAction)
         is ScreenPage.EventsDetailPage -> EventsDetailsScreen(page.event)
+
+        /* Library screen */
+        is ScreenPage.Library -> LibraryScreen()
 
 
 

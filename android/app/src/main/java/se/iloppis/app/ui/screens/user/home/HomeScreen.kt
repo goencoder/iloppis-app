@@ -1,4 +1,4 @@
-package se.iloppis.app.ui.screens.home
+package se.iloppis.app.ui.screens.user.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

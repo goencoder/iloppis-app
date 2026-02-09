@@ -63,6 +63,14 @@ sealed class ScreenPage {
         val event: Event
     ) : ScreenPage()
 
+    /**
+     * User local library page
+     *
+     * Stored events will be shown
+     * on this page.
+     */
+    data object Library : ScreenPage()
+
 
 
 

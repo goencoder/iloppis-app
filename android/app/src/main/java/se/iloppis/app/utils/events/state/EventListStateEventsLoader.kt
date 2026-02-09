@@ -41,6 +41,9 @@ internal suspend fun EventListState.loadLocalEvents() {
     isLoading = false
 }
 
+internal suspend fun EventListState.loadAllEvents() {
+}
+
 
 
 

@@ -110,7 +110,7 @@ class EventListState(
         scope.launch {
             when (sort) {
                 EventListSortType.SAVED -> loadLocalEvents()
-                EventListSortType.ALL -> {}
+                EventListSortType.ALL -> loadAllEvents()
             }
         }
     }

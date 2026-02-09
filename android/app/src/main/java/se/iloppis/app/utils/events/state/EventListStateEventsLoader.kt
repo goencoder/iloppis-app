@@ -5,12 +5,13 @@ import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.network.ILoppisClient
-import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.events.ApiEventListResponse
 import se.iloppis.app.network.events.EventAPI
+import se.iloppis.app.network.events.EventFilter
+import se.iloppis.app.network.events.EventFilterRequest
 import se.iloppis.app.network.events.EventLifecycle
 import se.iloppis.app.network.events.convertCollection
-import se.iloppis.app.utils.events.StoredEventsListState.Companion.TAG
+import java.time.LocalDate
 
 /**
  * Loads events from local storage
@@ -35,13 +36,41 @@ internal suspend fun EventListState.loadLocalEvents() {
 
     } catch (e: Exception) {
         val message = e.message()
-        Log.e(TAG, "Error loading events", e)
-        errorMessage = "API: ${clientConfig().url} - $message"
+        Log.e(EventListState.TAG, "Error loading events", e)
+        errorMessage = "API: ${config.url} - $message"
     }
     isLoading = false
 }
 
+/**
+ * Loads events without any specific sorting
+ * method applied.
+ *
+ * @see EventListSortType.ALL
+ */
 internal suspend fun EventListState.loadAllEvents() {
+    Log.d(EventListState.TAG, "Loading events from: ${config.url}")
+    try {
+        val api = ILoppisClient(config).create<EventAPI>()
+        Log.d(EventListState.TAG, "API client created, making filterEvents request")
+        val today = "${LocalDate.now()}T00:00:00Z"
+        val filterRequest = EventFilterRequest(
+            filter = EventFilter(
+                dateFrom = today,
+                lifecycleStates = listOf(EventLifecycle.OPEN)
+            )
+        )
+        Log.d(EventListState.TAG, "Filter request: dateFrom=$today, states=[OPEN]")
+        val response = api.get(filterRequest)
+        Log.d(EventListState.TAG, "Response received, events count: ${response.events.size}")
+        events.addAll(response.events.map { it.toDomain() })
+
+    }catch (e: Exception) {
+        val message = e.message()
+        Log.e(EventListState.TAG, "Error loading events", e)
+        errorMessage = "API: ${config.url} - $message"
+    }
+    isLoading = false
 }
 
 

@@ -20,6 +20,8 @@ import se.iloppis.app.utils.events.state.EventListSortType
 
 /**
  * Event list component
+ *
+ * @see EventCard
  */
 @Composable
 fun EventList(events: List<Event>, onAction: (Event) -> Unit) {
@@ -29,6 +31,36 @@ fun EventList(events: List<Event>, onAction: (Event) -> Unit) {
         }
     }
 }
+
+/**
+ * Swipeable events list component
+ *
+ * @see SwipeToDismissEventCard
+ */
+@Composable
+fun SwipeableEventList(
+    events: List<Event>,
+    enableEndToStart: Boolean = true,
+    onEndToStart: (Event) -> Unit = {},
+    enableStartToEnd: Boolean = false,
+    onStartToEnd: (Event) -> Unit = {},
+    onAction: (Event) -> Unit
+) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        items(events) {
+            SwipeToDismissEventCard(
+                event = it,
+                enableEndToStart = enableEndToStart,
+                onEndToStart = { onEndToStart(it) },
+                enableStartToEnd = enableStartToEnd,
+                onStartToEnd = { onStartToEnd(it) },
+                cardAction = { onAction(it) }
+            )
+        }
+    }
+}
+
+
 
 /**
  * Event list search bar

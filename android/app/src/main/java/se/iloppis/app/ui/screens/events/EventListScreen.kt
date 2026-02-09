@@ -1,9 +1,7 @@
 package se.iloppis.app.ui.screens.events
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -17,7 +15,7 @@ import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
-import se.iloppis.app.ui.components.events.SwipeToDismissEventCard
+import se.iloppis.app.ui.components.events.SwipeableEventList
 import se.iloppis.app.ui.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.dialogs.EventDetailDialog
 import se.iloppis.app.ui.screens.screenContext
@@ -178,6 +176,7 @@ private fun EventListBody(
     onReload: () -> Unit,
     onEventClick: (Event) -> Unit
 ) {
+    val storage = localEventsStorage()
     PullToRefreshBox(
         isRefreshing = false,
         onRefresh = onReload
@@ -186,7 +185,16 @@ private fun EventListBody(
             state.isLoading -> LoadingState()
             state.errorMessage != null -> ErrorState(state.errorMessage)
             state.events.isEmpty() -> EmptyState()
-            else -> EventList(events = state.events, onEventClick = onEventClick)
+            else -> SwipeableEventList(
+                events = state.events,
+                enableEndToStart = false,
+                enableStartToEnd = true,
+                onStartToEnd = {
+                    if(storage.contains(it.id)) storage.remove(it.id)
+                    else storage.add(it.id)
+                },
+                onAction = onEventClick
+            )
         }
     }
 }
@@ -224,27 +232,5 @@ fun EmptyState() {
             text = stringResource(R.string.no_events_found),
             color = AppColors.TextMuted
         )
-    }
-}
-
-@Composable
-private fun EventList(
-    events: List<Event>,
-    onEventClick: (Event) -> Unit
-) {
-    val storage = localEventsStorage()
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(events) { event ->
-            SwipeToDismissEventCard(
-                event,
-                enableEndToStart = false,
-                enableStartToEnd = true,
-                onStartToEnd = {
-                    if(storage.contains(event.id)) storage.remove(event.id)
-                    else storage.add(event.id)
-                },
-                cardAction = { onEventClick(event) }
-            )
-        }
     }
 }

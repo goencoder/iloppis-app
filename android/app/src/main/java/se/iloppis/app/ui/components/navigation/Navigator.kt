@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
@@ -97,31 +99,17 @@ fun Navigator(
                         page is ScreenPage.EventsDetailPage
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Search)) }
 
-
-
-//            NavigatorButton(
-//                if(screen.state.page == ScreenPage.CashierSelector)
-//                    Icons.Filled.Payments
-//                else Icons.Outlined.Payments,
-//                stringResource(R.string.nav_cashier),
-//                buttonSize,
-//                iconSize,
-//                buttonCorner,
-//                buttonSpacing,
-//                screen.state.page == ScreenPage.CashierSelector
-//            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.CashierSelector)) }
-//
-//            NavigatorButton(
-//                if(screen.state.page == ScreenPage.ScannerSelector)
-//                    Icons.Filled.QrCodeScanner
-//                else Icons.Outlined.QrCodeScanner,
-//                stringResource(R.string.nav_scanner),
-//                buttonSize,
-//                iconSize,
-//                buttonCorner,
-//                buttonSpacing,
-//                screen.state.page == ScreenPage.ScannerSelector
-//            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.ScannerSelector)) }
+            NavigatorButton(
+                if(page is ScreenPage.Library)
+                    Icons.Filled.Bookmarks
+                else Icons.Outlined.Bookmarks,
+                stringResource(R.string.nav_library),
+                buttonSize,
+                iconSize,
+                buttonCorner,
+                buttonSpacing,
+                page is ScreenPage.Library
+            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Library)) }
         }
     }
 }

@@ -74,6 +74,7 @@ class CodeState(
                     CodeStateMode.SCANNER -> ScreenPage.Scanner(event, res.apiKey)
                 }
                 screen.onAction(ScreenAction.NavigateToPage(page, false))
+                screen.onAction(ScreenAction.RemoveOverlay)
             }catch (e: HttpException) {
                 handleHttpException(e)
             } catch (e: Exception) {

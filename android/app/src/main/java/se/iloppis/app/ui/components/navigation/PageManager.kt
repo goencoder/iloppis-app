@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.screens.cashier.CashierScreen
 import se.iloppis.app.ui.screens.cashier.CashierSelectionScreen
-import se.iloppis.app.ui.screens.events.EventDialogs
+import se.iloppis.app.ui.screens.events.CodeEntryDialog
 import se.iloppis.app.ui.screens.events.EventSearchScreen
 import se.iloppis.app.ui.screens.events.EventSelectionScreen
 import se.iloppis.app.ui.screens.events.EventsDetailsScreen
@@ -28,7 +28,7 @@ fun PageManager() {
     val screen = screenContext()
 
     /* Page content helper */
-    EventDialogs()
+    CodeEntryDialog()
 
     /* Main page content */
     when (val page = screen.state.page) {

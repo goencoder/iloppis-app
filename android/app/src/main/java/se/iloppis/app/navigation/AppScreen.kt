@@ -5,6 +5,7 @@ import se.iloppis.app.domain.model.Event
 /**
  * Represents the current navigation destination in the app.
  */
+@Deprecated("use new screen model system")
 sealed class AppScreen {
     /** Event list / home screen */
     data object EventList : AppScreen()
@@ -71,15 +72,6 @@ sealed class ScreenPage {
      */
     data object Library : ScreenPage()
 
-
-
-
-
-    /**
-     * Cashier selector page
-     */
-    data object CashierSelector : ScreenPage()
-
     /**
      * Cashier page
      */
@@ -94,13 +86,6 @@ sealed class ScreenPage {
          */
         val apiKey: String
     ) : ScreenPage()
-
-
-
-    /**
-     * Scanner selector page
-     */
-    data object ScannerSelector : ScreenPage()
 
     /**
      * Scanner page

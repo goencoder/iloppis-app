@@ -18,19 +18,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
+import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.buttons.IconButton
+import se.iloppis.app.ui.components.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.screens.ScreenModel
-import se.iloppis.app.ui.screens.events.CodeEntryMode
-import se.iloppis.app.ui.screens.events.EventListAction
-import se.iloppis.app.ui.screens.events.EventListViewModel
 import se.iloppis.app.ui.screens.events.ILoppisHeader
-import se.iloppis.app.ui.screens.events.eventContext
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
+import se.iloppis.app.utils.user.codes.CodeStateMode
 
 @Composable
 fun HomeScreen() {
+    val screen = screenContext()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -40,7 +41,13 @@ fun HomeScreen() {
         ILoppisHeader()
 
         Spacer(modifier = Modifier.height(14.dp))
-        SelectionScreenButtonsRow()
+        SelectionScreenButtonsRow(screen) { event, mode ->
+            screen.onAction(ScreenAction.SetOverlay {
+                CodeEntryDialog(event, mode) {
+                    screen.onAction(ScreenAction.RemoveOverlay)
+                }
+            })
+        }
 
         /*
             Home page content such as the closest event
@@ -55,8 +62,8 @@ fun HomeScreen() {
  */
 @Composable
 private fun SelectionScreenButtonsRow(
-    screen: ScreenModel = screenContext(),
-    event: EventListViewModel = eventContext()
+    screen: ScreenModel,
+    onAction: (Event, CodeStateMode) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -68,17 +75,7 @@ private fun SelectionScreenButtonsRow(
         ) {
             screen.onAction(
                 ScreenAction.NavigateToPage(
-                    ScreenPage.Selection {
-
-                        /* Event context */
-                        event.onAction(
-                            EventListAction.StartCodeEntry(
-                                CodeEntryMode.CASHIER,
-                                it
-                            )
-                        )
-
-                    }
+                    ScreenPage.Selection { onAction(it, CodeStateMode.CASHIER) }
                 )
             )
         }
@@ -92,17 +89,7 @@ private fun SelectionScreenButtonsRow(
         ) {
             screen.onAction(
                 ScreenAction.NavigateToPage(
-                    ScreenPage.Selection {
-
-                        /* Event context */
-                        event.onAction(
-                            EventListAction.StartCodeEntry(
-                                CodeEntryMode.SCANNER,
-                                it
-                            )
-                        )
-
-                    }
+                    ScreenPage.Selection { onAction(it, CodeStateMode.SCANNER) }
                 )
             )
         }

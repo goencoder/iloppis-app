@@ -16,7 +16,6 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.events.SwipeableEventList
-import se.iloppis.app.ui.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
@@ -45,27 +44,6 @@ fun EventSearchScreen() {
             )
         }
     )
-}
-
-/**
- * Handles dialog display based on current state.
- */
-@Composable
-fun CodeEntryDialog() {
-    val screen = screenContext()
-    val events = eventContext()
-
-    events.uiState.codeEntryState?.let { codeEntry ->
-        CodeEntryDialog(
-            mode = codeEntry.mode,
-            eventName = codeEntry.event.name,
-            isValidating = codeEntry.isValidating,
-            errorMessage = codeEntry.errorMessage,
-            onDismiss = { events.onAction(EventListAction.DismissCodeEntry) },
-            onCodeChange = { code -> events.onAction(EventListAction.ValidateCode(screen, code)) },
-            onCodeEntered = { code -> events.onAction(EventListAction.SubmitCode(screen, code)) }
-        )
-    }
 }
 
 /**

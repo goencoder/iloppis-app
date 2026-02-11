@@ -26,6 +26,12 @@ class ScreenModel : ViewModel() {
         private set
 
     /**
+     * Screen overlay
+     */
+    var overlay by mutableStateOf<(@Composable () -> Unit)?>(null)
+        private set
+
+    /**
      * Screen border
      *
      * Provides values for the screens border
@@ -48,6 +54,9 @@ class ScreenModel : ViewModel() {
             is ScreenAction.ShowNavigator -> showNavigator(action.show)
             is ScreenAction.NavigateHome -> navigateHome()
             is ScreenAction.SetBorders -> setBorders(action.borders)
+
+            is ScreenAction.SetOverlay -> setScreenOverlay(action.overlay)
+            is ScreenAction.RemoveOverlay -> setScreenOverlay(null)
         }
     }
 
@@ -61,6 +70,7 @@ class ScreenModel : ViewModel() {
     private fun showNavigator(state: Boolean) { this.state = this.state.copy(showNavigator = state) }
     private fun navigateHome() { navigateToPage(ScreenPage.Home, true) }
     private fun setBorders(values: PaddingValues) { state = state.copy(borders = values) }
+    private fun setScreenOverlay(overlay: (@Composable () -> Unit)?) { this.overlay = overlay }
 }
 
 

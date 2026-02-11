@@ -1,6 +1,7 @@
 package se.iloppis.app.ui.states
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
 import se.iloppis.app.navigation.ScreenPage
 
 /**
@@ -50,6 +51,21 @@ sealed class ScreenAction {
          */
         val borders: PaddingValues
     ) : ScreenAction()
+
+    /**
+     * Sets screen overlay
+     */
+    data class SetOverlay(
+        /**
+         * Screen overlay
+         */
+        val overlay: @Composable () -> Unit
+    ) : ScreenAction()
+
+    /**
+     * Removes screen overlay
+     */
+    data object RemoveOverlay : ScreenAction()
 
     /**
      * Navigates home and enables the navigator if disabled

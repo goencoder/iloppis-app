@@ -22,8 +22,8 @@ import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.buttons.IconButton
 import se.iloppis.app.ui.components.dialogs.CodeEntryDialog
+import se.iloppis.app.ui.components.navigation.ILoppisHeader
 import se.iloppis.app.ui.screens.ScreenModel
-import se.iloppis.app.ui.screens.events.ILoppisHeader
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.utils.user.codes.CodeStateMode
@@ -38,7 +38,7 @@ fun HomeScreen() {
             .padding(horizontal = 16.dp)
             .statusBarsPadding()
     ) {
-        ILoppisHeader()
+        ILoppisHeader(R.string.pages_home)
 
         Spacer(modifier = Modifier.height(14.dp))
         SelectionScreenButtonsRow(screen) { event, mode ->

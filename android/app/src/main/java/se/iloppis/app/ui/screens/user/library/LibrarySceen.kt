@@ -8,12 +8,13 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.events.SwipeableEventList
+import se.iloppis.app.ui.components.navigation.ILoppisHeader
 import se.iloppis.app.ui.screens.events.EmptyState
 import se.iloppis.app.ui.screens.events.ErrorState
-import se.iloppis.app.ui.screens.events.ILoppisHeader
 import se.iloppis.app.ui.screens.events.LoadingState
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
@@ -33,7 +34,7 @@ fun LibraryScreen() {
             .padding(horizontal = 16.dp)
             .statusBarsPadding()
     ) {
-        ILoppisHeader()
+        ILoppisHeader(R.string.pages_library)
         ListContent(state) {
             screen.onAction(ScreenAction.NavigateToPage(
                 ScreenPage.EventsDetailPage(it)

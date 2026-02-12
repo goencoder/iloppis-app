@@ -8,6 +8,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.events.EventList
 import se.iloppis.app.ui.components.events.FilterChips
@@ -26,7 +27,7 @@ fun EventSelectionScreen(onAction: (Event) -> Unit) {
             .padding(horizontal = 16.dp)
             .statusBarsPadding()
     ) {
-        ILoppisHeader()
+        ILoppisHeader(R.string.pages_selection)
 
         SearchBar()
 

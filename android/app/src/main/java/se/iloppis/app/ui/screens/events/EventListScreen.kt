@@ -16,6 +16,7 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.events.SwipeableEventList
+import se.iloppis.app.ui.components.navigation.ILoppisHeader
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
@@ -62,7 +63,7 @@ private fun EventListContent(
             .statusBarsPadding()
     ) {
         // Header
-        ILoppisHeader()
+        ILoppisHeader(R.string.pages_search)
 
         // Search bar
         SearchBar()
@@ -77,17 +78,6 @@ private fun EventListContent(
             onEventClick = onEventClick
         )
     }
-}
-
-@Composable
-fun ILoppisHeader() {
-    Text(
-        text = stringResource(R.string.app_title),
-        fontSize = 28.sp,
-        fontWeight = FontWeight.Bold,
-        color = AppColors.TextPrimary,
-        modifier = Modifier.padding(vertical = 16.dp)
-    )
 }
 
 @Composable

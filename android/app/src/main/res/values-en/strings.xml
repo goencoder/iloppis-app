@@ -9,6 +9,10 @@
     <string name="nav_library">Library</string>
     <string name="nav_cashier">Cashier</string>
     <string name="nav_scanner">Scanner</string>
+    <string name="pages_home">Home</string>
+    <string name="pages_search">Search flea market</string>
+    <string name="pages_selection">Select flea market</string>
+    <string name="pages_library">Library</string>
 
     <!-- Home Screen -->
     <string name="home_open_cashier">Open cashier</string>

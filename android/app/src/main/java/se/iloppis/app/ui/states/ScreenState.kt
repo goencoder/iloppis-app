@@ -71,6 +71,11 @@ sealed class ScreenAction {
      * Navigates home and enables the navigator if disabled
      */
     data object NavigateHome : ScreenAction()
+
+    /**
+     * Navigates back to previous page
+     */
+    data object NavigateBack : ScreenAction()
 }
 
 

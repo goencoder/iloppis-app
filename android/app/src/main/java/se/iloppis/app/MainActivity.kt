@@ -2,6 +2,7 @@ package se.iloppis.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.WindowInsets
@@ -29,13 +30,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             Provider(applicationContext) {
                 Screens {
+                    val screen = screenContext()
                     ILoppisTheme {
                         Scaffold(
                             contentWindowInsets = WindowInsets(),
                             modifier = Modifier,
                             bottomBar = { Navigator() }
                         ) { padding ->
-                            screenContext().onAction(ScreenAction.SetBorders(padding))
+                            screen.onAction(ScreenAction.SetBorders(padding))
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
                                 color = AppColors.Background
@@ -43,6 +45,12 @@ class MainActivity : ComponentActivity() {
                                 PageManager()
                             }
                         }
+                    }
+
+
+
+                    onBackPressedDispatcher.addCallback(this) {
+                        screen.onAction(ScreenAction.NavigateBack)
                     }
                 }
             }

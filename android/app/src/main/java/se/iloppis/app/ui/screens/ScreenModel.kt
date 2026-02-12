@@ -32,6 +32,12 @@ class ScreenModel : ViewModel() {
         private set
 
     /**
+     * Previous screen page
+     */
+    var previous by mutableStateOf<ScreenPage?>(null)
+        private set
+
+    /**
      * Screen border
      *
      * Provides values for the screens border
@@ -50,9 +56,12 @@ class ScreenModel : ViewModel() {
     fun onAction(action: ScreenAction) {
         when(action) {
             is ScreenAction.Loading -> setLoad(action.status)
-            is ScreenAction.NavigateToPage -> navigateToPage(action.page, action.navigator)
+
+            is ScreenAction.NavigateToPage -> navigateToPage(action.page, action.navigator, state.page)
             is ScreenAction.ShowNavigator -> showNavigator(action.show)
             is ScreenAction.NavigateHome -> navigateHome()
+            is ScreenAction.NavigateBack -> navigateBack()
+
             is ScreenAction.SetBorders -> setBorders(action.borders)
 
             is ScreenAction.SetOverlay -> setScreenOverlay(action.overlay)
@@ -63,12 +72,20 @@ class ScreenModel : ViewModel() {
 
 
     private fun setLoad(state: Boolean) { this.state = this.state.copy(isLoading = state) }
-    private fun navigateToPage(page: ScreenPage, navigator: Boolean) {
+    private fun navigateToPage(page: ScreenPage, navigator: Boolean, previous: ScreenPage?) {
+        this.previous = previous
         state = state.copy(page = page)
         showNavigator(navigator)
     }
     private fun showNavigator(state: Boolean) { this.state = this.state.copy(showNavigator = state) }
-    private fun navigateHome() { navigateToPage(ScreenPage.Home, true) }
+    private fun navigateHome() { navigateToPage(ScreenPage.Home, true, null) }
+    private fun navigateBack() {
+        navigateToPage(
+            previous ?: ScreenPage.Home,
+            true,
+            if(previous != null) ScreenPage.Home else null
+        )
+    }
     private fun setBorders(values: PaddingValues) { state = state.copy(borders = values) }
     private fun setScreenOverlay(overlay: (@Composable () -> Unit)?) { this.overlay = overlay }
 }

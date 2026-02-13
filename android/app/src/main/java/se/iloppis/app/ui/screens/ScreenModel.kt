@@ -83,7 +83,7 @@ class ScreenModel : ViewModel() {
         navigateToPage(
             previous ?: ScreenPage.Home,
             true,
-            if(previous != null) ScreenPage.Home else null
+            if(previous != null && previous != ScreenPage.Home) ScreenPage.Home else null
         )
     }
     private fun setBorders(values: PaddingValues) { state = state.copy(borders = values) }

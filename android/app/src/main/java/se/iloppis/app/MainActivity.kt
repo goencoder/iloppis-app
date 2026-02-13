@@ -50,7 +50,8 @@ class MainActivity : ComponentActivity() {
 
 
                     onBackPressedDispatcher.addCallback(this) {
-                        screen.onAction(ScreenAction.NavigateBack)
+                        if(screen.previous != null) screen.onAction(ScreenAction.NavigateBack)
+                        else finish()
                     }
                 }
             }

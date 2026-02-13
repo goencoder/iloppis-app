@@ -57,7 +57,7 @@ class ScreenModel : ViewModel() {
         when(action) {
             is ScreenAction.Loading -> setLoad(action.status)
 
-            is ScreenAction.NavigateToPage -> navigateToPage(action.page, action.navigator, state.page)
+            is ScreenAction.NavigateToPage -> navigateToPage(action.page, action.navigator, if(state.page != ScreenPage.Home) state.page else null)
             is ScreenAction.ShowNavigator -> showNavigator(action.show)
             is ScreenAction.NavigateHome -> navigateHome()
             is ScreenAction.NavigateBack -> navigateBack()

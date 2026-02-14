@@ -1,11 +1,28 @@
-package se.iloppis.app.ui.dialogs
+package se.iloppis.app.ui.components.dialogs
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -19,11 +36,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import se.iloppis.app.R
+import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.CancelTextButton
 import se.iloppis.app.ui.components.CodeBox
 import se.iloppis.app.ui.components.PrimaryButton
-import se.iloppis.app.ui.screens.events.CodeEntryMode
 import se.iloppis.app.ui.theme.AppColors
+import se.iloppis.app.utils.user.codes.CodeState
+import se.iloppis.app.utils.user.codes.CodeStateMode
+import se.iloppis.app.utils.user.codes.rememberCodeState
+
+/**
+ * Code entry dialog
+ */
+@Composable
+fun CodeEntryDialog(event: Event, mode: CodeStateMode, onDismiss: () -> Unit) {
+    val state = rememberCodeState(event, mode)
+    DialogContent(state, onDismiss)
+}
+
+
 
 /**
  * Dialog for entering cashier or scanner codes.
@@ -31,26 +62,21 @@ import se.iloppis.app.ui.theme.AppColors
  * Validates code implicitly when complete.
  */
 @Composable
-fun CodeEntryDialog(
-    mode: CodeEntryMode,
-    eventName: String,
-    isValidating: Boolean = false,
-    errorMessage: String? = null,
+private fun DialogContent(
+    state: CodeState,
     onDismiss: () -> Unit,
-    onCodeChange: (String) -> Unit,
-    onCodeEntered: (String) -> Unit
 ) {
     var code by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     val maxLength = 6
 
-    val title = when (mode) {
-        CodeEntryMode.CASHIER -> stringResource(R.string.code_entry_title_cashier)
-        CodeEntryMode.SCANNER -> stringResource(R.string.code_entry_title_scanner)
+    val title = when (state.mode) {
+        CodeStateMode.CASHIER -> stringResource(R.string.code_entry_title_cashier)
+        CodeStateMode.SCANNER -> stringResource(R.string.code_entry_title_scanner)
     }
-    val subtitle = when (mode) {
-        CodeEntryMode.CASHIER -> stringResource(R.string.code_entry_subtitle_cashier)
-        CodeEntryMode.SCANNER -> stringResource(R.string.code_entry_subtitle_scanner)
+    val subtitle = when (state.mode) {
+        CodeStateMode.CASHIER -> stringResource(R.string.code_entry_subtitle_cashier)
+        CodeStateMode.SCANNER -> stringResource(R.string.code_entry_subtitle_scanner)
     }
 
     LaunchedEffect(Unit) {
@@ -83,7 +109,7 @@ fun CodeEntryDialog(
 
                 // Event name
                 Text(
-                    text = eventName,
+                    text = state.event.name,
                     fontSize = 14.sp,
                     color = AppColors.TextMuted
                 )
@@ -105,11 +131,10 @@ fun CodeEntryDialog(
                     code = code,
                     onCodeChange = { newCode ->
                         code = newCode
-                        onCodeChange(newCode)
+                        state.validate(newCode)
                     },
-                    maxLength = maxLength,
                     focusRequester = focusRequester,
-                    hasError = errorMessage != null
+                    hasError = state.errorMessage != null
                 )
 
                 // Error message or validating indicator
@@ -121,7 +146,7 @@ fun CodeEntryDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     when {
-                        isValidating -> {
+                        state.isValidating -> {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
@@ -139,7 +164,7 @@ fun CodeEntryDialog(
                                 )
                             }
                         }
-                        errorMessage != null -> {
+                        state.errorMessage != null -> {
                             Text(
                                 text = stringResource(R.string.code_invalid),
                                 fontSize = 12.sp,
@@ -151,21 +176,20 @@ fun CodeEntryDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Submit button
-                PrimaryButton(
+                PrimaryButton( // Submit button
                     text = stringResource(R.string.button_verify_continue),
-                    onClick = { onCodeEntered(code) },
-                    enabled = code.length == maxLength && !isValidating
+                    onClick = { state.validate(code) },
+                    enabled = code.length == maxLength && !state.isValidating
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Cancel button
                 CancelTextButton(onClick = onDismiss)
             }
         }
     }
 }
+
+
 
 /**
  * Code input field with 6 boxes in XXX-XXX format.
@@ -174,7 +198,6 @@ fun CodeEntryDialog(
 private fun CodeInput(
     code: String,
     onCodeChange: (String) -> Unit,
-    maxLength: Int,
     focusRequester: FocusRequester,
     hasError: Boolean = false
 ) {
@@ -186,7 +209,7 @@ private fun CodeInput(
                 .replace("-", "")
                 .replace(" ", "")
                 .filter { it.isLetterOrDigit() }
-                .take(maxLength)
+                .take(CodeState.CODE_LENGTH)
                 .uppercase()
             onCodeChange(filtered)
         },
@@ -209,7 +232,7 @@ private fun CodeInput(
                     CodeBox(
                         char = code.getOrNull(index)?.toString() ?: "",
                         isFocused = code.length == index,
-                        hasError = hasError && code.length == maxLength,
+                        hasError = hasError && code.length == CodeState.CODE_LENGTH,
                         modifier = Modifier.weight(1f)
                     )
                     if (index < 2) Spacer(modifier = Modifier.width(6.dp))
@@ -227,7 +250,7 @@ private fun CodeInput(
                     CodeBox(
                         char = code.getOrNull(index + 3)?.toString() ?: "",
                         isFocused = code.length == index + 3,
-                        hasError = hasError && code.length == maxLength,
+                        hasError = hasError && code.length == CodeState.CODE_LENGTH,
                         modifier = Modifier.weight(1f)
                     )
                     if (index < 2) Spacer(modifier = Modifier.width(6.dp))

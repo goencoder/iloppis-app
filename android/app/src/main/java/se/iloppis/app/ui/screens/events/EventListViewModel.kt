@@ -31,6 +31,7 @@ import java.time.LocalDate
  * ViewModel for the event list screen.
  * Handles all business logic and state management.
  */
+@Deprecated("use new EventListState and new CodeState")
 class EventListViewModel : ViewModel() {
 
     var uiState by mutableStateOf(EventListUiState())

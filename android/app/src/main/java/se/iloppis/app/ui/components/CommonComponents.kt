@@ -2,9 +2,10 @@ package se.iloppis.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,7 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
-import se.iloppis.app.domain.model.Event
 import se.iloppis.app.domain.model.EventState
 import se.iloppis.app.ui.theme.AppColors
 
@@ -43,44 +43,16 @@ fun StateBadge(state: EventState) {
 }
 
 /**
- * Card displaying event summary information.
+ * Star icon
  */
 @Composable
-fun EventCard(event: Event, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AppColors.CardBackground)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = event.name,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = AppColors.TextPrimary
-                )
-                StateBadge(event.state)
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = event.dates,
-                color = AppColors.TextMuted,
-                fontSize = 14.sp
-            )
-            Text(
-                text = event.location.ifBlank { stringResource(R.string.location_not_specified) },
-                color = AppColors.TextMuted,
-                fontSize = 14.sp
-            )
-        }
-    }
+fun StarIcon() {
+    Icon(
+        imageVector = Icons.Filled.Star,
+        contentDescription = stringResource(R.string.store_event_locally),
+        tint = MaterialTheme.colorScheme.onTertiaryFixed,
+        modifier = Modifier.padding(horizontal = 8.dp)
+    )
 }
 
 /**

@@ -8,16 +8,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFFB71C1C),
+    primary = Blue,
+    secondary = Green,
+    error = Red,
+
     onPrimary = Color.White,
     primaryContainer = PinkAccent,
     onPrimaryContainer = Color.Black,
-    secondary = GreenBadge,
-    onSecondary = GreenText,
+    onSecondary = GreenBadge,
     background = PinkBackground,
     surface = PinkCard,
     onBackground = Color.Black,
     onSurfaceVariant = Color.DarkGray,
+    surfaceDim = Color.Gray,
+    tertiary = Text,
+    onTertiaryFixed = Gold,
 )
 
 @Composable

@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,7 +50,7 @@ fun Navigator(
         top = 5.dp,
         end = 25.dp
     ),
-    alpha: Float = 0.2f,
+    alpha: Float = 0.5f,
     buttonSize: Dp = 75.dp,
     buttonCorner: Dp = 5.dp,
     buttonSpacing: Dp = 15.dp,
@@ -68,8 +68,9 @@ fun Navigator(
             .padding(paddingValues),
             horizontalArrangement = Arrangement.Center
         ) {
+            val page = screen.page
             NavigatorButton(
-                if(screen.state.page == ScreenPage.Home)
+                if(page is ScreenPage.Home || page == null)
                     Icons.Filled.Home
                 else Icons.Outlined.Home,
                 stringResource(R.string.nav_home),
@@ -77,32 +78,42 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                screen.state.page == ScreenPage.Home
+                page is ScreenPage.Home
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Home)) }
 
             NavigatorButton(
-                if(screen.state.page == ScreenPage.CashierSelector)
-                    Icons.Filled.Payments
-                else Icons.Outlined.Payments,
-                stringResource(R.string.nav_cashier),
+                if(
+                    page is ScreenPage.Search ||
+                    page is ScreenPage.Selection ||
+                    page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Search
+                )
+                    Icons.Filled.Search
+                else Icons.Outlined.Search,
+                stringResource(R.string.search_placeholder),
                 buttonSize,
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                screen.state.page == ScreenPage.CashierSelector
-            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.CashierSelector)) }
+                page is ScreenPage.Search ||
+                        page is ScreenPage.Selection ||
+                        page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Search
+            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Search)) }
 
             NavigatorButton(
-                if(screen.state.page == ScreenPage.ScannerSelector)
-                    Icons.Filled.QrCodeScanner
-                else Icons.Outlined.QrCodeScanner,
-                stringResource(R.string.nav_scanner),
+                if(
+                    page is ScreenPage.Library ||
+                    page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Library
+                )
+                    Icons.Filled.Bookmarks
+                else Icons.Outlined.Bookmarks,
+                stringResource(R.string.nav_library),
                 buttonSize,
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                screen.state.page == ScreenPage.ScannerSelector
-            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.ScannerSelector)) }
+                page is ScreenPage.Library ||
+                        page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Library
+            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Library)) }
         }
     }
 }
@@ -125,7 +136,9 @@ fun NavigatorButton(
 ) {
     Box(modifier = Modifier.padding(horizontal = space)) {
         IconButton(
-            modifier = Modifier.size(size).padding(0.dp),
+            modifier = Modifier
+                .size(size)
+                .padding(0.dp),
             shape = RoundedCornerShape(rounded),
             onClick = onClick
         ) {
@@ -134,9 +147,9 @@ fun NavigatorButton(
                 imageVector = image,
                 contentDescription = description,
                 tint = if(enable)
-                    MaterialTheme.colorScheme.background.copy(alpha = 0.4f)
-                else
                     MaterialTheme.colorScheme.background
+                else
+                    MaterialTheme.colorScheme.background.copy(alpha = 0.4f)
             )
         }
     }

@@ -6,11 +6,21 @@
 
     <!-- Navigation -->
     <string name="nav_home">Hem</string>
+    <string name="nav_library">Biblotek</string>
     <string name="nav_cashier">Kassa</string>
     <string name="nav_scanner">Skanner</string>
+    <string name="pages_home">Startsida</string>
+    <string name="pages_search">Sök evenemang</string>
+    <string name="pages_selection">Välj evenemang</string>
+    <string name="pages_library">Biblotek</string>
+
+    <!-- Home Screen -->
+    <string name="home_open_cashier">Öppna kassa</string>
+    <string name="home_open_scanner">Öppna skanner</string>
 
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>
+    <string name="filter_saved">Sparade</string>
     <string name="filter_all">Alla</string>
     <string name="filter_open">Öppna</string>
     <string name="filter_upcoming">Kommande</string>

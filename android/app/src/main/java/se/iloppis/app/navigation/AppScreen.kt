@@ -5,6 +5,7 @@ import se.iloppis.app.domain.model.Event
 /**
  * Represents the current navigation destination in the app.
  */
+@Deprecated("use new screen model system")
 sealed class AppScreen {
     /** Event list / home screen */
     data object EventList : AppScreen()
@@ -33,12 +34,43 @@ sealed class ScreenPage {
      */
     data object Home : ScreenPage()
 
-
+    /**
+     * Search page
+     */
+    data object Search : ScreenPage()
 
     /**
-     * Cashier selector page
+     * Event selection page
      */
-    data object CashierSelector : ScreenPage()
+    data class Selection(
+        /**
+         * On Action event
+         *
+         * This is called when an event has been
+         * selected on the selection page.
+         */
+        val onAction: (event: Event) -> Unit
+    ) : ScreenPage()
+
+    /**
+     * Events detail page
+     *
+     * Shows details about a specified event
+     */
+    data class EventsDetailPage(
+        /**
+         * Event to show details about
+         */
+        val event: Event
+    ) : ScreenPage()
+
+    /**
+     * User local library page
+     *
+     * Stored events will be shown
+     * on this page.
+     */
+    data object Library : ScreenPage()
 
     /**
      * Cashier page
@@ -54,13 +86,6 @@ sealed class ScreenPage {
          */
         val apiKey: String
     ) : ScreenPage()
-
-
-
-    /**
-     * Scanner selector page
-     */
-    data object ScannerSelector : ScreenPage()
 
     /**
      * Scanner page

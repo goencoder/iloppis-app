@@ -26,14 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.StarIcon
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.components.map.Map
-import se.iloppis.app.ui.components.navigation.SwipeToNavigate
 import se.iloppis.app.ui.components.text.MarkdownText
 import se.iloppis.app.ui.screens.screenContext
-import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.utils.events.localEventsStorage
 
 @Composable
@@ -41,44 +38,34 @@ fun EventsDetailsScreen(event: Event)  {
     val screen = screenContext()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SwipeToNavigate(
-            onNavigate = {
-                screen.onAction(
-                    ScreenAction.NavigateToPage(
-                        ScreenPage.Search
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            item {
+                Box(modifier = Modifier.fillMaxWidth().height(325.dp)) {
+                    Map(
+                        event,
+                        modifier = Modifier
                     )
+                }
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(color = MaterialTheme.colorScheme.onPrimary)
                 )
             }
-        ) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item {
-                    Box(modifier = Modifier.fillMaxWidth().height(325.dp)) {
-                        Map(
-                            event,
-                            modifier = Modifier
-                        )
-                    }
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(color = MaterialTheme.colorScheme.onPrimary)
-                    )
-                }
 
-                item {
-                    Column(
-                        modifier = Modifier
-                            .padding(horizontal = 15.dp)
-                            .statusBarsPadding()
-                    ) {
-                        Spacer(modifier = Modifier.height(7.dp))
-                        EventDetailsContent(event)
-                        Spacer(modifier = Modifier.height(14.dp))
-                    }
+            item {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 15.dp)
+                        .statusBarsPadding()
+                ) {
+                    Spacer(modifier = Modifier.height(7.dp))
+                    EventDetailsContent(event)
+                    Spacer(modifier = Modifier.height(14.dp))
                 }
-
-                item {Spacer(modifier = Modifier.height(screen.border.calculateBottomPadding())) }
             }
+
+            item {Spacer(modifier = Modifier.height(screen.border.calculateBottomPadding())) }
         }
     }
 }

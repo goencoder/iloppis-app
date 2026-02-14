@@ -71,11 +71,6 @@ sealed class ScreenAction {
      * Navigates home and enables the navigator if disabled
      */
     data object NavigateHome : ScreenAction()
-
-    /**
-     * Navigates back to previous page
-     */
-    data object NavigateBack : ScreenAction()
 }
 
 
@@ -104,11 +99,6 @@ data class ScreenState(
      * if an error has occurred
      */
     val errorMessage: String? = null,
-
-    /**
-     * Screen state page
-     */
-    val page: ScreenPage = ScreenPage.Home,
 
     /**
      * Screen borders

@@ -68,9 +68,9 @@ fun Navigator(
             .padding(paddingValues),
             horizontalArrangement = Arrangement.Center
         ) {
-            val page = screen.state.page
+            val page = screen.page
             NavigatorButton(
-                if(page is ScreenPage.Home)
+                if(page is ScreenPage.Home || page == null)
                     Icons.Filled.Home
                 else Icons.Outlined.Home,
                 stringResource(R.string.nav_home),
@@ -85,7 +85,7 @@ fun Navigator(
                 if(
                     page is ScreenPage.Search ||
                     page is ScreenPage.Selection ||
-                    page is ScreenPage.EventsDetailPage
+                    page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Search
                 )
                     Icons.Filled.Search
                 else Icons.Outlined.Search,
@@ -96,11 +96,14 @@ fun Navigator(
                 buttonSpacing,
                 page is ScreenPage.Search ||
                         page is ScreenPage.Selection ||
-                        page is ScreenPage.EventsDetailPage
+                        page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Search
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Search)) }
 
             NavigatorButton(
-                if(page is ScreenPage.Library)
+                if(
+                    page is ScreenPage.Library ||
+                    page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Library
+                )
                     Icons.Filled.Bookmarks
                 else Icons.Outlined.Bookmarks,
                 stringResource(R.string.nav_library),
@@ -108,7 +111,8 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                page is ScreenPage.Library
+                page is ScreenPage.Library ||
+                        page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Library
             ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Library)) }
         }
     }
@@ -132,7 +136,9 @@ fun NavigatorButton(
 ) {
     Box(modifier = Modifier.padding(horizontal = space)) {
         IconButton(
-            modifier = Modifier.size(size).padding(0.dp),
+            modifier = Modifier
+                .size(size)
+                .padding(0.dp),
             shape = RoundedCornerShape(rounded),
             onClick = onClick
         ) {

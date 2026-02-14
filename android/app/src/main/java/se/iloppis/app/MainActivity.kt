@@ -2,7 +2,6 @@ package se.iloppis.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.WindowInsets
@@ -45,13 +44,6 @@ class MainActivity : ComponentActivity() {
                                 PageManager()
                             }
                         }
-                    }
-
-
-
-                    onBackPressedDispatcher.addCallback(this) {
-                        if(screen.previous != null) screen.onAction(ScreenAction.NavigateBack)
-                        else finish()
                     }
                 }
             }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,8 +35,21 @@ class ScreenModel : ViewModel() {
     /**
      * Previous screen page
      */
-    var previous by mutableStateOf<ScreenPage?>(null)
+    var pages = mutableStateListOf<ScreenPage>(ScreenPage.Home)
         private set
+
+    /**
+     * Current screen page
+     *
+     * The page that is currently loaded
+     * and viewed in the application.
+     */
+    val page by derivedStateOf { pages.lastOrNull() }
+
+    /**
+     * Previous page
+     */
+    val previous by derivedStateOf { pages.getOrNull(pages.size - 2) }
 
     /**
      * Screen border
@@ -57,10 +71,9 @@ class ScreenModel : ViewModel() {
         when(action) {
             is ScreenAction.Loading -> setLoad(action.status)
 
-            is ScreenAction.NavigateToPage -> navigateToPage(action.page, action.navigator, if(state.page != ScreenPage.Home) state.page else null)
+            is ScreenAction.NavigateToPage -> navigateToPage(action.page, action.navigator)
             is ScreenAction.ShowNavigator -> showNavigator(action.show)
             is ScreenAction.NavigateHome -> navigateHome()
-            is ScreenAction.NavigateBack -> navigateBack()
 
             is ScreenAction.SetBorders -> setBorders(action.borders)
 
@@ -72,22 +85,50 @@ class ScreenModel : ViewModel() {
 
 
     private fun setLoad(state: Boolean) { this.state = this.state.copy(isLoading = state) }
-    private fun navigateToPage(page: ScreenPage, navigator: Boolean, previous: ScreenPage?) {
-        this.previous = previous
-        state = state.copy(page = page)
+    private fun showNavigator(state: Boolean) { this.state = this.state.copy(showNavigator = state) }
+
+    private fun navigateToPage(page: ScreenPage, navigator: Boolean) {
+        pushPage(page)
         showNavigator(navigator)
     }
-    private fun showNavigator(state: Boolean) { this.state = this.state.copy(showNavigator = state) }
-    private fun navigateHome() { navigateToPage(ScreenPage.Home, true, null) }
-    private fun navigateBack() {
-        navigateToPage(
-            previous ?: ScreenPage.Home,
-            true,
-            if(previous != null && previous != ScreenPage.Home) ScreenPage.Home else null
-        )
-    }
+    private fun navigateHome() { navigateToPage(ScreenPage.Home, true) }
+
     private fun setBorders(values: PaddingValues) { state = state.copy(borders = values) }
+
     private fun setScreenOverlay(overlay: (@Composable () -> Unit)?) { this.overlay = overlay }
+
+
+
+    /**
+     * Pops previous page from the navigation queue
+     */
+    fun popPage() : ScreenPage? = pages.removeLastOrNull()
+
+    private fun pushPage(page: ScreenPage) {
+        /*
+            Needs to have a better way of navigation
+            than being hard coded if there are more
+            pages to be added.
+        */
+
+        val previous = popPage()
+        pages.clear()
+
+        if(
+            page is ScreenPage.Search ||
+            page is ScreenPage.Library ||
+            page is ScreenPage.Selection ||
+            page is ScreenPage.Cashier ||
+            page is ScreenPage.Scanner
+        ) {
+            pages.add(ScreenPage.Home)
+        } else if(page is ScreenPage.EventsDetailPage) {
+            pages.add(ScreenPage.Home)
+            pages.add(previous ?: ScreenPage.Search)
+        }
+
+        pages.add(page)
+    }
 }
 
 

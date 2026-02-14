@@ -132,6 +132,7 @@ dependencies {
 
     // Background work (offline sync)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.navigation3.ui)
 
     // Testing
     testImplementation(libs.junit)

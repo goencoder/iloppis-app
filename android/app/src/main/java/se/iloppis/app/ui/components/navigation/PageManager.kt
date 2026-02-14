@@ -1,6 +1,8 @@
 package se.iloppis.app.ui.components.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.ui.NavDisplay
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.screens.cashier.CashierScreen
 import se.iloppis.app.ui.screens.events.EventSearchScreen
@@ -27,29 +29,41 @@ fun PageManager() {
     /* Screen overlays */
     if(screen.overlay != null) screen.overlay!!()
 
-    /* Screen content */
-    when (val page = screen.state.page) {
-        /* Home screen */
-        is ScreenPage.Home -> HomeScreen()
+    NavDisplay(
+        backStack = screen.pages,
+        onBack = { screen.popPage() },
+        transitionSpec = animateSlideOut(),
+        popTransitionSpec = animateSlideOut(),
+        predictivePopTransitionSpec = animatePredictiveSlideOut(),
+        entryProvider = { page ->
+            when (page) {
+                /* Home screen */
+                is ScreenPage.Home -> NavEntry(page) { HomeScreen() }
 
-        /* Event screens */
-        is ScreenPage.Search -> EventSearchScreen()
-        is ScreenPage.Selection -> EventSelectionScreen(page.onAction)
-        is ScreenPage.EventsDetailPage -> EventsDetailsScreen(page.event)
+                /* Event screens */
+                is ScreenPage.Search -> NavEntry(page) { EventSearchScreen() }
+                is ScreenPage.Selection -> NavEntry(page) { EventSelectionScreen(page.onAction) }
+                is ScreenPage.EventsDetailPage -> NavEntry(page) { EventsDetailsScreen(page.event) }
 
-        /* Library screen */
-        is ScreenPage.Library -> LibraryScreen()
+                /* Library screen */
+                is ScreenPage.Library -> NavEntry(page) { LibraryScreen() }
 
-        /* Cashier and Scanner screen */
-        is ScreenPage.Cashier -> CashierScreen(
-            event = page.event,
-            apiKey = page.apiKey,
-            onBack = { screen.onAction(ScreenAction.NavigateHome) }
-        )
-        is ScreenPage.Scanner -> ScannerScreen(
-            event = page.event,
-            apiKey = page.apiKey,
-            onBack = { screen.onAction(ScreenAction.NavigateHome) }
-        )
-    }
+                /* Cashier and Scanner screen */
+                is ScreenPage.Cashier -> NavEntry(page) {
+                    CashierScreen(
+                        event = page.event,
+                        apiKey = page.apiKey,
+                        onBack = { screen.onAction(ScreenAction.NavigateHome) }
+                    )
+                }
+                is ScreenPage.Scanner -> NavEntry(page) {
+                    ScannerScreen(
+                        event = page.event,
+                        apiKey = page.apiKey,
+                        onBack = { screen.onAction(ScreenAction.NavigateHome) }
+                    )
+                }
+            }
+        }
+    )
 }

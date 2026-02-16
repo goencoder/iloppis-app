@@ -89,7 +89,7 @@ fun Navigator(
                 )
                     Icons.Filled.Search
                 else Icons.Outlined.Search,
-                stringResource(R.string.search_placeholder),
+                stringResource(R.string.nav_search),
                 buttonSize,
                 iconSize,
                 buttonCorner,

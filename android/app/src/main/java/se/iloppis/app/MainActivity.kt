@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import se.iloppis.app.ui.components.navigation.Navigator
 import se.iloppis.app.ui.components.navigation.PageManager
@@ -36,7 +37,9 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier,
                             bottomBar = { Navigator() }
                         ) { padding ->
-                            screen.onAction(ScreenAction.SetBorders(padding))
+                            LaunchedEffect(padding) {
+                                screen.onAction(ScreenAction.SetBorders(padding))
+                            }
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
                                 color = AppColors.Background

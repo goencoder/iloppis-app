@@ -140,7 +140,7 @@ fun rememberCodeState(
     scope: CoroutineScope = rememberCoroutineScope(),
     screen: ScreenModel = screenContext()
 ) : CodeState {
-    return remember {
+    return remember(event, mode) {
         CodeState(event, mode, scope, config, screen)
     }
 }

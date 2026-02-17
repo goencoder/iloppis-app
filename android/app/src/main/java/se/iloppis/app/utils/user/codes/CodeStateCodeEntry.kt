@@ -1,7 +1,10 @@
 package se.iloppis.app.utils.user.codes
 
 import android.util.Log
+import se.iloppis.app.data.mappers.EventMapper.toDomain
+import se.iloppis.app.domain.model.Event
 import se.iloppis.app.network.ILoppisClient
+import se.iloppis.app.network.events.EventAPI
 import se.iloppis.app.network.keys.KeyAPI
 import se.iloppis.app.network.keys.KeyApiResponse
 
@@ -11,9 +14,9 @@ import se.iloppis.app.network.keys.KeyApiResponse
  * If the code is valid the response is
  * returned else a null value is returned.
  */
-internal suspend fun CodeState.validate(event: String, code: String) : KeyApiResponse? {
+internal suspend fun CodeState.validateCode(code: String) : KeyApiResponse? {
     val api = ILoppisClient(config).create<KeyAPI>()
-    val res = api.getApiKeyByAlias(event, code)
+    val res = api.getApiKeyByAlias(code)
 
     Log.d(CodeState.TAG, "API Response - alias: ${res.alias}, isActive: ${res.isActive}, type: ${res.type}")
 
@@ -31,6 +34,25 @@ internal suspend fun CodeState.validate(event: String, code: String) : KeyApiRes
     }
 
     return res
+}
+
+/**
+ * Gets event by ID
+ */
+internal suspend fun CodeState.getEventById(id: String) : Event {
+    val api = ILoppisClient(config).create<EventAPI>()
+    val res = api.get(id)
+
+    Log.d(CodeState.TAG, "API Response - total: ${res.total}, events: ${res.events}")
+
+    if(res.events.isEmpty()) {
+        Log.w(CodeState.TAG, "API did not return any events, got: $res")
+        isValidating = false
+        errorMessage = "no_event"
+        throw Exception("Could not get any event by specified id: $id")
+    }
+
+    return res.events.first().toDomain()
 }
 
 

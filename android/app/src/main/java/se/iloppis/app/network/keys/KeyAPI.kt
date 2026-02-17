@@ -11,9 +11,8 @@ interface KeyAPI : ILoppisApiInterface {
     /**
      * Gets iLoppis API key by alias
      */
-    @GET("v1/events/{event_id}/api-keys/alias/{alias}")
+    @GET("v1/api-keys/alias/{alias}")
     suspend fun getApiKeyByAlias(
-        @Path("event_id") eventId: String,
         @Path("alias") alias: String
     ) : KeyApiResponse
 }

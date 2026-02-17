@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import se.iloppis.app.R
-import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.CancelTextButton
 import se.iloppis.app.ui.components.CodeBox
 import se.iloppis.app.ui.components.PrimaryButton
@@ -49,8 +48,8 @@ import se.iloppis.app.utils.user.codes.rememberCodeState
  * Code entry dialog
  */
 @Composable
-fun CodeEntryDialog(event: Event, mode: CodeStateMode, onDismiss: () -> Unit) {
-    val state = rememberCodeState(event, mode)
+fun CodeEntryDialog(mode: CodeStateMode, onDismiss: () -> Unit) {
+    val state = rememberCodeState(mode)
     DialogContent(state, onDismiss)
 }
 
@@ -105,16 +104,7 @@ private fun DialogContent(
                     color = AppColors.TextPrimary
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Event name
-                Text(
-                    text = state.event.name,
-                    fontSize = 14.sp,
-                    color = AppColors.TextMuted
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Subtitle
                 Text(

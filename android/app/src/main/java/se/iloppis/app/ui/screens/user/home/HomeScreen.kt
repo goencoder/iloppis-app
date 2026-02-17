@@ -18,12 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
-import se.iloppis.app.domain.model.Event
-import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.buttons.IconButton
 import se.iloppis.app.ui.components.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.components.navigation.ILoppisHeader
-import se.iloppis.app.ui.screens.ScreenModel
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.utils.user.codes.CodeStateMode
@@ -41,9 +38,9 @@ fun HomeScreen() {
         ILoppisHeader(R.string.pages_home)
 
         Spacer(modifier = Modifier.height(14.dp))
-        SelectionScreenButtonsRow(screen) { event, mode ->
+        SelectionScreenButtonsRow { mode ->
             screen.onAction(ScreenAction.SetOverlay {
-                CodeEntryDialog(event, mode) {
+                CodeEntryDialog(mode) {
                     screen.onAction(ScreenAction.RemoveOverlay)
                 }
             })
@@ -62,8 +59,7 @@ fun HomeScreen() {
  */
 @Composable
 private fun SelectionScreenButtonsRow(
-    screen: ScreenModel,
-    onAction: (Event, CodeStateMode) -> Unit
+    onAction: (CodeStateMode) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -72,13 +68,7 @@ private fun SelectionScreenButtonsRow(
         IconButton(
             text = R.string.home_open_cashier,
             icon = Icons.Outlined.Payments
-        ) {
-            screen.onAction(
-                ScreenAction.NavigateToPage(
-                    ScreenPage.Selection { onAction(it, CodeStateMode.CASHIER) }
-                )
-            )
-        }
+        ) { onAction(CodeStateMode.CASHIER) }
 
         IconButton(
             text = R.string.home_open_scanner,
@@ -86,12 +76,6 @@ private fun SelectionScreenButtonsRow(
                 containerColor = MaterialTheme.colorScheme.secondary
             ),
             icon = Icons.Outlined.QrCode
-        ) {
-            screen.onAction(
-                ScreenAction.NavigateToPage(
-                    ScreenPage.Selection { onAction(it, CodeStateMode.SCANNER) }
-                )
-            )
-        }
+        ) { onAction(CodeStateMode.SCANNER) }
     }
 }

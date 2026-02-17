@@ -10,7 +10,6 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.network.config.ClientConfig
 import se.iloppis.app.network.config.clientConfig
@@ -22,7 +21,6 @@ import se.iloppis.app.ui.states.ScreenAction
  * iLoppis code state
  */
 class CodeState(
-    val event: Event,
     val mode: CodeStateMode,
     val scope: CoroutineScope,
     val config: ClientConfig,
@@ -50,7 +48,7 @@ class CodeState(
      * the two pages depending on the type of [se.iloppis.app.utils.user.codes.CodeState.mode]
      */
     fun validate(code: String) {
-        isValidating = false /* Resets in case code is to short */
+        isValidating = false /* Resets in case code is too short */
         errorMessage = null
         if(code.length < CODE_LENGTH) return
 
@@ -63,10 +61,10 @@ class CodeState(
                         CODE_LENGTH
                     )
                 }".uppercase()
-                val id = event.id
 
-                Log.d(TAG, "Validating code: $format for event: $id")
-                val res = validate(id, format) ?: return@launch
+                Log.d(TAG, "Validating code: $format")
+                val res = validateCode(format) ?: return@launch
+                val event = getEventById(res.eventId)
 
                 Log.i(TAG, "Code validated successfully! Navigating to $mode")
                 val page = when (mode) {
@@ -134,13 +132,12 @@ class CodeState(
  */
 @Composable
 fun rememberCodeState(
-    event: Event,
     mode: CodeStateMode,
     config: ClientConfig = clientConfig(),
     scope: CoroutineScope = rememberCoroutineScope(),
     screen: ScreenModel = screenContext()
 ) : CodeState {
-    return remember(event, mode) {
-        CodeState(event, mode, scope, config, screen)
+    return remember(mode) {
+        CodeState(mode, scope, config, screen)
     }
 }

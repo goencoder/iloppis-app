@@ -13,7 +13,10 @@ data class Event(
     val startTimeFormatted: String,
     val endTimeFormatted: String,
     val location: String,
-    val state: EventState
+    val state: EventState,
+
+    val latitude: Double?,
+    val longitude: Double?,
 )
 
 /**

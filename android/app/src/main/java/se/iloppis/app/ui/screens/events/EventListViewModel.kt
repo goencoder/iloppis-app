@@ -31,6 +31,7 @@ import java.time.LocalDate
  * ViewModel for the event list screen.
  * Handles all business logic and state management.
  */
+@Deprecated("use new EventListState and new CodeState")
 class EventListViewModel : ViewModel() {
 
     var uiState by mutableStateOf(EventListUiState())
@@ -140,7 +141,7 @@ class EventListViewModel : ViewModel() {
 
             try {
                 val api = ILoppisClient(clientConfig()).create<KeyAPI>()
-                val response = api.getApiKeyByAlias(eventId, formattedCode)
+                val response = api.getApiKeyByAlias(formattedCode)
 
                 Log.d(TAG, "API Response - alias: ${response.alias}, isActive: ${response.isActive}, type: ${response.type}")
 

@@ -5,6 +5,11 @@ package se.iloppis.app.network.keys
  */
 data class KeyApiResponse(
     /**
+     * Event ID of the event that this key belongs to.
+     */
+    val eventId: String,
+
+    /**
      * Key alias
      */
     val alias: String,

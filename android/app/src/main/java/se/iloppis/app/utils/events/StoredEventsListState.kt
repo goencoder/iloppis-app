@@ -110,6 +110,9 @@ class StoredEventsListState(val config: ClientConfig, val storage: LocalStorage)
         Log.d(TAG, "Loading events from: ${clientConfig().url}")
         CoroutineScope(Dispatchers.Main).launch {
             data = data.copy(isLoading = true, errorMessage = null)
+
+
+
             try {
                 val api = ILoppisClient(config).create<EventAPI>()
 
@@ -118,6 +121,8 @@ class StoredEventsListState(val config: ClientConfig, val storage: LocalStorage)
                 Log.d(TAG, "Response received, events count: ${res.total}")
 
                 val handled = handleEventsResponse(res)
+
+
 
                 data = data.copy(
                     isLoading = false,

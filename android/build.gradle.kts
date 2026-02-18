@@ -11,15 +11,21 @@ dependencyCheck {
     autoUpdate = true
     format = "HTML"
     outputDirectory = "build/reports/dependency-check"
-    
+
     // Suppress false positives (add as needed)
     suppressionFile = file("dependency-check-suppressions.xml").takeIf { it.exists() }?.absolutePath
-    
+
     // Fail build on CVSS score >= 7.0 (High severity)
     failBuildOnCVSS = 7.0f
-    
+
     analyzers.apply {
         assemblyEnabled = false  // .NET not used
         nuspecEnabled = false    // .NET not used
+    }
+}
+
+buildscript {
+    dependencies {
+        classpath(libs.secrets.gradle.plugin)
     }
 }

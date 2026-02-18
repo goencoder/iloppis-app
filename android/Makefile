@@ -3,7 +3,7 @@
 
 # Environment Setup
 ENV ?= staging
-FLAVOR_CAPITALIZED := $(shell echo $(ENV) | sed 's/^./\U&/')
+FLAVOR_CAPITALIZED := $(shell echo $(ENV) | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
 ANDROID_HOME ?= /opt/homebrew/share/android-commandlinetools
 
 # Java Version Detection and Setup
@@ -35,7 +35,7 @@ export PATH := $(JAVA_HOME)/bin:$(PATH)
 ADB          := $(ANDROID_HOME)/platform-tools/adb
 EMULATOR     := $(ANDROID_HOME)/emulator/emulator
 AVD_NAME     ?= Pixel_6_API_34
-PACKAGE_NAME := se.iloppis.app
+PACKAGE_NAME := se.iloppis.app$(if $(filter staging,$(ENV)),.staging)
 DEVICE       ?=
 
 .PHONY: help build clean install run start stop emulator stop-emulator create-avd list-avds status logs devices all lint security check test release
@@ -212,17 +212,17 @@ install: build
 	@echo "Installing APK..."
 ifdef DEVICE
 	@echo "Targeting device: $(DEVICE)"
-	$(ADB) -s $(DEVICE) install -r app/build/outputs/apk/debug/app-debug.apk
+	$(ADB) -s $(DEVICE) install -r app/build/outputs/apk/$(ENV)/debug/app-$(ENV)-debug.apk
 else
-	$(ADB) install -r app/build/outputs/apk/debug/app-debug.apk
+	$(ADB) install -r app/build/outputs/apk/$(ENV)/debug/app-$(ENV)-debug.apk
 endif
 
 run: install
 	@echo "Launching app..."
 ifdef DEVICE
-	$(ADB) -s $(DEVICE) shell am start -n $(PACKAGE_NAME)/.MainActivity
+	$(ADB) -s $(DEVICE) shell am start -n $(PACKAGE_NAME)/se.iloppis.app.MainActivity
 else
-	$(ADB) shell am start -n $(PACKAGE_NAME)/.MainActivity
+	$(ADB) shell am start -n $(PACKAGE_NAME)/se.iloppis.app.MainActivity
 endif
 
 start: emulator run

@@ -45,6 +45,19 @@
     <string name="button_cancel">Avbryt</string>
     <string name="button_back">Tillbaka</string>
 
+    <!-- Code Entry Screen -->
+    <string name="code_entry_label">Ange kod</string>
+    <string name="verify_button">Verifiera</string>
+    <string name="cancel_button">Avbryt</string>
+    <string name="back">Tillbaka</string>
+
+    <!-- Code Confirmation Screen -->
+    <string name="confirm_event_title">Bekräfta evenemang</string>
+    <string name="confirm_event_message">Koden motsvarar detta evenemang. Vill du fortsätta?</string>
+    <string name="open_cashier_button">Öppna kassa</string>
+    <string name="open_scanner_button">Öppna skanner</string>
+    <string name="confirm_button">Bekräfta</string>
+
     <!-- Code Entry Dialog -->
     <string name="code_entry_title_cashier">Ange kassakod</string>
     <string name="code_entry_title_scanner">Ange skannerkod</string>

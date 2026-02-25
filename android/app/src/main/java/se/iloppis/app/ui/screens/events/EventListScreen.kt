@@ -1,8 +1,12 @@
 package se.iloppis.app.ui.screens.events
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.QrCode
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -15,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.buttons.IconButton
 import se.iloppis.app.ui.components.events.SwipeableEventList
 import se.iloppis.app.ui.components.navigation.ILoppisHeader
 import se.iloppis.app.ui.screens.screenContext
@@ -23,16 +28,20 @@ import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.utils.events.localEventsStorage
 
 /**
- * Main screen showing list of events (loppisar).
- * Also handles navigation to cashier/scanner screens.
+ * Unified main screen combining Home and Event List.
+ * 
+ * This screen displays:
+ * - Quick access buttons for Cashier/Scanner via direct code entry
+ * - Event search and filters
+ * - List of events
  */
 @Composable
-fun EventSearchScreen() {
+fun EventListScreen() {
     val screen = screenContext()
     val viewModel = eventContext()
     val state = viewModel.uiState
 
-    EventListContent(
+    UnifiedEventListContent(
         state = state,
         onReload = {
             if(!viewModel.uiState.isLoading) viewModel.onAction(EventListAction.LoadEvents)
@@ -43,40 +52,96 @@ fun EventSearchScreen() {
                     ScreenPage.EventsDetailPage(it)
                 )
             )
+        },
+        onCashierClick = {
+            screen.onAction(
+                ScreenAction.NavigateToPage(
+                    ScreenPage.CodeEntry("CASHIER")
+                )
+            )
+        },
+        onScannerClick = {
+            screen.onAction(
+                ScreenAction.NavigateToPage(
+                    ScreenPage.CodeEntry("SCANNER")
+                )
+            )
         }
     )
 }
 
 /**
- * Main content layout for the event list.
+ * Unified content layout combining Home buttons and Event List.
  */
 @Composable
-private fun EventListContent(
+private fun UnifiedEventListContent(
     state: EventListUiState,
     onReload: () -> Unit,
-    onEventClick: (Event) -> Unit
+    onEventClick: (Event) -> Unit,
+    onCashierClick: () -> Unit,
+    onScannerClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
             .statusBarsPadding()
     ) {
         // Header
-        ILoppisHeader(R.string.pages_search)
+        ILoppisHeader(R.string.pages_home)
 
-        // Search bar
-        SearchBar()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            // Quick access buttons for Cashier/Scanner
+            ToolAccessButtons(
+                onCashierClick = onCashierClick,
+                onScannerClick = onScannerClick
+            )
 
-        // Filter chips
-        FilterChips()
+            Spacer(modifier = Modifier.height(14.dp))
 
-        // Content based on state
-        EventListBody(
-            state = state,
-            onReload = onReload,
-            onEventClick = onEventClick
-        )
+            // Search bar
+            SearchBar()
+
+            // Filter chips
+            FilterChips()
+
+            // Content based on state
+            EventListBody(
+                state = state,
+                onReload = onReload,
+                onEventClick = onEventClick
+            )
+        }
+    }
+}
+
+/**
+ * Row with quick access buttons for Cashier and Scanner
+ */
+@Composable
+private fun ToolAccessButtons(
+    onCashierClick: () -> Unit,
+    onScannerClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        IconButton(
+            text = R.string.home_open_cashier,
+            icon = Icons.Outlined.Payments
+        ) { onCashierClick() }
+
+        IconButton(
+            text = R.string.home_open_scanner,
+            colors = ButtonDefaults.buttonColors().copy(
+                containerColor = MaterialTheme.colorScheme.secondary
+            ),
+            icon = Icons.Outlined.QrCode
+        ) { onScannerClick() }
     }
 }
 

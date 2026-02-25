@@ -5,13 +5,10 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.screens.cashier.CashierScreen
-import se.iloppis.app.ui.screens.events.EventSearchScreen
-import se.iloppis.app.ui.screens.events.EventSelectionScreen
+import se.iloppis.app.ui.screens.events.EventListScreen
 import se.iloppis.app.ui.screens.events.EventsDetailsScreen
-import se.iloppis.app.ui.screens.user.home.HomeScreen
 import se.iloppis.app.ui.screens.scanner.ScannerScreen
 import se.iloppis.app.ui.screens.screenContext
-import se.iloppis.app.ui.screens.user.library.LibraryScreen
 import se.iloppis.app.ui.states.ScreenAction
 
 /**
@@ -37,25 +34,25 @@ fun PageManager() {
         predictivePopTransitionSpec = animatePredictiveSlideOut(),
         entryProvider = { page ->
             when (page) {
-                /* Home screen */
-                is ScreenPage.Home -> NavEntry(page) { HomeScreen() }
+                /* Unified event list screen (merged Home + Search) */
+                is ScreenPage.EventList -> NavEntry(page) { EventListScreen() }
 
-                /* Event screens */
-                is ScreenPage.Search -> NavEntry(page) { EventSearchScreen() }
-                is ScreenPage.Selection -> NavEntry(page) { EventSelectionScreen(page.onAction) }
+                /* Event detail screen */
                 is ScreenPage.EventsDetailPage -> NavEntry(page) { EventsDetailsScreen(page.event) }
 
-                /* Library screen */
-                is ScreenPage.Library -> NavEntry(page) { LibraryScreen() }
+                /* Code entry screen for direct tool access */
+                is ScreenPage.CodeEntry -> NavEntry(page) { CodeEntryScreen(page.mode) }
 
-                /* Cashier and Scanner screen */
-                is ScreenPage.Cashier -> NavEntry(page) {
-                    CashierScreen(
+                /* Code confirmation screen after code resolves */
+                is ScreenPage.CodeConfirm -> NavEntry(page) {
+                    CodeConfirmScreen(
                         event = page.event,
                         apiKey = page.apiKey,
-                        onBack = { screen.onAction(ScreenAction.NavigateHome) }
+                        mode = page.mode
                     )
                 }
+
+                /* Cashier and Scanner screens */
                 is ScreenPage.Scanner -> NavEntry(page) {
                     ScannerScreen(
                         event = page.event,

@@ -26,36 +26,31 @@ sealed class AppScreen {
 
 
 /**
- * Screen view state page
+ * Screen view state page - unified navigation structure
+ * 
+ * Navigation flow:
+ * - EventList: Primary screen showing events with search/filters and tool entry buttons
+ * - EventsDetailPage: Event details with full information and tool options
+ * - CodeEntry: Direct code input for Cashier/Scanner (no event selection needed)
+ * - CodeConfirm: Show resolved event before entering tool
+ * - Cashier/Scanner: Active tool screens
  */
 sealed class ScreenPage {
     /**
-     * Home page
+     * Unified event list screen (merged Home + Search)
+     * 
+     * Shows:
+     * - Event search and filters
+     * - List of events
+     * - Quick access buttons for Cashier/Scanner entry
      */
-    data object Home : ScreenPage()
-
-    /**
-     * Search page
-     */
-    data object Search : ScreenPage()
-
-    /**
-     * Event selection page
-     */
-    data class Selection(
-        /**
-         * On Action event
-         *
-         * This is called when an event has been
-         * selected on the selection page.
-         */
-        val onAction: (event: Event) -> Unit
-    ) : ScreenPage()
+    data object EventList : ScreenPage()
 
     /**
      * Events detail page
      *
-     * Shows details about a specified event
+     * Shows details about a specified event and provides
+     * access to Cashier/Scanner tools
      */
     data class EventsDetailPage(
         /**
@@ -65,12 +60,40 @@ sealed class ScreenPage {
     ) : ScreenPage()
 
     /**
-     * User local library page
+     * Code entry screen for direct tool access
      *
-     * Stored events will be shown
-     * on this page.
+     * Shows code input field with mode (Cashier or Scanner).
+     * No event selection needed - code resolves the event.
      */
-    data object Library : ScreenPage()
+    data class CodeEntry(
+        /**
+         * Tool mode (CASHIER or SCANNER)
+         */
+        val mode: String
+    ) : ScreenPage()
+
+    /**
+     * Code confirmation screen
+     *
+     * After code is validated, show which event it belongs to
+     * and ask user to confirm before entering the tool.
+     */
+    data class CodeConfirm(
+        /**
+         * Event that the code belongs to
+         */
+        val event: Event,
+
+        /**
+         * API key for the tool
+         */
+        val apiKey: String,
+
+        /**
+         * Tool mode (CASHIER or SCANNER)
+         */
+        val mode: String
+    ) : ScreenPage()
 
     /**
      * Cashier page

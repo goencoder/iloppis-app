@@ -1,5 +1,6 @@
 package se.iloppis.app.ui.components.navigation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +20,9 @@ import se.iloppis.app.ui.theme.AppColors
 /**
  * App header with iLoppis logo, optional subtitle, and a subtle divider.
  *
+ * Tinted background area to give the header visual weight,
+ * with the logo centered and sized Large for prominence.
+ *
  * @param subtitle Optional string resource ID for a subtitle below the logo (e.g. page name).
  *                 Pass `null` for the main home screen where only the logo is needed.
  */
@@ -26,24 +31,23 @@ fun ILoppisHeader(subtitle: Int? = null) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 4.dp)
+            .background(AppColors.Primary.copy(alpha = 0.06f))
+            .padding(top = 16.dp, bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ILoppisLogo(
-            modifier = Modifier.padding(start = 4.dp),
-            size = LogoSize.Medium
-        )
+        ILoppisLogo(size = LogoSize.Large)
 
         if (subtitle != null) {
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(subtitle),
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = AppColors.TextSecondary,
-                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                color = AppColors.TextSecondary
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         HorizontalDivider(
             color = AppColors.Border,

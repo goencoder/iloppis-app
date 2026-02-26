@@ -89,7 +89,7 @@ private fun UnifiedEventListContent(
             .statusBarsPadding()
     ) {
         // Header
-        ILoppisHeader(R.string.pages_home)
+        ILoppisHeader()
 
         Column(
             modifier = Modifier

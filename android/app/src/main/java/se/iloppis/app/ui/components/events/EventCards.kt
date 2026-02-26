@@ -36,10 +36,10 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.ui.components.StarIcon
+import se.iloppis.app.domain.model.displayStatus
+import se.iloppis.app.ui.components.DisplayStatusBadge
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
-import se.iloppis.app.utils.events.localEventsStorage
 
 /**
  * Swipe to dismiss event card
@@ -121,7 +121,6 @@ fun SwipeToDismissEventCard(
  */
 @Composable
 fun EventCard(event: Event, onClick: () -> Unit) {
-    val storage = localEventsStorage()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -146,8 +145,7 @@ fun EventCard(event: Event, onClick: () -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if(storage.contains(event.id)) StarIcon()
-                    StateBadge(event.state)
+                    DisplayStatusBadge(event.displayStatus())
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))

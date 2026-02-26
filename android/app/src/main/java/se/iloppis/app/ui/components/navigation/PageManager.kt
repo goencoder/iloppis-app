@@ -11,6 +11,7 @@ import se.iloppis.app.ui.screens.events.EventListScreen
 import se.iloppis.app.ui.screens.events.EventsDetailsScreen
 import se.iloppis.app.ui.screens.scanner.ScannerScreen
 import se.iloppis.app.ui.screens.screenContext
+import se.iloppis.app.ui.screens.splash.SplashScreen
 import se.iloppis.app.ui.states.ScreenAction
 
 /**
@@ -36,6 +37,9 @@ fun PageManager() {
         predictivePopTransitionSpec = animatePredictiveSlideOut(),
         entryProvider = { page ->
             when (page) {
+                /* Splash screen */
+                is ScreenPage.Splash -> NavEntry(page) { SplashScreen() }
+
                 /* Unified event list screen (merged Home + Search) */
                 is ScreenPage.EventList -> NavEntry(page) { EventListScreen() }
 

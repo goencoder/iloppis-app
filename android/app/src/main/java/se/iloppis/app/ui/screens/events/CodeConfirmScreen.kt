@@ -8,10 +8,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
+import se.iloppis.app.domain.model.displayStatus
 import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.DisplayStatusBadge
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
@@ -19,8 +22,8 @@ import se.iloppis.app.ui.theme.AppColors
 /**
  * Confirmation screen after code entry.
  *
- * Shows which event the code belongs to and asks user to confirm
- * before entering the Cashier/Scanner tool.
+ * Shows which event the code resolved to (name, dates, location, status).
+ * User confirms before entering the Cashier/Scanner tool.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,114 +47,126 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: String) {
             )
         }
     ) { paddingValues ->
-        CodeConfirmContent(
-            event = event,
-            mode = mode,
-            onConfirm = {
-                // Navigate to appropriate tool screen
-                val toolPage = when (mode) {
-                    "CASHIER" -> ScreenPage.Cashier(event, apiKey)
-                    "SCANNER" -> ScreenPage.Scanner(event, apiKey)
-                    else -> return@CodeConfirmContent
-                }
-                screen.onAction(
-                    ScreenAction.NavigateToPage(toolPage, true)
-                )
-            },
-            onCancel = { screen.popPage() },
-            modifier = Modifier.padding(paddingValues)
-        )
-    }
-}
-
-/**
- * Confirmation content showing event details
- */
-@Composable
-private fun CodeConfirmContent(
-    event: Event,
-    mode: String,
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Confirmation message
-        Text(
-            text = stringResource(R.string.confirm_event_message),
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        // Event details card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp)
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            // Confirmation message
+            Text(
+                text = stringResource(R.string.confirm_event_message),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            // Event details card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                colors = CardDefaults.cardColors(containerColor = AppColors.CardBackground)
             ) {
-                Text(
-                    text = event.name,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    // Event name + status badge
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = event.name,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = AppColors.TextPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        DisplayStatusBadge(event.displayStatus())
+                    }
 
-                Text(
-                    text = event.description.orEmpty().take(100),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AppColors.TextMuted
-                )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                if (!event.description.isNullOrBlank()) {
-                    Text(
-                        text = event.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 12.dp)
-                    )
+                    // Dates
+                    if (event.dates.isNotBlank()) {
+                        Text(
+                            text = event.dates,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppColors.TextSecondary
+                        )
+                    }
+
+                    // Time
+                    if (event.startTimeFormatted.isNotBlank() || event.endTimeFormatted.isNotBlank()) {
+                        val hours = listOfNotNull(
+                            event.startTimeFormatted.takeIf { it.isNotBlank() },
+                            event.endTimeFormatted.takeIf { it.isNotBlank() }
+                        ).joinToString(" – ")
+                        Text(
+                            text = hours,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppColors.TextSecondary
+                        )
+                    }
+
+                    // Location
+                    if (event.location.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = event.location,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppColors.TextSecondary
+                        )
+                    }
                 }
             }
-        }
 
-        // Confirm button
-        Button(
-            onClick = onConfirm,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-        ) {
-            Text(
-                stringResource(
-                    when (mode) {
-                        "CASHIER" -> R.string.open_cashier_button
-                        "SCANNER" -> R.string.open_scanner_button
-                        else -> R.string.confirm_button
+            // Confirm button
+            Button(
+                onClick = {
+                    val toolPage = when (mode) {
+                        "CASHIER" -> ScreenPage.Cashier(event, apiKey)
+                        "SCANNER" -> ScreenPage.Scanner(event, apiKey)
+                        else -> return@Button
                     }
+                    screen.onAction(
+                        ScreenAction.NavigateToPage(toolPage, true)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                Text(
+                    stringResource(
+                        when (mode) {
+                            "CASHIER" -> R.string.open_cashier_button
+                            "SCANNER" -> R.string.open_scanner_button
+                            else -> R.string.confirm_button
+                        }
+                    )
                 )
-            )
-        }
+            }
 
-        // Cancel button
-        Button(
-            onClick = onCancel,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors().copy(
-                containerColor = AppColors.CardBackground
-            )
-        ) {
-            Text(
-                stringResource(R.string.cancel_button),
-                color = AppColors.TextPrimary
-            )
+            // Cancel button
+            Button(
+                onClick = { screen.popPage() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.CardBackground
+                )
+            ) {
+                Text(
+                    stringResource(R.string.cancel_button),
+                    color = AppColors.TextPrimary
+                )
+            }
         }
     }
 }
+

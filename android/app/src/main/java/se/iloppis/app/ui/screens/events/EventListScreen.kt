@@ -1,7 +1,6 @@
 package se.iloppis.app.ui.screens.events
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,9 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
@@ -25,15 +22,15 @@ import se.iloppis.app.ui.components.navigation.ILoppisHeader
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
-import se.iloppis.app.utils.events.localEventsStorage
 
 /**
  * Unified main screen combining Home and Event List.
- * 
+ *
  * This screen displays:
  * - Quick access buttons for Cashier/Scanner via direct code entry
- * - Event search and filters
- * - List of events
+ * - Functional event search with 300ms debounce
+ * - Filter chips mapped to real API calls
+ * - List of events with computed status badges
  */
 @Composable
 fun EventListScreen() {
@@ -44,8 +41,10 @@ fun EventListScreen() {
     UnifiedEventListContent(
         state = state,
         onReload = {
-            if(!viewModel.uiState.isLoading) viewModel.onAction(EventListAction.LoadEvents)
+            if (!viewModel.uiState.isLoading) viewModel.onAction(EventListAction.LoadEvents)
         },
+        onSearchChange = { viewModel.onAction(EventListAction.UpdateSearch(it)) },
+        onFilterSelect = { viewModel.onAction(EventListAction.SelectFilter(it)) },
         onEventClick = {
             screen.onAction(
                 ScreenAction.NavigateToPage(
@@ -77,9 +76,11 @@ fun EventListScreen() {
 private fun UnifiedEventListContent(
     state: EventListUiState,
     onReload: () -> Unit,
+    onSearchChange: (String) -> Unit,
+    onFilterSelect: (EventFilterChip) -> Unit,
     onEventClick: (Event) -> Unit,
     onCashierClick: () -> Unit,
-    onScannerClick: () -> Unit
+    onScannerClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -102,17 +103,23 @@ private fun UnifiedEventListContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Search bar
-            SearchBar()
+            // Functional Search bar
+            SearchBar(
+                query = state.searchQuery,
+                onQueryChange = onSearchChange
+            )
 
-            // Filter chips
-            FilterChips()
+            // Functional Filter chips
+            FilterChips(
+                activeFilter = state.activeFilter,
+                onSelect = onFilterSelect
+            )
 
             // Content based on state
             EventListBody(
                 state = state,
                 onReload = onReload,
-                onEventClick = onEventClick
+                onEventClick = onEventClick,
             )
         }
     }
@@ -145,11 +152,17 @@ private fun ToolAccessButtons(
     }
 }
 
+/**
+ * Functional search bar wired to ViewModel.
+ */
 @Composable
-private fun SearchBar() {
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
     OutlinedTextField(
-        value = "",
-        onValueChange = {},
+        value = query,
+        onValueChange = onQueryChange,
         placeholder = { Text(stringResource(R.string.search_placeholder)) },
         modifier = Modifier
             .fillMaxWidth()
@@ -159,35 +172,45 @@ private fun SearchBar() {
     )
 }
 
+/**
+ * Functional filter chips wired to ViewModel.
+ */
 @Composable
-private fun FilterChips() {
+private fun FilterChips(
+    activeFilter: EventFilterChip,
+    onSelect: (EventFilterChip) -> Unit
+) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(bottom = 16.dp)
     ) {
         item {
             FilterChip(
-                selected = true,
-                onClick = {},
-                label = { Text(stringResource(R.string.filter_all)) })
+                selected = activeFilter == EventFilterChip.ALL,
+                onClick = { onSelect(EventFilterChip.ALL) },
+                label = { Text(stringResource(R.string.filter_all)) }
+            )
         }
         item {
             FilterChip(
-                selected = false,
-                onClick = {},
-                label = { Text(stringResource(R.string.filter_open)) })
+                selected = activeFilter == EventFilterChip.UPCOMING,
+                onClick = { onSelect(EventFilterChip.UPCOMING) },
+                label = { Text(stringResource(R.string.filter_upcoming)) }
+            )
         }
         item {
             FilterChip(
-                selected = false,
-                onClick = {},
-                label = { Text(stringResource(R.string.filter_upcoming)) })
+                selected = activeFilter == EventFilterChip.ONGOING,
+                onClick = { onSelect(EventFilterChip.ONGOING) },
+                label = { Text(stringResource(R.string.filter_ongoing)) }
+            )
         }
         item {
             FilterChip(
-                selected = false,
-                onClick = {},
-                label = { Text(stringResource(R.string.filter_past)) })
+                selected = activeFilter == EventFilterChip.PAST,
+                onClick = { onSelect(EventFilterChip.PAST) },
+                label = { Text(stringResource(R.string.filter_past)) }
+            )
         }
     }
 }
@@ -196,9 +219,8 @@ private fun FilterChips() {
 private fun EventListBody(
     state: EventListUiState,
     onReload: () -> Unit,
-    onEventClick: (Event) -> Unit
+    onEventClick: (Event) -> Unit,
 ) {
-    val storage = localEventsStorage()
     PullToRefreshBox(
         isRefreshing = false,
         onRefresh = onReload
@@ -210,11 +232,7 @@ private fun EventListBody(
             else -> SwipeableEventList(
                 events = state.events,
                 enableEndToStart = false,
-                enableStartToEnd = true,
-                onStartToEnd = {
-                    if(storage.contains(it.id)) storage.remove(it.id)
-                    else storage.add(it.id)
-                },
+                enableStartToEnd = false,
                 onAction = onEventClick
             )
         }

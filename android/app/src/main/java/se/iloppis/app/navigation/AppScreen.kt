@@ -37,6 +37,11 @@ sealed class AppScreen {
  */
 sealed class ScreenPage {
     /**
+     * Splash screen - shown on app launch for brand moment
+     */
+    data object Splash : ScreenPage()
+
+    /**
      * Unified event list screen (merged Home + Search)
      * 
      * Shows:

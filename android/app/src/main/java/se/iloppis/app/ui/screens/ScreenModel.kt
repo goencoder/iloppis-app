@@ -35,7 +35,7 @@ class ScreenModel : ViewModel() {
     /**
      * Previous screen page
      */
-    var pages = mutableStateListOf<ScreenPage>(ScreenPage.EventList)
+    var pages = mutableStateListOf<ScreenPage>(ScreenPage.Splash)
         private set
 
     /**
@@ -114,6 +114,11 @@ class ScreenModel : ViewModel() {
         */
 
         when(page) {
+            is ScreenPage.Splash -> {
+                // Splash replaces everything
+                pages.clear()
+                pages.add(page)
+            }
             is ScreenPage.EventList -> {
                 // Reset to root
                 pages.clear()

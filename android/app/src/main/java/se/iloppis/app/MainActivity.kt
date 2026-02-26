@@ -10,7 +10,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import se.iloppis.app.ui.components.navigation.Navigator
 import se.iloppis.app.ui.components.navigation.PageManager
 import se.iloppis.app.ui.screens.Screens
 import se.iloppis.app.ui.screens.screenContext
@@ -35,7 +34,6 @@ class MainActivity : ComponentActivity() {
                         Scaffold(
                             contentWindowInsets = WindowInsets(),
                             modifier = Modifier,
-                            bottomBar = { Navigator() }
                         ) { padding ->
                             LaunchedEffect(padding) {
                                 screen.onAction(ScreenAction.SetBorders(padding))

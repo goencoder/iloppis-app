@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
+import se.iloppis.app.domain.model.EventDisplayStatus
 import se.iloppis.app.domain.model.EventState
 import se.iloppis.app.ui.theme.AppColors
 
@@ -34,6 +35,31 @@ fun StateBadge(state: EventState) {
     ) {
         Text(
             text = stringResource(state.stringResId),
+            color = textColor,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
+}
+
+/**
+ * Displays a badge showing the computed display status.
+ * Uses ONGOING (green), UPCOMING (blue), PAST (gray).
+ */
+@Composable
+fun DisplayStatusBadge(status: EventDisplayStatus) {
+    val (bgColor, textColor) = when (status) {
+        EventDisplayStatus.ONGOING -> AppColors.BadgeOngoingBackground to AppColors.BadgeOngoingText
+        EventDisplayStatus.UPCOMING -> AppColors.BadgeInfoBackground to AppColors.BadgeInfoText
+        EventDisplayStatus.PAST -> AppColors.BadgeDefaultBackground to AppColors.BadgeDefaultText
+    }
+    Surface(
+        color = bgColor,
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Text(
+            text = stringResource(status.stringResId),
             color = textColor,
             fontSize = 10.sp,
             fontWeight = FontWeight.Medium,

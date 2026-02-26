@@ -70,7 +70,7 @@ fun Navigator(
         ) {
             val page = screen.page
             NavigatorButton(
-                if(page is ScreenPage.Home || page == null)
+                if(page is ScreenPage.EventList || page == null)
                     Icons.Filled.Home
                 else Icons.Outlined.Home,
                 stringResource(R.string.nav_home),
@@ -78,42 +78,8 @@ fun Navigator(
                 iconSize,
                 buttonCorner,
                 buttonSpacing,
-                page is ScreenPage.Home
-            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Home)) }
-
-            NavigatorButton(
-                if(
-                    page is ScreenPage.Search ||
-                    page is ScreenPage.Selection ||
-                    page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Search
-                )
-                    Icons.Filled.Search
-                else Icons.Outlined.Search,
-                stringResource(R.string.nav_search),
-                buttonSize,
-                iconSize,
-                buttonCorner,
-                buttonSpacing,
-                page is ScreenPage.Search ||
-                        page is ScreenPage.Selection ||
-                        page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Search
-            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Search)) }
-
-            NavigatorButton(
-                if(
-                    page is ScreenPage.Library ||
-                    page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Library
-                )
-                    Icons.Filled.Bookmarks
-                else Icons.Outlined.Bookmarks,
-                stringResource(R.string.nav_library),
-                buttonSize,
-                iconSize,
-                buttonCorner,
-                buttonSpacing,
-                page is ScreenPage.Library ||
-                        page is ScreenPage.EventsDetailPage && screen.previous is ScreenPage.Library
-            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.Library)) }
+                page is ScreenPage.EventList
+            ) { screen.onAction(ScreenAction.NavigateToPage(ScreenPage.EventList)) }
         }
     }
 }

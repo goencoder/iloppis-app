@@ -22,6 +22,7 @@ import se.iloppis.app.ui.theme.AppColors
  * Shows which event the code belongs to and asks user to confirm
  * before entering the Cashier/Scanner tool.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CodeConfirmScreen(event: Event, apiKey: String, mode: String) {
     val screen = screenContext()
@@ -106,7 +107,7 @@ private fun CodeConfirmContent(
                 )
 
                 Text(
-                    text = "${event.date} • ${event.location}",
+                    text = event.description.orEmpty().take(100),
                     style = MaterialTheme.typography.bodySmall,
                     color = AppColors.TextMuted
                 )
@@ -144,7 +145,7 @@ private fun CodeConfirmContent(
             onClick = onCancel,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors().copy(
-                containerColor = AppColors.Background
+                containerColor = AppColors.CardBackground
             )
         ) {
             Text(

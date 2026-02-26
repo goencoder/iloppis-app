@@ -17,7 +17,8 @@ import se.iloppis.app.R
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
-import androidx.compose.material3.TopAppBar
+
+@OptIn(ExperimentalMaterial3Api::class)
 
 /**
  * Screen for direct code entry to access Cashier/Scanner modes.

@@ -5,6 +5,8 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.screens.cashier.CashierScreen
+import se.iloppis.app.ui.screens.events.CodeConfirmScreen
+import se.iloppis.app.ui.screens.events.CodeEntryScreen
 import se.iloppis.app.ui.screens.events.EventListScreen
 import se.iloppis.app.ui.screens.events.EventsDetailsScreen
 import se.iloppis.app.ui.screens.scanner.ScannerScreen
@@ -52,7 +54,16 @@ fun PageManager() {
                     )
                 }
 
-                /* Cashier and Scanner screens */
+                /* Cashier screen */
+                is ScreenPage.Cashier -> NavEntry(page) {
+                    CashierScreen(
+                        event = page.event,
+                        apiKey = page.apiKey,
+                        onBack = { screen.onAction(ScreenAction.NavigateHome) }
+                    )
+                }
+
+                /* Scanner screen */
                 is ScreenPage.Scanner -> NavEntry(page) {
                     ScannerScreen(
                         event = page.event,

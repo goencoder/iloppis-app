@@ -43,7 +43,7 @@ fun ILoppisLogo(
     Row(
         modifier = modifier
             .background(
-                color = AppColors.Primary.copy(alpha = 0.10f),
+                color = Color(0xFFEFEDEA),
                 shape = RoundedCornerShape(999.dp)
             )
             .padding(horizontal = size.paddingH, vertical = size.paddingV),

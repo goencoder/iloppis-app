@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,21 +19,21 @@ import androidx.compose.ui.unit.sp
 import se.iloppis.app.ui.theme.AppColors
 
 /**
- * App header with iLoppis logo, optional subtitle, and a subtle divider.
+ * App header — "Soft Band" design.
  *
- * Tinted background area to give the header visual weight,
- * with the logo centered and sized Large for prominence.
+ * Warm neutral background (#F7F6F4) avoids green-on-green with the logo.
+ * 1px warm gray border provides clear separation from content.
+ * Logo centered, sized Large for prominence.
  *
- * @param subtitle Optional string resource ID for a subtitle below the logo (e.g. page name).
- *                 Pass `null` for the main home screen where only the logo is needed.
+ * @param subtitle Optional string resource ID for a subtitle below the logo.
  */
 @Composable
 fun ILoppisHeader(subtitle: Int? = null) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AppColors.Primary.copy(alpha = 0.06f))
-            .padding(top = 16.dp, bottom = 8.dp),
+            .background(Color(0xFFF7F6F4))
+            .padding(top = 16.dp, bottom = 0.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ILoppisLogo(size = LogoSize.Large)
@@ -47,11 +48,11 @@ fun ILoppisHeader(subtitle: Int? = null) {
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         HorizontalDivider(
-            color = AppColors.Border,
-            thickness = 0.5.dp,
+            color = Color(0xFFE8E5E0),
+            thickness = 1.dp,
             modifier = Modifier.fillMaxWidth()
         )
     }

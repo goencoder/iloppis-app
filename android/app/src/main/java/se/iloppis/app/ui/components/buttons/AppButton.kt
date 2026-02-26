@@ -27,17 +27,17 @@ import se.iloppis.app.ui.theme.AppColors
 // ── Enums ────────────────────────────────────
 
 enum class AppButtonVariant {
-    /** Orange/red primary action — scan, verify, submit */
+    /** Primary action (teal) — main call to action such as scan, verify, submit */
     Primary,
-    /** Green confirmation — mark done, success */
+    /** Success/confirmation (green) — mark done, indicate successful outcome */
     Success,
-    /** Gray secondary action — back, cancel-as-button */
+    /** Secondary/neutral action — back, non-destructive alternative */
     Secondary,
-    /** Outlined danger — delete, destructive */
+    /** Destructive/danger — delete, irreversible or high-risk actions */
     Danger,
-    /** Outlined neutral — low-emphasis alternative */
+    /** Neutral outlined — low-emphasis alternative to primary/secondary */
     Outlined,
-    /** Borderless text link style — dismiss/cancel */
+    /** Text-only button — dismiss/cancel, inline or low-emphasis actions */
     Text
 }
 

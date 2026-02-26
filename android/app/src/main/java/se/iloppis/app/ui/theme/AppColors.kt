@@ -7,9 +7,9 @@ import androidx.compose.ui.graphics.Color
  * All colors used in the app should be referenced from here.
  * 
  * Button Color Guidelines:
- * - Primary (Orange): Main actions (Scan, Verify, Submit, Continue)
- * - Secondary (Gray): Less important actions (Back, Cancel as button)
- * - TextSecondary: Dismiss/Cancel as text link
+ * - Primary (Teal): Main actions (Scan, Verify, Submit, Continue)
+ * - Secondary (Border): Less important actions (Back, Cancel as button)
+ * - Text: Dismiss/Cancel as text link
  * - Success (Green): Positive confirmations (in result sheets only)
  * - Warning (Amber): Caution states (duplicate, offline)
  * - Error (Red): Error states and destructive actions

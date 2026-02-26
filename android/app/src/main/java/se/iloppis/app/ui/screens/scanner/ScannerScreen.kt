@@ -91,7 +91,7 @@ fun ScannerScreen(
     onBack: () -> Unit
 ) {
     val viewModel: ScannerViewModel = viewModel(
-        key = "scanner-${event.id}-$apiKey",
+        key = "scanner-${event.id}",
         factory = ScannerViewModel.factory(
             eventId = event.id,
             eventName = event.name,

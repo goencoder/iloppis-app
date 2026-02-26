@@ -35,7 +35,7 @@ class ScreenModel : ViewModel() {
     /**
      * Previous screen page
      */
-    var pages = mutableStateListOf<ScreenPage>(ScreenPage.Home)
+    var pages = mutableStateListOf<ScreenPage>(ScreenPage.Splash)
         private set
 
     /**
@@ -91,7 +91,7 @@ class ScreenModel : ViewModel() {
         pushPage(page)
         showNavigator(navigator)
     }
-    private fun navigateHome() { navigateToPage(ScreenPage.Home, true) }
+    private fun navigateHome() { navigateToPage(ScreenPage.EventList, true) }
 
     private fun setBorders(values: PaddingValues) { state = state.copy(borders = values) }
 
@@ -106,28 +106,59 @@ class ScreenModel : ViewModel() {
 
     private fun pushPage(page: ScreenPage) {
         /*
-            Needs to have a better way of navigation
-            than being hard coded if there are more
-            pages to be added.
+            Navigation hierarchy:
+            - EventList is root screen
+            - EventsDetailPage: EventList > EventsDetailPage
+            - CodeEntry & CodeConfirm: EventList > CodeEntry > CodeConfirm
+            - Cashier/Scanner: Can be reached from CodeConfirm or EventsDetailPage
         */
 
-        val previous = popPage()
-        pages.clear()
-
-        if(
-            page is ScreenPage.Search ||
-            page is ScreenPage.Library ||
-            page is ScreenPage.Selection ||
-            page is ScreenPage.Cashier ||
-            page is ScreenPage.Scanner
-        ) {
-            pages.add(ScreenPage.Home)
-        } else if(page is ScreenPage.EventsDetailPage) {
-            pages.add(ScreenPage.Home)
-            pages.add(previous ?: ScreenPage.Search)
+        when(page) {
+            is ScreenPage.Splash -> {
+                // Splash replaces everything
+                pages.clear()
+                pages.add(page)
+            }
+            is ScreenPage.EventList -> {
+                // Reset to root
+                pages.clear()
+                pages.add(page)
+            }
+            is ScreenPage.EventsDetailPage -> {
+                // Keep: EventList > EventsDetailPage
+                if(pages.lastOrNull() !is ScreenPage.EventList) {
+                    pages.clear()
+                    pages.add(ScreenPage.EventList)
+                }
+                pages.add(page)
+            }
+            is ScreenPage.CodeEntry -> {
+                // Keep: EventList > CodeEntry
+                if(pages.lastOrNull() !is ScreenPage.EventList) {
+                    pages.clear()
+                    pages.add(ScreenPage.EventList)
+                }
+                pages.add(page)
+            }
+            is ScreenPage.CodeConfirm -> {
+                // Keep: EventList > CodeEntry > CodeConfirm
+                if(pages.lastOrNull() !is ScreenPage.CodeEntry) {
+                    pages.clear()
+                    pages.add(ScreenPage.EventList)
+                    pages.add(ScreenPage.CodeEntry(page.mode))
+                }
+                pages.add(page)
+            }
+            is ScreenPage.Cashier, is ScreenPage.Scanner -> {
+                // Navigate from CodeConfirm or EventsDetailPage
+                // Keep existing path and add tool page
+                if(pages.lastOrNull() !is ScreenPage.CodeConfirm && pages.lastOrNull() !is ScreenPage.EventsDetailPage) {
+                    pages.clear()
+                    pages.add(ScreenPage.EventList)
+                }
+                pages.add(page)
+            }
         }
-
-        pages.add(page)
     }
 }
 

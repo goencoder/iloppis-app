@@ -106,14 +106,6 @@ fun FilterChips(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(bottom = 16.dp)
     ) {
-        /* Locally stored events filter */
-        if(allowLocal) item {
-            FilterChip(
-                selected = sort == EventListSortType.SAVED,
-                onClick = { onClick(EventListSortType.SAVED) },
-                label = { Text(stringResource(R.string.filter_saved)) })
-        }
-
         /* Default filters */
         item {
             FilterChip(

@@ -120,7 +120,14 @@ final class EventListViewModel: ObservableObject {
                 return
             }
 
-            let response = try await apiClient.getApiKeyByAlias(eventId: entry.event.id, alias: normalized)
+            // Use flat endpoint when event is nil (quick-access flow),
+            // event-scoped endpoint when event is known (detail dialog flow).
+            let response: ApiKeyResponse
+            if let event = entry.event {
+                response = try await apiClient.getApiKeyByAlias(eventId: event.id, alias: normalized)
+            } else {
+                response = try await apiClient.getApiKeyByAlias(alias: normalized)
+            }
             DebugLogStore.shared.append("[CodeExchange] alias=\(normalized) type=\(response.type ?? "(nil)") isActive=\(response.isActive)")
             guard response.isActive else {
                 onAction(.validationFailed("Code is inactive"))
@@ -154,7 +161,32 @@ final class EventListViewModel: ObservableObject {
                 }
             }
 
-            onAction(.codeValidated(apiKey: response.apiKey, event: entry.event, mode: entry.mode))
+            // Resolve event: use the known event, or fetch it via the returned eventId.
+            let resolvedEvent: Event
+            if let event = entry.event {
+                resolvedEvent = event
+            } else if let eventId = response.eventId {
+                if let dto = try await apiClient.getEvent(eventId: eventId) {
+                    resolvedEvent = Event(
+                        id: dto.id,
+                        name: dto.name,
+                        description: dto.description,
+                        startTime: dto.startTime,
+                        endTime: dto.endTime,
+                        addressStreet: dto.addressStreet,
+                        addressCity: dto.addressCity,
+                        lifecycleState: dto.lifecycleState
+                    )
+                } else {
+                    onAction(.validationFailed("Event not found"))
+                    return
+                }
+            } else {
+                onAction(.validationFailed("Event not found"))
+                return
+            }
+
+            onAction(.codeValidated(apiKey: response.apiKey, event: resolvedEvent, mode: entry.mode))
         } catch {
             let message = error.localizedDescription
             onAction(.validationFailed(message))

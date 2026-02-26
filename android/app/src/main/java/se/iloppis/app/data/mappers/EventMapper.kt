@@ -39,6 +39,11 @@ object EventMapper {
             state = lifecycleState?.toEventState() ?: EventState.UNKNOWN,
             latitude = latitude,
             longitude = longitude,
+            startTime = startParsed?.toInstant(),
+            endTime = endParsed?.toInstant(),
+            lifecycleState = lifecycleState,
+            addressStreet = addressStreet,
+            addressCity = addressCity,
         )
     }
 

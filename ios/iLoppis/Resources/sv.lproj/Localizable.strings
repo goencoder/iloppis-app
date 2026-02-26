@@ -19,6 +19,8 @@
 "select_mode" = "Välj läge:";
 "button_open_cashier" = "Öppna kassa";
 "button_ticket_scanner" = "Biljettskanner";
+"home_open_cashier" = "Öppna kassa";
+"home_open_scanner" = "Öppna skanner";
 "button_cancel" = "Avbryt";
 "button_back" = "Tillbaka";
 

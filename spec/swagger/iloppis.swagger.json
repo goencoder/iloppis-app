@@ -18,6 +18,9 @@
       "name": "ChatService"
     },
     {
+      "name": "WebhookService"
+    },
+    {
       "name": "EventService"
     },
     {
@@ -28,6 +31,12 @@
     },
     {
       "name": "ApprovedMarketService"
+    },
+    {
+      "name": "MarketDelegationService"
+    },
+    {
+      "name": "AuthService"
     },
     {
       "name": "PlatformAdminService"
@@ -64,6 +73,70 @@
     "application/json"
   ],
   "paths": {
+    "/v1/admin/emails/{email}/delivery-status": {
+      "get": {
+        "summary": "GetEmailDeliveryStatus returns the delivery status of an email (admin only).\nUsed to diagnose why an email didn't arrive.\nPath: GET /v1/admin/emails/{email}/delivery-status",
+        "operationId": "WebhookService_GetEmailDeliveryStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetEmailDeliveryStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "description": "Email address to check (required)",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "WebhookService"
+        ]
+      }
+    },
+    "/v1/api-keys/alias/{alias}": {
+      "get": {
+        "summary": "Retrieves an API key by alias only, without requiring the event ID.\nAuthorization: Public (no auth required). Used for mobile app code-based login.\nRate limited per IP to prevent brute-force attacks.",
+        "operationId": "ApiKeyService_GetApiKeyByAlias",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetApiKeyByAliasResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "alias",
+            "description": "Alias of the requested API key (format: XXX-YYY).",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApiKeyService"
+        ]
+      }
+    },
     "/v1/auth/captcha-challenge": {
       "get": {
         "summary": "Step 1: Generate a CAPTCHA challenge.",
@@ -159,9 +232,81 @@
         ]
       }
     },
+    "/v1/auth/{provider}/callback": {
+      "post": {
+        "summary": "Handle OAuth provider callback with authorization code",
+        "operationId": "AuthService_OAuthCallback",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1OAuthCallbackResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "provider",
+            "description": "\"microsoft\" or \"google\"",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AuthServiceOAuthCallbackBody"
+            }
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
+    "/v1/auth/{provider}/initiate": {
+      "get": {
+        "summary": "Initiate OAuth login flow – returns provider's authorization URL",
+        "operationId": "AuthService_InitiateOAuth",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1InitiateOAuthResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "provider",
+            "description": "\"microsoft\" or \"google\"",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AuthService"
+        ]
+      }
+    },
     "/v1/chat": {
       "get": {
-        "summary": "List chat messages for a specific resource with pagination.\nAuthorization: authenticated user with access to the specified resource.\nResource access is validated based on resource type (MARKET, EVENT, VENDOR).",
+        "summary": "List chat messages for a specific resource with pagination.\nAuthorization: authenticated user with access to the specified resource.\nResource access is validated based on resource type (MARKET, EVENT, VENDOR).\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy message naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ChatService_ListMessages",
         "responses": {
           "200": {
@@ -180,7 +325,7 @@
         "parameters": [
           {
             "name": "resourceType",
-            "description": " - MARKET: Market chat is open for all users to discuss about the market\n - DRAFT_MARKET: Draft market chat is open for market owner and platform owner.\n - VENDOR: Vendor chat is open for vendor (defined by the vendor id) and the market owner\n - EVENT: Event chat is opened for all vendors for the event and the market owner",
+            "description": " - MARKET: Market chat is open for all users to discuss about the market\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - DRAFT_MARKET: Draft market chat is open for market owner and platform owner.\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - VENDOR: Vendor chat is open for vendor (defined by the vendor id) and the market owner\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - EVENT: Event chat is opened for all vendors for the event and the market owner\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming",
             "in": "query",
             "required": false,
             "type": "string",
@@ -226,7 +371,7 @@
         ]
       },
       "post": {
-        "summary": "Post a new chat message to a specific resource.\nAuthorization: authenticated user with access to the specified resource.\nResource access is validated based on resource type (MARKET, EVENT, VENDOR).",
+        "summary": "Post a new chat message to a specific resource.\nAuthorization: authenticated user with access to the specified resource.\nResource access is validated based on resource type (MARKET, EVENT, VENDOR).\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy message naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ChatService_PostMessage",
         "responses": {
           "200": {
@@ -259,7 +404,7 @@
     },
     "/v1/chat/{chatId}": {
       "delete": {
-        "summary": "Delete a chat message (moderation action).\nAuthorization: market owner, event owner, or platform admin/owner only.\nResource ownership is validated based on the message's resource type.",
+        "summary": "Delete a chat message (moderation action).\nAuthorization: market owner, event owner, or platform admin/owner only.\nResource ownership is validated based on the message's resource type.\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy message naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ChatService_DeleteMessage",
         "responses": {
           "200": {
@@ -290,7 +435,7 @@
     },
     "/v1/chat/{chatId}/flags": {
       "delete": {
-        "summary": "Clear all flags from a chat message (moderation action).\nAuthorization: market owner, event owner, or platform admin/owner only.\nResource ownership is validated based on the message's resource type.",
+        "summary": "Clear all flags from a chat message (moderation action).\nAuthorization: market owner, event owner, or platform admin/owner only.\nResource ownership is validated based on the message's resource type.\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy message naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ChatService_ClearMessageFlags",
         "responses": {
           "200": {
@@ -321,7 +466,7 @@
     },
     "/v1/chat/{chatId}:flag": {
       "post": {
-        "summary": "Flag a chat message as inappropriate.\nAuthorization: authenticated user with access to the resource where the message was posted.\nPlatform admins can flag any message regardless of resource access.",
+        "summary": "Flag a chat message as inappropriate.\nAuthorization: authenticated user with access to the resource where the message was posted.\nPlatform admins can flag any message regardless of resource access.\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy message naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ChatService_FlagMessage",
         "responses": {
           "200": {
@@ -360,7 +505,7 @@
     },
     "/v1/chat:search": {
       "post": {
-        "summary": "Search chat messages across ALL resources with advanced filtering capabilities.\nSTRICTLY RESTRICTED: platform_admin and platform_owner roles ONLY.\nThis endpoint provides administrative access to all chat messages system-wide\nand bypasses normal resource-based access controls.",
+        "summary": "Search chat messages across ALL resources with advanced filtering capabilities.\nSTRICTLY RESTRICTED: platform_admin and platform_owner roles ONLY.\nThis endpoint provides administrative access to all chat messages system-wide\nand bypasses normal resource-based access controls.\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy message naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ChatService_SearchMessages",
         "responses": {
           "200": {
@@ -391,9 +536,88 @@
         ]
       }
     },
+    "/v1/delegations": {
+      "get": {
+        "summary": "List all markets where the current user is a delegate.\nAuthorization: authenticated user (returns only own delegations).",
+        "operationId": "MarketDelegationService_ListMyDelegations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListMyDelegationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "includeExpired",
+            "description": "Whether to include expired delegations (default: false)",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "MarketDelegationService"
+        ]
+      }
+    },
+    "/v1/delegations/{marketId}/{email}": {
+      "put": {
+        "summary": "Update an existing delegation (e.g., permissions or expiry).\nAuthorization: market owner or platform admin.",
+        "operationId": "MarketDelegationService_UpdateDelegation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateDelegationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Market ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "description": "Email of the delegate to update",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MarketDelegationServiceUpdateDelegationBody"
+            }
+          }
+        ],
+        "tags": [
+          "MarketDelegationService"
+        ]
+      }
+    },
     "/v1/draft-markets": {
       "get": {
-        "summary": "List draft markets owned by the caller.\nAuthorization: platform owner can list all.",
+        "summary": "List draft markets owned by the caller.\nAuthorization: platform owner can list all.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse",
         "operationId": "DraftMarketService_ListMarkets",
         "responses": {
           "200": {
@@ -416,6 +640,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "includeDelegated",
+            "description": "If true and owner_email is set, also include markets where owner_email is a delegate",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -423,7 +654,7 @@
         ]
       },
       "post": {
-        "summary": "Create a new market request (draft).\nAuthorization: authenticated user; owner_email defaults to caller if empty.",
+        "summary": "Create a new market request (draft).\nAuthorization: authenticated user; owner_email defaults to caller if empty.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse",
         "operationId": "DraftMarketService_CreateMarket",
         "responses": {
           "200": {
@@ -456,7 +687,7 @@
     },
     "/v1/draft-markets/{marketId}": {
       "get": {
-        "summary": "Get details of a specific draft market.\nAuthorization: platform owner or market owner.",
+        "summary": "Get details of a specific draft market.\nAuthorization: platform owner or market owner.\nDelegation: Requires market:read permission for delegates.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse",
         "operationId": "DraftMarketService_GetMarket",
         "responses": {
           "200": {
@@ -486,7 +717,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete a specific draft market.\nAuthorization: platform owner or market owner.",
+        "summary": "Delete a specific draft market.\nAuthorization: platform owner or market owner.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "DraftMarketService_DeleteMarket",
         "responses": {
           "200": {
@@ -517,7 +748,7 @@
         ]
       },
       "put": {
-        "summary": "Update a specific draft market.\nAuthorization: platform owner or market owner.",
+        "summary": "Update a specific draft market.\nAuthorization: platform owner or market owner.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "DraftMarketService_UpdateMarket",
         "responses": {
           "200": {
@@ -557,7 +788,7 @@
     },
     "/v1/draft-markets/{marketId}/approval": {
       "post": {
-        "summary": "Approve a draft market.\nAuthorization: platform owner only.",
+        "summary": "Approve a draft market.\nAuthorization: platform owner only.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "DraftMarketService_ApproveMarket",
         "responses": {
           "200": {
@@ -597,7 +828,7 @@
     },
     "/v1/draft-markets:filter": {
       "post": {
-        "summary": "Filter draft markets with pagination.\nAuthorization: platform owner can filter all; others only their own markets.",
+        "summary": "Filter draft markets with pagination.\nAuthorization: platform owner can filter all; others only their own markets.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse",
         "operationId": "DraftMarketService_FilterMarkets",
         "responses": {
           "200": {
@@ -667,7 +898,7 @@
         ]
       },
       "post": {
-        "summary": "Create a new event\nAuthorization: any authenticated user (event ownership assigned to caller).",
+        "summary": "Create a new event\nAuthorization: any authenticated user (event ownership assigned to caller).\nDelegation: Requires events:create permission for delegates.",
         "operationId": "EventService_CreateEvent",
         "responses": {
           "200": {
@@ -700,7 +931,7 @@
     },
     "/v1/events/{eventId}": {
       "get": {
-        "summary": "Get details of a specific event\nAuthorization: none.",
+        "summary": "Get details of a specific event\nAuthorization: none.\nDelegation: Requires events:read permission for delegates to access owner-only fields.",
         "operationId": "EventService_GetEvent",
         "responses": {
           "200": {
@@ -730,7 +961,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete a specific event\nAuthorization: event owner or platform owner.",
+        "summary": "Delete a specific event\nAuthorization: event owner or platform owner.\nDelegation: Requires events:delete permission for delegates.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy response type kept for compatibility\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "EventService_DeleteEvent",
         "responses": {
           "200": {
@@ -761,7 +992,7 @@
         ]
       },
       "put": {
-        "summary": "Update an existing event\nAuthorization: event owner or platform owner.",
+        "summary": "Update an existing event\nAuthorization: event owner or platform owner.\nDelegation: Requires events:update permission for delegates.",
         "operationId": "EventService_UpdateEvent",
         "responses": {
           "200": {
@@ -1123,7 +1354,7 @@
           },
           {
             "name": "paidFilter",
-            "description": "Filter by paid/unpaid state\n\n - PAID_FILTER_UNSPECIFIED: means \"all\"\n - ONLY_PAID: only collected_by_seller == true\n - ONLY_UNPAID: only collected_by_seller == false",
+            "description": "Filter by paid/unpaid state\n\n - PAID_FILTER_UNSPECIFIED: means \"all\"\n - ONLY_PAID: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\nonly collected_by_seller == true\n - ONLY_UNPAID: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\nonly collected_by_seller == false",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1136,7 +1367,7 @@
           },
           {
             "name": "paymentMethodFilter",
-            "description": "Filter by payment method\n\n - PAYMENT_METHOD_FILTER_UNSPECIFIED: means \"all methods\"",
+            "description": "Filter by payment method\n\n - PAYMENT_METHOD_FILTER_UNSPECIFIED: means \"all methods\"\n - ONLY_SWISH: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n - ONLY_KONTANT: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1197,7 +1428,8 @@
         ]
       },
       "post": {
-        "summary": "Create new sold item records.\nAuthorization: event owner, platform owner, or event API key for the event.",
+        "summary": "Create new sold item records.\nSupports both single-item and bulk-upload scenarios.",
+        "description": "Bulk-upload flow (e.g. from LoppisKassan local events):\n1. Client groups items by purchase_id\n2. For each group, POST to /v1/events/{event_id}/sold-items\n3. Partial success is expected: accepted_items + rejected_items both populated\n4. DUPLICATE_RECEIPT errors indicate already-uploaded items (not a failure)\n5. Retry is safe: duplicate items are idempotent\n\nAuthorization: event owner, platform owner, or event API key for the event.",
         "operationId": "SoldItemsService_CreateSoldItems",
         "responses": {
           "200": {
@@ -1319,6 +1551,38 @@
         ]
       }
     },
+    "/v1/events/{eventId}/sold-items:aggregate": {
+      "get": {
+        "summary": "Aggregate sold items statistics with vendor breakdown.\nReturns total items, total sum, total purchases, and per-vendor breakdown.\nAuthorization: Vendors see only their own stats, market owners see all vendors,\nplatform admins see everything.",
+        "operationId": "SoldItemsService_AggregateSoldItems",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AggregateSoldItemsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event identifier for which to aggregate stats",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SoldItemsService"
+        ]
+      }
+    },
     "/v1/events/{eventId}/sold-items:archive": {
       "post": {
         "summary": "Archive sold items for an event.\nAuthorization: event owner, platform owner, or event API key for the event.",
@@ -1401,7 +1665,7 @@
     },
     "/v1/events/{eventId}/state": {
       "put": {
-        "summary": "Authorization: event owner or platform owner.",
+        "summary": "Authorization: event owner or platform owner.\nDelegation: Requires events:update permission for delegates.",
         "operationId": "EventService_UpdateEventState",
         "responses": {
           "200": {
@@ -1682,6 +1946,40 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "sortBy",
+            "description": "Field to sort by",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "VENDOR_SORT_FIELD_UNSPECIFIED",
+              "VENDOR_SORT_FIELD_CREATED_AT",
+              "VENDOR_SORT_FIELD_SELLER_NUMBER",
+              "VENDOR_SORT_FIELD_NAME"
+            ],
+            "default": "VENDOR_SORT_FIELD_UNSPECIFIED"
+          },
+          {
+            "name": "sortOrder",
+            "description": "Sort order (ascending or descending)",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "VENDOR_SORT_ORDER_UNSPECIFIED",
+              "VENDOR_SORT_ORDER_ASC",
+              "VENDOR_SORT_ORDER_DESC"
+            ],
+            "default": "VENDOR_SORT_ORDER_UNSPECIFIED"
+          },
+          {
+            "name": "searchTerm",
+            "description": "Search by name or email",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1689,7 +1987,7 @@
         ]
       },
       "post": {
-        "summary": "Creates a vendor application for the specified event.\nAuthorization: any authenticated user.",
+        "summary": "Creates a vendor application for the specified event.\nAuthorization: any authenticated user.\nWhen event owner/API-key invites on behalf of another user (applicant field set),\na profile is automatically created for the invitee if it doesn't exist.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "VendorService_CreateVendor",
         "responses": {
           "200": {
@@ -1729,7 +2027,7 @@
     },
     "/v1/events/{eventId}/vendors/{vendorId}": {
       "get": {
-        "summary": "Retrieves a single vendor application.\nAuthorization: platform owner, event owner, event API key, or vendor themselves.",
+        "summary": "Retrieves a single vendor application.\nAuthorization: platform owner, event owner, event API key, or vendor themselves.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "VendorService_GetVendor",
         "responses": {
           "200": {
@@ -1766,7 +2064,7 @@
         ]
       },
       "delete": {
-        "summary": "Deletes a vendor application.\nAuthorization: platform owner, vendor (status pending), or event owner.",
+        "summary": "Deletes a vendor application.\nAuthorization: platform owner, vendor (status pending), or event owner.\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME legacy naming retained",
         "operationId": "VendorService_DeleteVendor",
         "responses": {
           "200": {
@@ -1803,7 +2101,7 @@
         ]
       },
       "put": {
-        "summary": "Updates a vendor application.\nAuthorization: platform owner, event owner, or vendor themselves.",
+        "summary": "Updates a vendor application.\nAuthorization: platform owner, event owner, or vendor themselves.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "VendorService_UpdateVendor",
         "responses": {
           "200": {
@@ -1850,7 +2148,7 @@
     },
     "/v1/events/{eventId}/vendors:filter": {
       "post": {
-        "summary": "Filters vendor applications with pagination.\nAuthorization: platform owner, event owner, event API key, or vendor themselves.",
+        "summary": "Filters vendor applications with pagination.\nAuthorization: platform owner, event owner, event API key, or vendor themselves.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy naming retained",
         "operationId": "VendorService_FilterVendors",
         "responses": {
           "200": {
@@ -2252,7 +2550,7 @@
     },
     "/v1/markets": {
       "get": {
-        "summary": "List all approved markets. Authorization: none.",
+        "summary": "List all approved markets. Authorization: none.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse",
         "operationId": "ApprovedMarketService_ListMarkets",
         "responses": {
           "200": {
@@ -2275,6 +2573,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "includeDelegated",
+            "description": "If true and owner_email is set, also include markets where owner_email is a delegate",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -2282,7 +2587,7 @@
         ]
       },
       "post": {
-        "summary": "Create a new approved market.\nAuthorization: platform owner only.",
+        "summary": "Create a new approved market.\nAuthorization: platform owner only.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse",
         "operationId": "ApprovedMarketService_CreateMarket",
         "responses": {
           "200": {
@@ -2315,7 +2620,7 @@
     },
     "/v1/markets/{marketId}": {
       "get": {
-        "summary": "Get details of a specific approved market. Authorization: none.",
+        "summary": "Get details of a specific approved market. Authorization: none.\nDelegation: Requires market:read permission for delegates.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse",
         "operationId": "ApprovedMarketService_GetMarket",
         "responses": {
           "200": {
@@ -2345,7 +2650,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete a specific approved market.\nAuthorization: platform owner only.",
+        "summary": "Delete a specific approved market.\nAuthorization: platform owner or market owner.\nDelegation: Requires market:delete permission (though delegates cannot actually delete markets in practice).\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ApprovedMarketService_DeleteMarket",
         "responses": {
           "200": {
@@ -2376,7 +2681,7 @@
         ]
       },
       "put": {
-        "summary": "Update a specific approved market.\nAuthorization: platform owner or market owner.",
+        "summary": "Update a specific approved market.\nAuthorization: platform owner or market owner.\nDelegation: Requires market:update permission (delegates cannot update markets in practice - owner only).\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ApprovedMarketService_UpdateMarket",
         "responses": {
           "200": {
@@ -2414,9 +2719,126 @@
         ]
       }
     },
+    "/v1/markets/{marketId}/delegations": {
+      "get": {
+        "summary": "List all delegations for a specific market.\nAuthorization: market owner, delegate, or platform admin.",
+        "operationId": "MarketDelegationService_ListDelegations",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListDelegationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Market ID to list delegates for",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "includeExpired",
+            "description": "Whether to include expired delegations (default: false)",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "MarketDelegationService"
+        ]
+      },
+      "post": {
+        "summary": "Create a new delegation for a market.\nAuthorization: market owner or platform admin.",
+        "operationId": "MarketDelegationService_CreateDelegation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateDelegationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Market ID to delegate",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MarketDelegationServiceCreateDelegationBody"
+            }
+          }
+        ],
+        "tags": [
+          "MarketDelegationService"
+        ]
+      }
+    },
+    "/v1/markets/{marketId}/delegations/{email}": {
+      "delete": {
+        "summary": "Delete (revoke) a delegation.\nAuthorization: market owner or platform admin.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
+        "operationId": "MarketDelegationService_DeleteDelegation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "marketId",
+            "description": "Market ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "description": "Email of the delegate to revoke",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MarketDelegationService"
+        ]
+      }
+    },
     "/v1/markets:filter": {
       "post": {
-        "summary": "Filter approved markets with pagination.\nAuthorization: none.",
+        "summary": "Filter approved markets with pagination.\nAuthorization: none.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy message reuse",
         "operationId": "ApprovedMarketService_FilterMarkets",
         "responses": {
           "200": {
@@ -2584,7 +3006,7 @@
     },
     "/v1/preferences": {
       "get": {
-        "summary": "Retrieves the authenticated user's preferences.\nAuthorization: authenticated user.",
+        "summary": "Retrieves the authenticated user's preferences.\nAuthorization: authenticated user.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy request/response naming\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "PreferencesService_GetPreferences",
         "responses": {
           "200": {
@@ -2604,8 +3026,8 @@
           "PreferencesService"
         ]
       },
-      "put": {
-        "summary": "Updates the authenticated user's preferences.\nAuthorization: authenticated user.",
+      "patch": {
+        "summary": "Updates the authenticated user's preferences.\nSupports partial updates via PATCH - only specified fields are updated.\nAuthorization: authenticated user.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy request/response naming\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "PreferencesService_UpdatePreferences",
         "responses": {
           "200": {
@@ -2623,12 +3045,11 @@
         },
         "parameters": [
           {
-            "name": "body",
-            "description": "Request to update preferences.",
+            "name": "preferences",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UpdatePreferencesRequest"
+              "$ref": "#/definitions/v1UserPreferences"
             }
           }
         ],
@@ -2637,9 +3058,64 @@
         ]
       }
     },
+    "/v1/profile": {
+      "delete": {
+        "summary": "Deletes the authenticated user's account with GDPR-compliant anonymization.\nAuthorization: user (own account only). Platform owner cannot delete themselves.\nackUnpaid is passed as a query parameter.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
+        "operationId": "ProfileService_DeleteAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ackUnpaid",
+            "description": "Acknowledge unpaid sold items (required if unpaid items exist)",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "ProfileService"
+        ]
+      }
+    },
+    "/v1/profile:deletionStatus": {
+      "get": {
+        "summary": "Gets account deletion status (preflight check).\nAuthorization: user (own account only).\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE",
+        "operationId": "ProfileService_GetAccountDeletionStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "ProfileService"
+        ]
+      }
+    },
     "/v1/profiles": {
       "get": {
-        "summary": "Lists all profiles.\nAuthorization: platform owner only.",
+        "summary": "Lists all profiles.\nAuthorization: platform owner only.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy naming retained\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ProfileService_ListProfiles",
         "responses": {
           "200": {
@@ -2693,7 +3169,7 @@
     },
     "/v1/profiles/{email}": {
       "get": {
-        "summary": "Retrieves a profile by email.\nAuthorization: profile owner, platform owner, or according to event/vendor relations.",
+        "summary": "Retrieves a profile by email.\nAuthorization: profile owner, platform owner, or according to event/vendor relations.\nbuf:lint:ignore RPC_REQUEST_STANDARD_NAME RPC_RESPONSE_STANDARD_NAME legacy naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ProfileService_GetProfile",
         "responses": {
           "200": {
@@ -2723,7 +3199,7 @@
         ]
       },
       "delete": {
-        "summary": "Deletes a profile.\nAuthorization: profile owner or platform owner.",
+        "summary": "Deletes a profile.\nAuthorization: profile owner or platform owner.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
         "operationId": "ProfileService_DeleteProfile",
         "responses": {
           "200": {
@@ -2794,7 +3270,7 @@
     },
     "/v1/profiles:filter": {
       "post": {
-        "summary": "Filters profiles by email or other fields.\nAuthorization: platform owner only.",
+        "summary": "Filters profiles by email or other fields.\nAuthorization: platform owner only.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy naming retained",
         "operationId": "ProfileService_FilterProfiles",
         "responses": {
           "200": {
@@ -2861,7 +3337,7 @@
     },
     "/v1/resources/{key.resourceType}/{key.resourceId}/{key.attachmentType}": {
       "get": {
-        "summary": "Get a download link for the attachment.\nAuthorization: event owner/platform admin; approved vendors for the event.\nClients should call this to receive a short-lived presigned URL (or a 302 redirect) to the blob; do not cache for long-term use.",
+        "summary": "Get a download link for the attachment.\nAuthorization: event owner/platform admin; approved vendors for the event.\nDelegation: Requires events:read permission for event attachments.\nClients should call this to receive a short-lived presigned URL (or a 302 redirect) to the blob; do not cache for long-term use.",
         "operationId": "AttachmentService_GetAttachmentDownload",
         "responses": {
           "200": {
@@ -2903,7 +3379,8 @@
             "enum": [
               "ATTACHMENT_KIND_UNSPECIFIED",
               "letter",
-              "ATTACHMENT_KIND_SELLER_LETTER"
+              "ATTACHMENT_KIND_SELLER_LETTER",
+              "ATTACHMENT_KIND_EVENT_IMAGE"
             ]
           }
         ],
@@ -2912,7 +3389,7 @@
         ]
       },
       "delete": {
-        "summary": "Delete the attachment blob and clear metadata.\nAuthorization: event owner or platform admin.",
+        "summary": "Delete the attachment blob and clear metadata.\nAuthorization: event owner or platform admin.\nDelegation: Requires events:update permission for event attachments (note: not events:delete).",
         "operationId": "AttachmentService_DeleteAttachment",
         "responses": {
           "200": {
@@ -2954,8 +3431,71 @@
             "enum": [
               "ATTACHMENT_KIND_UNSPECIFIED",
               "letter",
-              "ATTACHMENT_KIND_SELLER_LETTER"
+              "ATTACHMENT_KIND_SELLER_LETTER",
+              "ATTACHMENT_KIND_EVENT_IMAGE"
             ]
+          }
+        ],
+        "tags": [
+          "AttachmentService"
+        ]
+      }
+    },
+    "/v1/resources/{key.resourceType}/{key.resourceId}/{key.attachmentType}:confirmUpload": {
+      "post": {
+        "summary": "Confirm a completed upload and persist metadata.\nAuthorization: event owner or platform admin.\nDelegation: Requires events:update permission for event attachments.",
+        "operationId": "AttachmentService_ConfirmAttachmentUpload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ConfirmAttachmentUploadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "key.resourceType",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "ATTACHMENT_RESOURCE_TYPE_UNSPECIFIED",
+              "event",
+              "ATTACHMENT_RESOURCE_TYPE_EVENT"
+            ]
+          },
+          {
+            "name": "key.resourceId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "key.attachmentType",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "ATTACHMENT_KIND_UNSPECIFIED",
+              "letter",
+              "ATTACHMENT_KIND_SELLER_LETTER",
+              "ATTACHMENT_KIND_EVENT_IMAGE"
+            ]
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AttachmentServiceConfirmAttachmentUploadBody"
+            }
           }
         ],
         "tags": [
@@ -2965,7 +3505,7 @@
     },
     "/v1/resources/{key.resourceType}/{key.resourceId}/{key.attachmentType}:prepareUpload": {
       "post": {
-        "summary": "Prepare an upload for an attachment.\nAuthorization: event owner or platform admin.",
+        "summary": "Prepare an upload for an attachment.\nAuthorization: event owner or platform admin.\nDelegation: Requires events:update permission for event attachments.",
         "operationId": "AttachmentService_PrepareAttachmentUpload",
         "responses": {
           "200": {
@@ -3007,7 +3547,8 @@
             "enum": [
               "ATTACHMENT_KIND_UNSPECIFIED",
               "letter",
-              "ATTACHMENT_KIND_SELLER_LETTER"
+              "ATTACHMENT_KIND_SELLER_LETTER",
+              "ATTACHMENT_KIND_EVENT_IMAGE"
             ]
           },
           {
@@ -3161,7 +3702,7 @@
           },
           {
             "name": "aggregationLevel",
-            "description": "daily, weekly, monthly",
+            "description": "daily, weekly, monthly\n\n - DAILY: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n - WEEKLY: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n - MONTHLY: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3285,6 +3826,39 @@
           "VisitorTicketService"
         ]
       }
+    },
+    "/v1/webhooks/sendgrid/events": {
+      "post": {
+        "summary": "ReceiveSendGridEvent accepts a webhook event from SendGrid.\nThis is called by SendGrid whenever an email event occurs (delivered, bounced, etc).\nPath: POST /v1/webhooks/sendgrid/events",
+        "operationId": "WebhookService_ReceiveSendGridEvent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ReceiveSendGridEventResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ReceiveSendGridEventRequest"
+            }
+          }
+        ],
+        "tags": [
+          "WebhookService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -3304,6 +3878,16 @@
         }
       },
       "description": "Request to create a new API key for an event."
+    },
+    "AttachmentServiceConfirmAttachmentUploadBody": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "object",
+          "description": "Identifies a single attachment."
+        }
+      },
+      "description": "Confirm upload request (verifies blob exists and updates metadata)."
     },
     "AttachmentServicePrepareAttachmentUploadBody": {
       "type": "object",
@@ -3328,6 +3912,19 @@
         }
       },
       "description": "Prepare upload request (presigned URL)."
+    },
+    "AuthServiceOAuthCallbackBody": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "title": "Authorization code from provider"
+        },
+        "state": {
+          "type": "string",
+          "title": "CSRF token (must match state stored server-side)"
+        }
+      }
     },
     "ChatServiceFlagMessageBody": {
       "type": "object",
@@ -3355,6 +3952,48 @@
         }
       },
       "title": "UpdateEventStateRequest is used to change the lifecycle state of an event.\nThe request includes the event's unique identifier and the desired new state.\nAllowed transitions are:\n  OPEN -\u003e CLOSED\n  CLOSED -\u003e FINALIZED"
+    },
+    "MarketDelegationServiceCreateDelegationBody": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "title": "Email of the user to receive delegation rights"
+        },
+        "firstName": {
+          "type": "string",
+          "title": "Optional: first name of delegate (from profile lookup)"
+        },
+        "lastName": {
+          "type": "string",
+          "title": "Optional: last name of delegate (from profile lookup)"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Optional: when the delegation should expire"
+        },
+        "permissions": {
+          "$ref": "#/definitions/v1AllPermissions",
+          "title": "Optional: granular permissions (future use - not yet stored in DB)\nWhen provided, all scopes must have read=true"
+        }
+      },
+      "title": "Request to create a new delegation"
+    },
+    "MarketDelegationServiceUpdateDelegationBody": {
+      "type": "object",
+      "properties": {
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Optional: update expiry date"
+        },
+        "permissions": {
+          "$ref": "#/definitions/v1AllPermissions",
+          "title": "Optional: update permissions (future use)"
+        }
+      },
+      "title": "Request to update an existing delegation"
     },
     "ProfileServiceUpdateProfileBody": {
       "type": "object",
@@ -3401,7 +4040,7 @@
             "type": "object",
             "$ref": "#/definitions/v1SoldItem"
           },
-          "title": "Items being created"
+          "description": "Items being created.\nNote: Supports bulk-upload scenarios. Items with duplicate (event_id, item_id) key\nwill be rejected with error_code DUPLICATE_RECEIPT (idempotent re-upload safe)."
         }
       }
     },
@@ -3461,11 +4100,15 @@
         "sellerNumber": {
           "type": "integer",
           "format": "int32",
-          "title": "Desired seller number at the event"
+          "title": "Desired seller number at the event (0 = no preference, assigned by market owner)"
         },
         "freeText": {
           "type": "string",
           "title": "Additional information from the vendor"
+        },
+        "applicant": {
+          "$ref": "#/definitions/v1VendorApplicant",
+          "title": "When set, market owner creates application on behalf of another person"
         }
       }
     },
@@ -3638,6 +4281,15 @@
       },
       "title": "Admin filter for searching tickets across all events"
     },
+    "v1AggregateSoldItemsResponse": {
+      "type": "object",
+      "properties": {
+        "aggregates": {
+          "$ref": "#/definitions/v1ExtendedAggregates",
+          "title": "Aggregated statistics with vendor breakdown"
+        }
+      }
+    },
     "v1AggregateVisitorTicketsRequest": {
       "type": "object",
       "properties": {
@@ -3697,7 +4349,34 @@
         "WEEKLY",
         "MONTHLY"
       ],
-      "default": "AGGREGATION_LEVEL_UNSPECIFIED"
+      "default": "AGGREGATION_LEVEL_UNSPECIFIED",
+      "title": "- DAILY: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n - WEEKLY: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n - MONTHLY: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained"
+    },
+    "v1AllPermissions": {
+      "type": "object",
+      "properties": {
+        "market": {
+          "$ref": "#/definitions/v1DelegationPermissions",
+          "title": "Market permissions - read-only for delegates (create/update/delete must be false)"
+        },
+        "events": {
+          "$ref": "#/definitions/v1DelegationPermissions",
+          "title": "Events permissions - full CRUD available"
+        },
+        "vendors": {
+          "$ref": "#/definitions/v1DelegationPermissions",
+          "title": "Vendors permissions - full CRUD available"
+        },
+        "tickets": {
+          "$ref": "#/definitions/v1DelegationPermissions",
+          "title": "Tickets permissions - full CRUD available"
+        },
+        "stats": {
+          "$ref": "#/definitions/v1DelegationPermissions",
+          "title": "Statistics permissions - read-only for delegates (create/update/delete must be false)"
+        }
+      },
+      "title": "Complete set of permissions for all scopes"
     },
     "v1ApiKeyInfo": {
       "type": "object",
@@ -3799,10 +4478,11 @@
       "enum": [
         "ATTACHMENT_KIND_UNSPECIFIED",
         "letter",
-        "ATTACHMENT_KIND_SELLER_LETTER"
+        "ATTACHMENT_KIND_SELLER_LETTER",
+        "ATTACHMENT_KIND_EVENT_IMAGE"
       ],
       "default": "ATTACHMENT_KIND_UNSPECIFIED",
-      "description": "Attachment kinds supported by attachment service (seller letter only for now)."
+      "description": "Attachment kinds supported by attachment service (seller letters and event images).\n\n - letter: buf:lint:ignore ENUM_VALUE_PREFIX Aliases kept for legacy clients.\nbuf:lint:ignore ENUM_VALUE_UPPER_SNAKE_CASE Aliases kept for legacy clients."
     },
     "v1AttachmentMetadata": {
       "type": "object",
@@ -3835,7 +4515,32 @@
         "ATTACHMENT_RESOURCE_TYPE_EVENT"
       ],
       "default": "ATTACHMENT_RESOURCE_TYPE_UNSPECIFIED",
-      "description": "Resource types supported by attachment service (scoped to events only for now)."
+      "description": "Resource types supported by attachment service (scoped to events only for now).\n\n - event: buf:lint:ignore ENUM_VALUE_PREFIX Aliases kept for legacy clients.\nbuf:lint:ignore ENUM_VALUE_UPPER_SNAKE_CASE Aliases kept for legacy clients."
+    },
+    "v1BlockingReason": {
+      "type": "object",
+      "properties": {
+        "reasonCode": {
+          "type": "string",
+          "title": "Reason code (e.g., \"PLATFORM_OWNER\", \"ACTIVE_EVENTS\")"
+        },
+        "description": {
+          "type": "string",
+          "title": "Human-readable description"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Count of blocking resources"
+        },
+        "resourceIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "IDs of blocking resources (e.g., event IDs)"
+        }
+      }
     },
     "v1BulkUpdateSaleStartResponse": {
       "type": "object",
@@ -3962,7 +4667,7 @@
         "DELETED"
       ],
       "default": "CHAT_MESSAGE_STATUS_UNSPECIFIED",
-      "description": "- VISIBLE: Message is visible to all users\n - MASKED: Message is masked due to user reports\n - DELETED: Message has been deleted by a moderator",
+      "description": "- VISIBLE: Message is visible to all users\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - MASKED: Message is masked due to user reports\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - DELETED: Message has been deleted by a moderator\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming",
       "title": "Status of a chat message in regard to moderation and visibility"
     },
     "v1ClearChatMessageFlagsResponse": {
@@ -3973,6 +4678,21 @@
         }
       },
       "title": "Response after clearing flags"
+    },
+    "v1ConfirmAttachmentUploadResponse": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/v1AttachmentMetadata"
+        },
+        "downloadUrl": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
     },
     "v1CreateApiKeyResponse": {
       "type": "object",
@@ -4045,6 +4765,16 @@
         }
       },
       "title": "Response after creating a new chat message"
+    },
+    "v1CreateDelegationResponse": {
+      "type": "object",
+      "properties": {
+        "delegation": {
+          "$ref": "#/definitions/v1MarketDelegation",
+          "title": "The created delegation"
+        }
+      },
+      "title": "Response containing the created delegation"
     },
     "v1CreateEventRequest": {
       "type": "object",
@@ -4122,7 +4852,7 @@
             "type": "object",
             "$ref": "#/definitions/v1RejectedItem"
           },
-          "title": "Items that were rejected together with reasons"
+          "title": "Items that were rejected together with reasons.\nFor duplicate items: error_code = DUPLICATE_RECEIPT (safe to retry)"
         }
       }
     },
@@ -4131,6 +4861,53 @@
       "properties": {
         "ticketType": {
           "$ref": "#/definitions/v1TicketType"
+        }
+      }
+    },
+    "v1DelegationPermissions": {
+      "type": "object",
+      "properties": {
+        "read": {
+          "type": "boolean",
+          "title": "Read access - MUST always be true"
+        },
+        "create": {
+          "type": "boolean",
+          "title": "Create access"
+        },
+        "update": {
+          "type": "boolean",
+          "title": "Update access"
+        },
+        "delete": {
+          "type": "boolean",
+          "title": "Delete access"
+        }
+      },
+      "title": "CRUD permissions for a specific scope (market, events, vendors, etc.)"
+    },
+    "v1DeleteAccountResponse": {
+      "type": "object",
+      "properties": {
+        "canDelete": {
+          "type": "boolean",
+          "title": "Whether account can be deleted"
+        },
+        "blockingReasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1BlockingReason"
+          },
+          "title": "Reasons blocking deletion"
+        },
+        "requiresUnpaidAck": {
+          "type": "boolean",
+          "title": "Whether unpaid acknowledgment is required"
+        },
+        "unpaidStats": {
+          "$ref": "#/definitions/v1UnpaidStats",
+          "title": "Statistics about unpaid items"
         }
       }
     },
@@ -4249,13 +5026,11 @@
         },
         "latitude": {
           "type": "number",
-          "format": "double",
-          "title": "Event-specific latitude; inherits from Market if not provided"
+          "format": "double"
         },
         "longitude": {
           "type": "number",
-          "format": "double",
-          "title": "Event-specific longitude; inherits from Market if not provided"
+          "format": "double"
         },
         "maxVendors": {
           "type": "integer",
@@ -4304,6 +5079,27 @@
         "sellerLetter": {
           "$ref": "#/definitions/v1SellerLetter",
           "description": "Seller letter metadata (output-only, derived from platform resource).",
+          "readOnly": true
+        },
+        "descriptionIsMarkdown": {
+          "type": "boolean",
+          "title": "Indicates if description contains Markdown formatting"
+        },
+        "distanceKm": {
+          "type": "number",
+          "format": "double",
+          "title": "Distance in kilometers from the search location (output-only, only set when sort_by_distance is used)",
+          "readOnly": true
+        },
+        "vendorCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of vendor applications for this event (output-only).",
+          "readOnly": true
+        },
+        "eventImage": {
+          "$ref": "#/definitions/v1EventImage",
+          "description": "Event image metadata (output-only, derived from attachments).",
           "readOnly": true
         }
       },
@@ -4417,9 +5213,32 @@
             "$ref": "#/definitions/v1EventLifecycleState"
           },
           "title": "Filter by lifecycle state(s) - e.g., only show OPEN events"
+        },
+        "sortByDistance": {
+          "type": "boolean",
+          "title": "When true, sort results by distance from latitude/longitude (requires lat/lng to be set)"
         }
       },
       "title": "Filter criteria for events"
+    },
+    "v1EventImage": {
+      "type": "object",
+      "properties": {
+        "hasImage": {
+          "type": "boolean",
+          "description": "Flag indicating an image is available."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Presigned URL (or public URL) for the image."
+        },
+        "uploadedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp for latest image upload."
+        }
+      },
+      "description": "Metadata for an event image (hero/banner)."
     },
     "v1EventLifecycleState": {
       "type": "string",
@@ -4430,7 +5249,7 @@
         "FINALIZED"
       ],
       "default": "EVENT_LIFECYCLE_STATE_UNSPECIFIED",
-      "description": "EventLifecycleState defines the explicit lifecycle state of an event.\nAlthough the event’s start and end dates imply \"coming\", \"ongoing\" and \"completed\"\nphases, these are all mapped to the OPEN state. The market owner can explicitly\nchange an event’s state to CLOSED (to prevent further transactions) and subsequently\nto FINALIZED (to archive sold items and mark the event read-only).\n\n - EVENT_LIFECYCLE_STATE_UNSPECIFIED: Unspecified state. Must not be used.\n - OPEN: OPEN indicates that the event is open for transactions.\n(This includes events that are coming, ongoing, or even completed by date,\nprovided they have not been explicitly closed.)\n - CLOSED: CLOSED indicates that the market owner has explicitly closed the event,\nand no new sold items are accepted.\n - FINALIZED: FINALIZED indicates that the event has been finalized.\nSold items should be archived and the event is rendered read-only."
+      "description": "EventLifecycleState defines the explicit lifecycle state of an event.\nAlthough the event’s start and end dates imply \"coming\", \"ongoing\" and \"completed\"\nphases, these are all mapped to the OPEN state. The market owner can explicitly\nchange an event’s state to CLOSED (to prevent further transactions) and subsequently\nto FINALIZED (to archive sold items and mark the event read-only).\n\n - EVENT_LIFECYCLE_STATE_UNSPECIFIED: Unspecified state. Must not be used.\n - OPEN: OPEN indicates that the event is open for transactions.\n(This includes events that are coming, ongoing, or even completed by date,\nprovided they have not been explicitly closed.)\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy name kept for clients\n - CLOSED: CLOSED indicates that the market owner has explicitly closed the event,\nand no new sold items are accepted.\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy name kept for clients\n - FINALIZED: FINALIZED indicates that the event has been finalized.\nSold items should be archived and the event is rendered read-only.\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy name kept for clients"
     },
     "v1EventTicketAggregate": {
       "type": "object",
@@ -4465,6 +5284,35 @@
           "format": "date-time"
         }
       }
+    },
+    "v1ExtendedAggregates": {
+      "type": "object",
+      "properties": {
+        "totalItems": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total items across all vendors"
+        },
+        "totalPrice": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total price across all vendors"
+        },
+        "totalPurchases": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total distinct purchases"
+        },
+        "vendors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VendorAggregates"
+          },
+          "title": "Per-vendor breakdown"
+        }
+      },
+      "title": "Extended aggregates with vendor breakdown"
     },
     "v1FilterEventsRequest": {
       "type": "object",
@@ -4689,6 +5537,43 @@
         }
       }
     },
+    "v1GetApiKeyByAliasResponse": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "description": "Unique identifier of the event this API key belongs to."
+        },
+        "alias": {
+          "type": "string",
+          "description": "Alias of the API key."
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "The secret API key."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether the API key is currently active."
+        },
+        "type": {
+          "$ref": "#/definitions/v1ApiKeyType",
+          "description": "Type of the API key."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Tags stored for the API key."
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the API key."
+        }
+      },
+      "description": "Response containing API key details and the associated event ID."
+    },
     "v1GetApiKeyResponse": {
       "type": "object",
       "properties": {
@@ -4737,6 +5622,43 @@
           "format": "date-time"
         }
       }
+    },
+    "v1GetEmailDeliveryStatusResponse": {
+      "type": "object",
+      "properties": {
+        "toEmail": {
+          "type": "string",
+          "title": "Email address"
+        },
+        "status": {
+          "type": "string",
+          "title": "Current status"
+        },
+        "isTerminal": {
+          "type": "boolean",
+          "title": "Is terminal (no retry will happen)"
+        },
+        "failureReason": {
+          "type": "string",
+          "title": "Reason for failure (if any)"
+        },
+        "lastEventAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Last event timestamp"
+        },
+        "nextRetryAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Next retry time (if applicable)"
+        },
+        "attemptCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of webhook events received for this message"
+        }
+      },
+      "description": "GetEmailDeliveryStatusResponse is the response from checking delivery status of an email."
     },
     "v1GetEventResponse": {
       "type": "object",
@@ -4844,6 +5766,15 @@
         }
       }
     },
+    "v1InitiateOAuthResponse": {
+      "type": "object",
+      "properties": {
+        "authUrl": {
+          "type": "string",
+          "title": "Redirect user to this URL"
+        }
+      }
+    },
     "v1Language": {
       "type": "string",
       "enum": [
@@ -4852,7 +5783,7 @@
         "ENGLISH"
       ],
       "default": "LANGUAGE_UNSPECIFIED",
-      "description": "Supported language options for the user interface.\nSystem default is Swedish, unless overridden by user preferences."
+      "description": "Supported language options for the user interface.\nSystem default is Swedish, unless overridden by user preferences.\n\n - SWEDISH: buf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - ENGLISH: buf:lint:ignore ENUM_VALUE_PREFIX legacy value naming"
     },
     "v1ListApiKeysResponse": {
       "type": "object",
@@ -4895,6 +5826,20 @@
       },
       "title": "Response containing a list of chat messages with pagination details"
     },
+    "v1ListDelegationsResponse": {
+      "type": "object",
+      "properties": {
+        "delegations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1MarketDelegation"
+          },
+          "title": "List of delegations for the market"
+        }
+      },
+      "title": "Response containing list of delegations"
+    },
     "v1ListEventsResponse": {
       "type": "object",
       "properties": {
@@ -4931,6 +5876,20 @@
           "title": "Total number of markets returned"
         }
       }
+    },
+    "v1ListMyDelegationsResponse": {
+      "type": "object",
+      "properties": {
+        "delegations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1MarketDelegation"
+          },
+          "title": "List of delegations where the user is a delegate"
+        }
+      },
+      "title": "Response containing user's delegations"
     },
     "v1ListPlatformAdminsResponse": {
       "type": "object",
@@ -5120,6 +6079,49 @@
       },
       "title": "--------------------\nMarkets\n--------------------\nMarket messages"
     },
+    "v1MarketDelegation": {
+      "type": "object",
+      "properties": {
+        "marketId": {
+          "type": "string",
+          "title": "Unique identifier of the market being delegated"
+        },
+        "email": {
+          "type": "string",
+          "title": "Email of the user receiving delegation rights"
+        },
+        "firstName": {
+          "type": "string",
+          "title": "Optional: first name of delegate (copied from profile)"
+        },
+        "lastName": {
+          "type": "string",
+          "title": "Optional: last name of delegate (copied from profile)"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "Optional: when the delegation expires (null = no expiration)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "When the delegation was created",
+          "readOnly": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "title": "When the delegation was last updated",
+          "readOnly": true
+        },
+        "permissions": {
+          "$ref": "#/definitions/v1AllPermissions",
+          "title": "Optional: granular permissions for different scopes\nThese permissions are stored in the database and enforced by the backend\nto control fine-grained access to specific resources and actions"
+        }
+      },
+      "description": "MarketDelegation represents a delegation of market ownership rights to another user.\nA delegation grants full owner rights to the delegate for the specified market.\nDeleting a delegation revokes access immediately (within cache TTL of 30s)."
+    },
     "v1MarketFilter": {
       "type": "object",
       "properties": {
@@ -5137,6 +6139,19 @@
         }
       },
       "title": "Filtering options for markets"
+    },
+    "v1OAuthCallbackResponse": {
+      "type": "object",
+      "properties": {
+        "apiKey": {
+          "type": "string",
+          "title": "Session API key for authenticated requests"
+        },
+        "message": {
+          "type": "string",
+          "title": "Success message"
+        }
+      }
     },
     "v1OrderLine": {
       "type": "object",
@@ -5260,7 +6275,7 @@
         "ONLY_UNPAID"
       ],
       "default": "PAID_FILTER_UNSPECIFIED",
-      "description": "- PAID_FILTER_UNSPECIFIED: means \"all\"\n - ONLY_PAID: only collected_by_seller == true\n - ONLY_UNPAID: only collected_by_seller == false",
+      "description": "- PAID_FILTER_UNSPECIFIED: means \"all\"\n - ONLY_PAID: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\nonly collected_by_seller == true\n - ONLY_UNPAID: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\nonly collected_by_seller == false",
       "title": "PaidFilter enum for specifying whether we want paid/unpaid/all"
     },
     "v1PaymentMethod": {
@@ -5271,7 +6286,7 @@
         "KONTANT"
       ],
       "default": "PAYMENT_METHOD_UNSPECIFIED",
-      "description": "- SWISH: \"Swish\"\n - KONTANT: \"Kontant\"",
+      "description": "- SWISH: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\n\"Swish\"\n - KONTANT: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\n\"Kontant\"",
       "title": "PaymentMethod enum"
     },
     "v1PaymentMethodFilter": {
@@ -5282,7 +6297,7 @@
         "ONLY_KONTANT"
       ],
       "default": "PAYMENT_METHOD_FILTER_UNSPECIFIED",
-      "description": "- PAYMENT_METHOD_FILTER_UNSPECIFIED: means \"all methods\"",
+      "description": "- PAYMENT_METHOD_FILTER_UNSPECIFIED: means \"all methods\"\n - ONLY_SWISH: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n - ONLY_KONTANT: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained",
       "title": "PaymentMethodFilter for specifying method or \"all\""
     },
     "v1PaymentStatus": {
@@ -5293,6 +6308,7 @@
         "UNPAID"
       ],
       "default": "PAYMENT_STATUS_UNSPECIFIED",
+      "description": "- PAID: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n - UNPAID: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained",
       "title": "PaymentStatus is an enum that tell if the vendor has been paid or not"
     },
     "v1PayoutResponse": {
@@ -5424,7 +6440,7 @@
       "properties": {
         "email": {
           "type": "string",
-          "description": "Unique identifier for the profile, used for login.\nMust be a valid email address."
+          "description": "Unique identifier for the profile, used for login.\nMust be a valid, lowercase email address."
         },
         "person": {
           "$ref": "#/definitions/v1Person",
@@ -5443,6 +6459,31 @@
         }
       },
       "title": "Profile message"
+    },
+    "v1ReceiveSendGridEventRequest": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1SendGridEmailEvent"
+          },
+          "title": "Array of events from SendGrid (can be multiple per request)"
+        }
+      },
+      "title": "ReceiveSendGridEventRequest contains the payload from SendGrid webhook.\nSendGrid sends this as JSON POST to our webhook endpoint.\nSee: https://docs.sendgrid.com/for-developers/tracking/event/"
+    },
+    "v1ReceiveSendGridEventResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "\"ok\"",
+          "title": "HTTP 200 tells SendGrid we received and processed the event"
+        }
+      },
+      "description": "ReceiveSendGridEventResponse is our acknowledgement to SendGrid."
     },
     "v1RejectedItem": {
       "type": "object",
@@ -5536,7 +6577,7 @@
         "EVENT"
       ],
       "default": "RESOURCE_TYPE_UNSPECIFIED",
-      "description": "- MARKET: Market chat is open for all users to discuss about the market\n - DRAFT_MARKET: Draft market chat is open for market owner and platform owner.\n - VENDOR: Vendor chat is open for vendor (defined by the vendor id) and the market owner\n - EVENT: Event chat is opened for all vendors for the event and the market owner",
+      "description": "- MARKET: Market chat is open for all users to discuss about the market\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - DRAFT_MARKET: Draft market chat is open for market owner and platform owner.\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - VENDOR: Vendor chat is open for vendor (defined by the vendor id) and the market owner\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming\n - EVENT: Event chat is opened for all vendors for the event and the market owner\nbuf:lint:ignore ENUM_VALUE_PREFIX legacy value naming",
       "title": "Enumerations"
     },
     "v1RevenueSplit": {
@@ -5660,18 +6701,83 @@
         }
       }
     },
+    "v1SendGridEmailEvent": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "type": "string",
+          "description": "Event type: \"delivered\", \"bounce\", \"dropped\", \"deferred\", \"processed\", \"complaint\", etc."
+        },
+        "email": {
+          "type": "string",
+          "description": "Recipient email address.\nNo validation — SendGrid controls this field, and webhook events should\nnever be rejected due to email format edge cases."
+        },
+        "sgMessageId": {
+          "type": "string",
+          "description": "SendGrid's unique message ID for this email."
+        },
+        "timestamp": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Unix timestamp of the event."
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject line (only present if enabled in SendGrid webhook settings)."
+        },
+        "bounceClassification": {
+          "type": "string",
+          "description": "Bounce classification (only on bounce events).\nValues: \"Invalid Address\", \"Mailbox Unavailable\", \"Reputation\", \"Content\",\n\"Technical Failure\", \"Frequency or Volume Too High\", etc."
+        },
+        "reason": {
+          "type": "string",
+          "title": "Human-readable reason for bounce/drop.\nExample: \"550 5.7.1 Service unavailable, Client host blocked\""
+        },
+        "sgEventId": {
+          "type": "string",
+          "description": "SendGrid's unique event ID (useful for deduplication)."
+        },
+        "response": {
+          "type": "string",
+          "title": "SMTP response from the receiving server.\nExample: \"250 2.0.0 OK 1234567890 - gsmtp\""
+        },
+        "attempt": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of delivery attempts made by SendGrid."
+        },
+        "ip": {
+          "type": "string",
+          "description": "IP address of the SendGrid server that sent the email.\nUseful for diagnosing IP-based blocks (BUG-015)."
+        },
+        "type": {
+          "type": "string",
+          "description": "Bounce type: \"bounce\" or \"blocked\" (only on bounce events)."
+        },
+        "status": {
+          "type": "string",
+          "description": "SMTP status code: e.g. \"5.0.0\", \"4.0.0\" (only on bounce/deferred events)."
+        },
+        "tls": {
+          "type": "integer",
+          "format": "int32",
+          "description": "TLS: 1 if TLS was used, 0 otherwise."
+        }
+      },
+      "description": "Fields SendGrid sends that we don't define (url, useragent, category, etc.)\nare silently discarded by the gateway's DiscardUnknown marshaler option.",
+      "title": "SendGridEmailEvent represents a single email event from SendGrid's webhook.\nField names and json_name annotations match SendGrid's actual JSON payload\nexactly. See: https://docs.sendgrid.com/for-developers/tracking/event"
+    },
     "v1SoldItem": {
       "type": "object",
       "properties": {
         "itemId": {
           "type": "string",
-          "description": "Unique ID (UUID) for each item",
-          "title": "Output-only fields (server sets these):",
-          "readOnly": true
+          "title": "REQUIRED: Client-generated ULID for idempotent retries (prevents duplicates)"
         },
         "eventId": {
           "type": "string",
-          "title": "The event this item belongs to",
+          "description": "The event this item belongs to",
+          "title": "Output-only fields (server sets these):",
           "readOnly": true
         },
         "cashierAlias": {
@@ -5681,7 +6787,7 @@
         },
         "purchaseId": {
           "type": "string",
-          "description": "Client-settable fields:\nULID used to group multiple items into one purchase."
+          "description": "Client-settable fields:\nREQUIRED: ULID used to group multiple items into one purchase."
         },
         "seller": {
           "type": "integer",
@@ -5726,7 +6832,7 @@
         "SOLD_ITEM_ERROR_CODE_DUPLICATE_RECEIPT"
       ],
       "default": "SOLD_ITEM_ERROR_CODE_UNSPECIFIED",
-      "description": "- SOLD_ITEM_ERROR_CODE_UNSPECIFIED: Unspecified error\n - SOLD_ITEM_ERROR_CODE_INVALID_SELLER: Seller not in approved list\n - SOLD_ITEM_ERROR_CODE_DUPLICATE_RECEIPT: MongoDB E11000: duplicate key (event_id, item_id)",
+      "description": "- SOLD_ITEM_ERROR_CODE_UNSPECIFIED: Unspecified error\n - SOLD_ITEM_ERROR_CODE_INVALID_SELLER: Seller not in approved list\n - SOLD_ITEM_ERROR_CODE_DUPLICATE_RECEIPT: DUPLICATE_RECEIPT: MongoDB E11000 duplicate key (event_id, item_id).\nIn bulk-upload context: indicates item already uploaded (not a failure).\nClients should treat this as idempotent: safe to retry all items.",
       "title": "Error codes for rejected sold items"
     },
     "v1SortOrder": {
@@ -5752,7 +6858,7 @@
         "NO_TICKETS_ORDERED"
       ],
       "default": "TICKET_ORDER_ERROR_UNSPECIFIED",
-      "description": "- SOLD_OUT: Slut på denna typ\n - MAX_PER_VISITOR: Användaren har nått max per person\n - INSUFFICIENT_TICKETS: Det finns färre biljetter än önskat\n - NO_TICKETS_ORDERED: Inga biljetter beställdes",
+      "description": "- TICKET_ORDER_ERROR_UNSPECIFIED: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n - SOLD_OUT: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\nSlut på denna typ\n - MAX_PER_VISITOR: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\nAnvändaren har nått max per person\n - INSUFFICIENT_TICKETS: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\nDet finns färre biljetter än önskat\n - NO_TICKETS_ORDERED: buf:lint:ignore ENUM_VALUE_PREFIX legacy naming retained\n\nInga biljetter beställdes",
       "title": "-----------------------------------\nError codes för tydlig maskinell hantering\n-----------------------------------"
     },
     "v1TicketSortOrder": {
@@ -5825,6 +6931,10 @@
           "type": "string",
           "format": "date-time",
           "title": "när biljettsläppet startar för denna biljettyp"
+        },
+        "exclusive": {
+          "type": "boolean",
+          "description": "If true, cannot be combined with other exclusive ticket types. Proto3 default is false; frontend sets true for new types."
         }
       }
     },
@@ -5924,6 +7034,24 @@
         }
       }
     },
+    "v1UnpaidStats": {
+      "type": "object",
+      "properties": {
+        "totalUnpaidItems": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total number of unpaid items"
+        },
+        "vendors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1VendorUnpaidInfo"
+          },
+          "title": "Per-vendor unpaid information"
+        }
+      }
+    },
     "v1UpdateApiKeyResponse": {
       "type": "object",
       "properties": {
@@ -5932,6 +7060,16 @@
         }
       },
       "description": "Response containing the updated API key metadata."
+    },
+    "v1UpdateDelegationResponse": {
+      "type": "object",
+      "properties": {
+        "delegation": {
+          "$ref": "#/definitions/v1MarketDelegation",
+          "title": "The updated delegation"
+        }
+      },
+      "title": "Response containing the updated delegation"
     },
     "v1UpdateEventResponse": {
       "type": "object",
@@ -5952,15 +7090,6 @@
         }
       },
       "description": "UpdateEventStateResponse returns the updated event."
-    },
-    "v1UpdatePreferencesRequest": {
-      "type": "object",
-      "properties": {
-        "preferences": {
-          "$ref": "#/definitions/v1UserPreferences"
-        }
-      },
-      "description": "Request to update preferences."
     },
     "v1UpdateProfileResponse": {
       "type": "object",
@@ -6049,9 +7178,64 @@
         "payoutMethod": {
           "type": "string",
           "title": "Payout method: \"Swish\", \"Banköverföring\", \"Kontant\", \"Annat\""
+        },
+        "firstName": {
+          "type": "string",
+          "title": "Denormalized from profile for search/sort"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "createdByOwner": {
+          "type": "boolean",
+          "title": "Audit fields when created av marknadsägare"
+        },
+        "createdByUserId": {
+          "type": "string"
         }
       },
       "title": "Vendor message"
+    },
+    "v1VendorAggregates": {
+      "type": "object",
+      "properties": {
+        "seller": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Seller number"
+        },
+        "totalItems": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total items sold by this vendor"
+        },
+        "totalPrice": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Total price of items sold by this vendor"
+        },
+        "totalPurchases": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of purchases (distinct purchase_ids)"
+        }
+      },
+      "title": "Vendor-specific aggregates"
+    },
+    "v1VendorApplicant": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        }
+      },
+      "description": "Applicant details provided by a market owner when creating an application åt annan."
     },
     "v1VendorFilter": {
       "type": "object",
@@ -6085,6 +7269,48 @@
         "vendor": {
           "$ref": "#/definitions/v1Vendor",
           "title": "The vendor record"
+        },
+        "overLimitWarning": {
+          "type": "boolean",
+          "title": "Indicates request accepted even though max vendor cap was exceeded (applicant flow)"
+        }
+      }
+    },
+    "v1VendorSortField": {
+      "type": "string",
+      "enum": [
+        "VENDOR_SORT_FIELD_UNSPECIFIED",
+        "VENDOR_SORT_FIELD_CREATED_AT",
+        "VENDOR_SORT_FIELD_SELLER_NUMBER",
+        "VENDOR_SORT_FIELD_NAME"
+      ],
+      "default": "VENDOR_SORT_FIELD_UNSPECIFIED"
+    },
+    "v1VendorSortOrder": {
+      "type": "string",
+      "enum": [
+        "VENDOR_SORT_ORDER_UNSPECIFIED",
+        "VENDOR_SORT_ORDER_ASC",
+        "VENDOR_SORT_ORDER_DESC"
+      ],
+      "default": "VENDOR_SORT_ORDER_UNSPECIFIED"
+    },
+    "v1VendorUnpaidInfo": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "title": "Event ID"
+        },
+        "sellerNumber": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Seller number"
+        },
+        "unpaidCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Number of unpaid items"
         }
       }
     },

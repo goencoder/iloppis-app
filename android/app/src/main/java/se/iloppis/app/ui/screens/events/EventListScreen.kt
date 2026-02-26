@@ -3,44 +3,66 @@ package se.iloppis.app.ui.screens.events
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.QrCode
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.buttons.IconButton
 import se.iloppis.app.ui.components.events.SwipeableEventList
 import se.iloppis.app.ui.components.navigation.ILoppisHeader
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
-import se.iloppis.app.utils.events.localEventsStorage
 
 /**
- * Main screen showing list of events (loppisar).
- * Also handles navigation to cashier/scanner screens.
+ * Unified main screen combining Home and Event List.
+ *
+ * This screen displays:
+ * - Quick access buttons for Cashier/Scanner via direct code entry
+ * - Functional event search with 300ms debounce
+ * - Filter chips mapped to real API calls
+ * - List of events with computed status badges
  */
 @Composable
-fun EventSearchScreen() {
+fun EventListScreen() {
     val screen = screenContext()
     val viewModel = eventContext()
     val state = viewModel.uiState
 
-    EventListContent(
+    UnifiedEventListContent(
         state = state,
         onReload = {
-            if(!viewModel.uiState.isLoading) viewModel.onAction(EventListAction.LoadEvents)
+            if (!viewModel.uiState.isLoading) viewModel.onAction(EventListAction.LoadEvents)
         },
+        onSearchChange = { viewModel.onAction(EventListAction.UpdateSearch(it)) },
+        onFilterSelect = { viewModel.onAction(EventListAction.SelectFilter(it)) },
         onEventClick = {
             screen.onAction(
                 ScreenAction.NavigateToPage(
                     ScreenPage.EventsDetailPage(it)
+                )
+            )
+        },
+        onCashierClick = {
+            screen.onAction(
+                ScreenAction.NavigateToPage(
+                    ScreenPage.CodeEntry("CASHIER")
+                )
+            )
+        },
+        onScannerClick = {
+            screen.onAction(
+                ScreenAction.NavigateToPage(
+                    ScreenPage.CodeEntry("SCANNER")
                 )
             )
         }
@@ -48,43 +70,99 @@ fun EventSearchScreen() {
 }
 
 /**
- * Main content layout for the event list.
+ * Unified content layout combining Home buttons and Event List.
  */
 @Composable
-private fun EventListContent(
+private fun UnifiedEventListContent(
     state: EventListUiState,
     onReload: () -> Unit,
-    onEventClick: (Event) -> Unit
+    onSearchChange: (String) -> Unit,
+    onFilterSelect: (EventFilterChip) -> Unit,
+    onEventClick: (Event) -> Unit,
+    onCashierClick: () -> Unit,
+    onScannerClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
             .statusBarsPadding()
     ) {
         // Header
-        ILoppisHeader(R.string.pages_search)
+        ILoppisHeader(R.string.pages_home)
 
-        // Search bar
-        SearchBar()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            // Quick access buttons for Cashier/Scanner
+            ToolAccessButtons(
+                onCashierClick = onCashierClick,
+                onScannerClick = onScannerClick
+            )
 
-        // Filter chips
-        FilterChips()
+            Spacer(modifier = Modifier.height(14.dp))
 
-        // Content based on state
-        EventListBody(
-            state = state,
-            onReload = onReload,
-            onEventClick = onEventClick
-        )
+            // Functional Search bar
+            SearchBar(
+                query = state.searchQuery,
+                onQueryChange = onSearchChange
+            )
+
+            // Functional Filter chips
+            FilterChips(
+                activeFilter = state.activeFilter,
+                onSelect = onFilterSelect
+            )
+
+            // Content based on state
+            EventListBody(
+                state = state,
+                onReload = onReload,
+                onEventClick = onEventClick,
+            )
+        }
     }
 }
 
+/**
+ * Row with quick access buttons for Cashier and Scanner
+ */
 @Composable
-private fun SearchBar() {
+private fun ToolAccessButtons(
+    onCashierClick: () -> Unit,
+    onScannerClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        IconButton(
+            text = R.string.home_open_cashier,
+            icon = Icons.Outlined.Payments
+        ) { onCashierClick() }
+
+        IconButton(
+            text = R.string.home_open_scanner,
+            colors = ButtonDefaults.buttonColors().copy(
+                containerColor = MaterialTheme.colorScheme.secondary
+            ),
+            icon = Icons.Outlined.QrCode
+        ) { onScannerClick() }
+    }
+}
+
+/**
+ * Functional search bar wired to ViewModel.
+ */
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
     OutlinedTextField(
-        value = "",
-        onValueChange = {},
+        value = query,
+        onValueChange = onQueryChange,
         placeholder = { Text(stringResource(R.string.search_placeholder)) },
         modifier = Modifier
             .fillMaxWidth()
@@ -94,35 +172,45 @@ private fun SearchBar() {
     )
 }
 
+/**
+ * Functional filter chips wired to ViewModel.
+ */
 @Composable
-private fun FilterChips() {
+private fun FilterChips(
+    activeFilter: EventFilterChip,
+    onSelect: (EventFilterChip) -> Unit
+) {
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(bottom = 16.dp)
     ) {
         item {
             FilterChip(
-                selected = true,
-                onClick = {},
-                label = { Text(stringResource(R.string.filter_all)) })
+                selected = activeFilter == EventFilterChip.ALL,
+                onClick = { onSelect(EventFilterChip.ALL) },
+                label = { Text(stringResource(R.string.filter_all)) }
+            )
         }
         item {
             FilterChip(
-                selected = false,
-                onClick = {},
-                label = { Text(stringResource(R.string.filter_open)) })
+                selected = activeFilter == EventFilterChip.UPCOMING,
+                onClick = { onSelect(EventFilterChip.UPCOMING) },
+                label = { Text(stringResource(R.string.filter_upcoming)) }
+            )
         }
         item {
             FilterChip(
-                selected = false,
-                onClick = {},
-                label = { Text(stringResource(R.string.filter_upcoming)) })
+                selected = activeFilter == EventFilterChip.ONGOING,
+                onClick = { onSelect(EventFilterChip.ONGOING) },
+                label = { Text(stringResource(R.string.filter_ongoing)) }
+            )
         }
         item {
             FilterChip(
-                selected = false,
-                onClick = {},
-                label = { Text(stringResource(R.string.filter_past)) })
+                selected = activeFilter == EventFilterChip.PAST,
+                onClick = { onSelect(EventFilterChip.PAST) },
+                label = { Text(stringResource(R.string.filter_past)) }
+            )
         }
     }
 }
@@ -131,9 +219,8 @@ private fun FilterChips() {
 private fun EventListBody(
     state: EventListUiState,
     onReload: () -> Unit,
-    onEventClick: (Event) -> Unit
+    onEventClick: (Event) -> Unit,
 ) {
-    val storage = localEventsStorage()
     PullToRefreshBox(
         isRefreshing = false,
         onRefresh = onReload
@@ -145,11 +232,7 @@ private fun EventListBody(
             else -> SwipeableEventList(
                 events = state.events,
                 enableEndToStart = false,
-                enableStartToEnd = true,
-                onStartToEnd = {
-                    if(storage.contains(it.id)) storage.remove(it.id)
-                    else storage.add(it.id)
-                },
+                enableStartToEnd = false,
                 onAction = onEventClick
             )
         }

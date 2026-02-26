@@ -1,48 +1,41 @@
 package se.iloppis.app.ui.screens.events
 
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.navigation.AppScreen
-import se.iloppis.app.ui.screens.ScreenModel
+
+/**
+ * Filter chip options for the event list.
+ */
+enum class EventFilterChip {
+    ALL,
+    UPCOMING,
+    ONGOING,
+    PAST,
+}
 
 /**
  * UI state for the event list screen.
  */
 data class EventListUiState(
+    /** Current list of events to display */
     val events: List<Event> = emptyList(),
+    /** Whether the list is loading */
     val isLoading: Boolean = true,
+    /** Error message if loading failed */
     val errorMessage: String? = null,
-    val selectedEvent: Event? = null,
-    val codeEntryState: CodeEntryState? = null,
-    val currentScreen: AppScreen = AppScreen.EventList
+    /** Current search query text */
+    val searchQuery: String = "",
+    /** Currently active filter chip */
+    val activeFilter: EventFilterChip = EventFilterChip.ALL,
 )
-
-/**
- * State for code entry dialog.
- */
-data class CodeEntryState(
-    val mode: CodeEntryMode,
-    val event: Event,
-    val isValidating: Boolean = false,
-    val errorMessage: String? = null
-)
-
-/**
- * Code entry mode - cashier or scanner.
- */
-enum class CodeEntryMode {
-    CASHIER,
-    SCANNER
-}
 
 /**
  * Actions that can be performed on the event list screen.
  */
 sealed class EventListAction {
+    /** Load/reload events with current filter */
     data object LoadEvents : EventListAction()
-    data class SelectEvent(val event: Event) : EventListAction()
-    data object DismissEventDetail : EventListAction()
-    data class StartCodeEntry(val mode: CodeEntryMode, val event: Event) : EventListAction()
-    data object DismissCodeEntry : EventListAction()
-    data class SubmitCode(val state: ScreenModel, val code: String) : EventListAction()
-    data class ValidateCode(val state: ScreenModel, val code: String) : EventListAction()
+    /** Update search query text */
+    data class UpdateSearch(val query: String) : EventListAction()
+    /** Change active filter chip */
+    data class SelectFilter(val filter: EventFilterChip) : EventListAction()
 }

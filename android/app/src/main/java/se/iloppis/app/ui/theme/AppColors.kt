@@ -63,4 +63,19 @@ object AppColors {
     // Badge colors - Default/Closed state
     val BadgeDefaultBackground = Color(0xFFE0E0E0)
     val BadgeDefaultText = Color(0xFF757575)
+
+    // Badge colors - Ongoing (Pågående) state - same as Open
+    val BadgeOngoingBackground = BadgeOpenBackground
+    val BadgeOngoingText = BadgeOpenText
+
+    // Badge colors - Info/Upcoming (Kommande) state
+    val BadgeInfoBackground = Color(0xFFBBDEFB)
+    val BadgeInfoText = Color(0xFF1565C0)
+
+    // Splash screen
+    val SplashBackground = Success  // #4CAF50
+    val OnSplashBackground = Color.White
+
+    // On-button text colors
+    val OnButtonPrimary = Color.White
 }

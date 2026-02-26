@@ -1,5 +1,7 @@
 package se.iloppis.app.ui.screens.events
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,59 +15,116 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.OpenInBrowser
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.QrCode
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.ui.components.StarIcon
-import se.iloppis.app.ui.components.StateBadge
+import se.iloppis.app.domain.model.displayStatus
+import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.DisplayStatusBadge
 import se.iloppis.app.ui.components.map.Map
 import se.iloppis.app.ui.components.text.MarkdownText
 import se.iloppis.app.ui.screens.screenContext
-import se.iloppis.app.utils.events.localEventsStorage
+import se.iloppis.app.ui.states.ScreenAction
+import se.iloppis.app.ui.theme.AppColors
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsDetailsScreen(event: Event)  {
+fun EventsDetailsScreen(event: Event) {
     val screen = screenContext()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            item {
-                Box(modifier = Modifier.fillMaxWidth().height(325.dp)) {
-                    Map(
-                        event,
-                        modifier = Modifier
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = event.name,
+                        maxLines = 1
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { screen.popPage() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = stringResource(R.string.button_back)
+                        )
+                    }
                 }
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(color = MaterialTheme.colorScheme.onPrimary)
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Map
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                ) {
+                    Map(event, modifier = Modifier)
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(color = AppColors.Border)
                 )
             }
 
+            // Event details content
             item {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 15.dp)
-                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Spacer(modifier = Modifier.height(7.dp))
                     EventDetailsContent(event)
-                    Spacer(modifier = Modifier.height(14.dp))
                 }
             }
 
-            item {Spacer(modifier = Modifier.height(screen.border.calculateBottomPadding())) }
+            // Action buttons
+            item {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    EventActionButtons(event)
+                }
+            }
+
+            // Tools section
+            item {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    EventToolButtons(event)
+                }
+            }
+
+            // Bottom spacing
+            item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 }
@@ -77,9 +136,9 @@ fun EventsDetailsScreen(event: Event)  {
  */
 @Composable
 private fun EventDetailsContent(event: Event) {
-    val storage = localEventsStorage()
+    // Name row with status badge
     Row(
-        modifier = Modifier.fillMaxWidth().statusBarsPadding(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -88,20 +147,17 @@ private fun EventDetailsContent(event: Event) {
             modifier = Modifier.widthIn(max = 225.dp),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.tertiary
+            color = AppColors.TextPrimary
         )
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if(storage.contains(event.id)) StarIcon()
-            StateBadge(event.state)
-        }
+        DisplayStatusBadge(event.displayStatus())
     }
 
+    Spacer(modifier = Modifier.height(4.dp))
+
+    // Dates
     Text(
         text = event.dates,
-        color = MaterialTheme.colorScheme.surfaceDim
+        color = AppColors.TextSecondary
     )
 
     // Opening hours
@@ -113,41 +169,150 @@ private fun EventDetailsContent(event: Event) {
         ).joinToString(" – ")
         Text(
             text = stringResource(R.string.opening_hours_label, hours),
-            color = MaterialTheme.colorScheme.surfaceDim
+            color = AppColors.TextSecondary
+        )
+    }
+
+    // Location
+    if (event.location.isNotBlank()) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = event.location,
+            color = AppColors.TextSecondary
         )
     }
 
     // Description
-    if(event.description.isNotBlank()) {
-        Spacer(modifier = Modifier.height(12.dp))
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(color = MaterialTheme.colorScheme.onPrimary)
+    if (event.description.isNotBlank()) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(color = AppColors.Border)
         )
         Spacer(modifier = Modifier.height(12.dp))
         MarkdownText(event.description)
     }
+}
 
-    // Follow event button
-    Button(
-        modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors().copy(
-            containerColor = if(!storage.contains(event.id))
-                MaterialTheme.colorScheme.secondary
-            else MaterialTheme.colorScheme.error
-        ),
-        onClick = {
-            if(!storage.contains(event.id)) storage.add(event.id)
-            else storage.remove(event.id)
+
+
+/**
+ * Navigation and website action buttons.
+ */
+@Composable
+private fun EventActionButtons(event: Event) {
+    val context = LocalContext.current
+
+    // Navigate button (Google Maps intent)
+    if (event.latitude != null && event.longitude != null) {
+        Button(
+            onClick = {
+                val uri = Uri.parse(
+                    "geo:${event.latitude},${event.longitude}?q=${event.latitude},${event.longitude}(${Uri.encode(event.name)})"
+                )
+                val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                    setPackage("com.google.android.apps.maps")
+                }
+                if (intent.resolveActivity(context.packageManager) != null) {
+                    context.startActivity(intent)
+                } else {
+                    // Fallback to browser
+                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Info)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Map,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Text(stringResource(R.string.event_detail_navigate))
         }
+    }
+
+    // Website button (browser intent)
+    Button(
+        onClick = {
+            val url = "https://iloppis.se/?event=${event.id}"
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonSecondary)
     ) {
-        Text(
-            text = if(!storage.contains(event.id))
-                stringResource(R.string.store_event_locally)
-            else
-                stringResource(R.string.remove_event_locally),
-            fontWeight = FontWeight.Medium
+        Icon(
+            imageVector = Icons.Outlined.OpenInBrowser,
+            contentDescription = null,
+            modifier = Modifier.padding(end = 8.dp)
         )
+        Text(stringResource(R.string.event_detail_website))
     }
 }
+
+
+
+/**
+ * Tool access buttons: Cashier and Scanner.
+ */
+@Composable
+private fun EventToolButtons(event: Event) {
+    val screen = screenContext()
+
+    // Section header
+    Text(
+        text = stringResource(R.string.event_detail_tools_section),
+        fontSize = 16.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = AppColors.TextPrimary,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Cashier button
+        Button(
+            onClick = {
+                screen.onAction(
+                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry("CASHIER"))
+                )
+            },
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonPrimary)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Payments,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+            Text(stringResource(R.string.home_open_cashier))
+        }
+
+        // Scanner button
+        Button(
+            onClick = {
+                screen.onAction(
+                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry("SCANNER"))
+                )
+            },
+            modifier = Modifier.weight(1f),
+            colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonSecondary)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.QrCode,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+            Text(stringResource(R.string.home_open_scanner))
+        }
+    }
+}
+

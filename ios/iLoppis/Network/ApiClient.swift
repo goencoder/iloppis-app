@@ -59,6 +59,17 @@ struct ApiClient {
         return response.events
     }
 
+    /// Fetch a single event by ID.
+    func getEvent(eventId: String) async throws -> EventDto? {
+        let response: EventListResponse = try await request(
+            path: "v1/events/\(eventId)",
+            method: .get,
+            authorization: nil,
+            body: Optional<EmptyBody>.none
+        )
+        return response.events.first
+    }
+
     func filterEvents(filter: EventFilter) async throws -> [EventDto] {
         let requestBody = EventFilterRequest(filter: filter)
         let response: EventListResponse = try await request(
@@ -74,6 +85,19 @@ struct ApiClient {
         let encodedAlias = ApiClient.encodePathSegment(alias)
         let response: ApiKeyResponse = try await request(
             path: "v1/events/\(eventId)/api-keys/alias/\(encodedAlias)",
+            method: .get,
+            authorization: nil,
+            body: Optional<EmptyBody>.none
+        )
+        return response
+    }
+
+    /// Resolve an alias code without requiring an event ID (flat endpoint).
+    /// Used by quick-access buttons where the event is not yet known.
+    func getApiKeyByAlias(alias: String) async throws -> ApiKeyResponse {
+        let encodedAlias = ApiClient.encodePathSegment(alias)
+        let response: ApiKeyResponse = try await request(
+            path: "v1/api-keys/alias/\(encodedAlias)",
             method: .get,
             authorization: nil,
             body: Optional<EmptyBody>.none
@@ -447,6 +471,7 @@ struct ApiKeyResponse: Codable {
     let type: String?
     let tags: [String]?
     let id: String?
+    let eventId: String?
 }
 
 struct VendorDto: Codable {

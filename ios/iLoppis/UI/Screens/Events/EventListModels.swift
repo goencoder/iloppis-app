@@ -2,7 +2,7 @@ import Foundation
 
 struct CodeEntryState: Equatable {
     var mode: CodeEntryMode
-    var event: Event
+    var event: Event?
     var code: String = ""
     var isValidating: Bool = false
     var errorMessage: String?
@@ -14,7 +14,7 @@ enum AppScreen: Equatable {
     case scanner(event: Event, apiKey: String)
 }
 
-enum EventFilter: Equatable {
+enum EventFilterChip: Equatable {
     case all
     case open
     case upcoming
@@ -30,7 +30,7 @@ struct EventListState: Equatable {
     var isLoading: Bool = false
     var errorMessage: String?
     var searchQuery: String = ""
-    var filter: EventFilter = .all
+    var filter: EventFilterChip = .all
 
     private func applyFilterAndSearch() -> [Event] {
         let filtered: [Event]
@@ -58,7 +58,7 @@ enum EventListAction {
     case loadingFailed(String)
     case selectEvent(Event)
     case dismissEventDetail
-    case startCodeEntry(mode: CodeEntryMode, event: Event)
+    case startCodeEntry(mode: CodeEntryMode, event: Event?)
     case dismissCodeEntry
     case updateCode(String)
     case submitCode(String)
@@ -66,5 +66,5 @@ enum EventListAction {
     case validationFailed(String)
     case navigateBack
     case updateSearch(String)
-    case updateFilter(EventFilter)
+    case updateFilter(EventFilterChip)
 }

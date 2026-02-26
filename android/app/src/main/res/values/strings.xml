@@ -21,10 +21,10 @@
 
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>
-    <string name="filter_saved">Sparade</string>
     <string name="filter_all">Alla</string>
     <string name="filter_open">Öppna</string>
     <string name="filter_upcoming">Kommande</string>
+    <string name="filter_ongoing">Pågående</string>
     <string name="filter_past">Förflutna</string>
     <string name="error_prefix">Fel: %1$s</string>
     <string name="no_events_found">Inga loppisar hittades</string>
@@ -35,6 +35,14 @@
     <string name="state_closed">STÄNGD</string>
     <string name="state_upcoming">KOMMANDE</string>
 
+    <!-- Splash Screen -->
+    <string name="splash_tagline">Tillsammans gör vi Sveriges bästa loppisar!</string>
+
+    <!-- Event Detail Screen -->
+    <string name="event_detail_navigate">Navigera</string>
+    <string name="event_detail_website">Besök på iLoppis.se</string>
+    <string name="event_detail_tools_section">Verktyg</string>
+
     <!-- Event Detail Dialog -->
     <string name="opening_hours_label">Öppettider: %1$s</string>
     <string name="select_mode">Välj läge:</string>
@@ -44,6 +52,25 @@
     <string name="button_ticket_scanner">Biljettskanner</string>
     <string name="button_cancel">Avbryt</string>
     <string name="button_back">Tillbaka</string>
+
+    <!-- Code Entry Screen -->
+    <string name="code_entry_label">Ange kod</string>
+    <string name="code_entry_cashier_hint">Ange kassans kod</string>
+    <string name="code_entry_scanner_hint">Ange skannerns kod</string>
+    <string name="code_entry_placeholder">XXX-YYY</string>
+    <string name="code_entry_error_inactive">Koden är inte aktiv</string>
+    <string name="code_entry_error_wrong_type_cashier">Koden är inte en kassakod</string>
+    <string name="code_entry_error_wrong_type_scanner">Koden är inte en skannerkod</string>
+    <string name="code_entry_error_not_found">Koden hittades inte</string>
+    <string name="code_entry_error_network">Nätverksfel. Kontrollera din anslutning.</string>
+    <string name="verify_button">Verifiera</string>
+
+    <!-- Code Confirmation Screen -->
+    <string name="confirm_event_title">Bekräfta</string>
+    <string name="confirm_event_message">Kod hittade event:</string>
+    <string name="open_cashier_button">Öppna kassa</string>
+    <string name="open_scanner_button">Öppna skanner</string>
+    <string name="confirm_button">Bekräfta</string>
 
     <!-- Code Entry Dialog -->
     <string name="code_entry_title_cashier">Ange kassakod</string>

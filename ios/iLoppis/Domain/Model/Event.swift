@@ -9,4 +9,14 @@ struct Event: Identifiable, Equatable {
     let addressStreet: String?
     let addressCity: String?
     let lifecycleState: String?
-}
+
+    static let placeholder = Event(
+        id: "",
+        name: "",
+        description: nil,
+        startTime: nil,
+        endTime: nil,
+        addressStreet: nil,
+        addressCity: nil,
+        lifecycleState: nil
+    )

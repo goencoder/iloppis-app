@@ -8,6 +8,10 @@ struct EventListScreen: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 12) {
                 header
+                quickAccessButtons
+                    .padding(.horizontal, -16)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 4)
                 searchBar
                 filterRow
                 content
@@ -64,6 +68,42 @@ struct EventListScreen: View {
             .font(.system(size: 28, weight: .bold))
             .foregroundColor(AppColors.textPrimary)
             .padding(.vertical, 8)
+    }
+
+    private var quickAccessButtons: some View {
+        HStack(spacing: 16) {
+            Button(action: { viewModel.onAction(.startCodeEntry(mode: .cashier, event: Event.placeholder)) }) {
+                HStack {
+                    Image(systemName: "creditcard.fill")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(LocalizedStringKey("home_open_cashier"))
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(AppColors.buttonPrimary)
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+
+            Button(action: { viewModel.onAction(.startCodeEntry(mode: .scanner, event: Event.placeholder)) }) {
+                HStack {
+                    Image(systemName: "qrcode")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(LocalizedStringKey("home_open_scanner"))
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(AppColors.buttonSecondary)
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     private var searchBar: some View {

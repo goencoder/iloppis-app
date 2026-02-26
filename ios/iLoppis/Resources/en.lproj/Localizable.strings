@@ -19,6 +19,8 @@
 "select_mode" = "Select mode:";
 "button_open_cashier" = "Open cashier";
 "button_ticket_scanner" = "Ticket scanner";
+"home_open_cashier" = "Open cashier";
+"home_open_scanner" = "Open scanner";
 "button_cancel" = "Cancel";
 "button_back" = "Back";
 

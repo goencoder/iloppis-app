@@ -55,6 +55,18 @@
     <string name="code_invalid">Invalid code. Check and try again.</string>
     <string name="code_validating">Verifying…</string>
 
+    <!-- Code Entry Screen -->
+    <string name="code_entry_label">Enter code</string>
+    <string name="code_entry_cashier_hint">Enter the cashier code</string>
+    <string name="code_entry_scanner_hint">Enter the scanner code</string>
+    <string name="code_entry_placeholder">XXX-YYY</string>
+    <string name="code_entry_error_inactive">The code is not active</string>
+    <string name="code_entry_error_wrong_type_cashier">The code is not a cashier code</string>
+    <string name="code_entry_error_wrong_type_scanner">The code is not a scanner code</string>
+    <string name="code_entry_error_not_found">Code not found</string>
+    <string name="code_entry_error_network">Network error. Check your connection.</string>
+    <string name="verify_button">Verify</string>
+
     <!-- Cashier Selection Screen -->
     <string name="cashier_selection_header">Choose an event to act cashier for</string>
 

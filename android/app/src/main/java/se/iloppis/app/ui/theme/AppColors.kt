@@ -74,4 +74,8 @@ object AppColors {
 
     // Splash screen
     val SplashBackground = Success  // #4CAF50
+    val OnSplashBackground = Color.White
+
+    // On-button text colors
+    val OnButtonPrimary = Color.White
 }

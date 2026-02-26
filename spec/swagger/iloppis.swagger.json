@@ -6717,7 +6717,7 @@
           "description": "SendGrid's unique message ID for this email."
         },
         "timestamp": {
-          "type": "string",
+          "type": "integer",
           "format": "int64",
           "description": "Unix timestamp of the event."
         },

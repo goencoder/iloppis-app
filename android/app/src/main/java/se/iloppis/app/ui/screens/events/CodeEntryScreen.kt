@@ -143,7 +143,7 @@ fun CodeEntryScreen(mode: String) {
                     IconButton(onClick = { screen.popPage() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
+                            contentDescription = stringResource(R.string.button_back)
                         )
                     }
                 }
@@ -174,7 +174,7 @@ fun CodeEntryScreen(mode: String) {
                 value = displayCode,
                 onValueChange = { onCodeChange(it) },
                 label = { Text(stringResource(R.string.code_entry_label)) },
-                placeholder = { Text("XXX-YYY") },
+                placeholder = { Text(stringResource(R.string.code_entry_placeholder)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
@@ -220,7 +220,7 @@ fun CodeEntryScreen(mode: String) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = AppColors.OnButtonPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
@@ -236,7 +236,7 @@ fun CodeEntryScreen(mode: String) {
                 )
             ) {
                 Text(
-                    stringResource(R.string.cancel_button),
+                    stringResource(R.string.button_cancel),
                     color = AppColors.TextPrimary
                 )
             }

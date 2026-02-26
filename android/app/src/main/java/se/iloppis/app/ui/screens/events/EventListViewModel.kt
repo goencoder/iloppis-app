@@ -39,6 +39,7 @@ class EventListViewModel : ViewModel() {
         private set
 
     private var searchJob: Job? = null
+    private var loadJob: Job? = null
 
     init {
         loadEvents()
@@ -77,7 +78,8 @@ class EventListViewModel : ViewModel() {
      * Load events based on current search + filter state.
      */
     private fun loadEvents() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null)
             try {
                 val events = loadFilteredEvents()

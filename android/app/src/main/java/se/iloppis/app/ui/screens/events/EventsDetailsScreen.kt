@@ -26,7 +26,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -67,7 +66,7 @@ fun EventsDetailsScreen(event: Event) {
                     IconButton(onClick = { screen.popPage() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
+                            contentDescription = stringResource(R.string.button_back)
                         )
                     }
                 }
@@ -92,7 +91,7 @@ fun EventsDetailsScreen(event: Event) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(color = MaterialTheme.colorScheme.onPrimary)
+                        .background(color = AppColors.Border)
                 )
             }
 
@@ -305,7 +304,7 @@ private fun EventToolButtons(event: Event) {
                 )
             },
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonSecondary)
         ) {
             Icon(
                 imageVector = Icons.Outlined.QrCode,

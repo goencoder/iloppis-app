@@ -57,14 +57,13 @@
     <string name="code_entry_label">Ange kod</string>
     <string name="code_entry_cashier_hint">Ange kassans kod</string>
     <string name="code_entry_scanner_hint">Ange skannerns kod</string>
+    <string name="code_entry_placeholder">XXX-YYY</string>
     <string name="code_entry_error_inactive">Koden är inte aktiv</string>
     <string name="code_entry_error_wrong_type_cashier">Koden är inte en kassakod</string>
     <string name="code_entry_error_wrong_type_scanner">Koden är inte en skannerkod</string>
     <string name="code_entry_error_not_found">Koden hittades inte</string>
     <string name="code_entry_error_network">Nätverksfel. Kontrollera din anslutning.</string>
     <string name="verify_button">Verifiera</string>
-    <string name="cancel_button">Avbryt</string>
-    <string name="back">Tillbaka</string>
 
     <!-- Code Confirmation Screen -->
     <string name="confirm_event_title">Bekräfta</string>

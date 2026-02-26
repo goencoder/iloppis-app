@@ -29,8 +29,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,7 +37,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -62,6 +59,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -70,6 +69,8 @@ import kotlinx.coroutines.delay
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.CameraScanner
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.dialogs.ManualTicketDialog
 import se.iloppis.app.ui.theme.AppColors
 import java.time.ZoneId
@@ -89,14 +90,15 @@ fun ScannerScreen(
     apiKey: String,
     onBack: () -> Unit
 ) {
-    val viewModel = remember(event.id, apiKey) {
-        ScannerViewModel(
+    val viewModel: ScannerViewModel = viewModel(
+        key = "scanner-${event.id}",
+        factory = ScannerViewModel.factory(
             eventId = event.id,
             eventName = event.name,
             apiKey = apiKey
         )
-    }
-    val uiState = viewModel.uiState
+    )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     // Camera permission state
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
@@ -191,31 +193,27 @@ fun ScannerScreen(
                 when {
                     cameraPermissionState.status.isGranted -> {
                         // Camera permission granted - show scan toggle
-                        Button(
+                        AppButton(
+                            text = if (isScanningActive)
+                                stringResource(R.string.scanner_button_pause)
+                            else
+                                stringResource(R.string.scanner_button_scan),
                             onClick = { isScanningActive = !isScanningActive },
                             enabled = !uiState.isProcessing,
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isScanningActive) AppColors.Warning else AppColors.Primary
-                            )
-                        ) {
-                            Text(
-                                if (isScanningActive) 
-                                    stringResource(R.string.scanner_button_pause) 
-                                else 
-                                    stringResource(R.string.scanner_button_scan)
-                            )
-                        }
+                            variant = AppButtonVariant.Primary,
+                            containerColor = if (isScanningActive) AppColors.Warning else AppColors.Primary,
+                            contentColor = AppColors.OnButtonPrimary
+                        )
                     }
                     cameraPermissionState.status.shouldShowRationale -> {
                         // Permission denied but can ask again
-                        Button(
+                        AppButton(
+                            text = stringResource(R.string.scanner_button_grant_permission),
                             onClick = { cameraPermissionState.launchPermissionRequest() },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary)
-                        ) {
-                            Text(stringResource(R.string.scanner_button_grant_permission))
-                        }
+                            variant = AppButtonVariant.Primary
+                        )
                         Text(
                             text = stringResource(R.string.scanner_permission_rationale),
                             style = MaterialTheme.typography.bodySmall,
@@ -226,29 +224,25 @@ fun ScannerScreen(
                     }
                     else -> {
                         // First time or permission permanently denied
-                        Button(
+                        AppButton(
+                            text = stringResource(R.string.scanner_button_enable_camera),
                             onClick = { cameraPermissionState.launchPermissionRequest() },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary)
-                        ) {
-                            Text(stringResource(R.string.scanner_button_enable_camera))
-                        }
+                            variant = AppButtonVariant.Primary
+                        )
                     }
                 }
 
                 // Manual entry is always available as fallback
-                OutlinedButton(
-                    onClick = { 
-                        viewModel.onAction(ScannerAction.RequestManualEntry) 
-                    },
+                AppButton(
+                    text = stringResource(R.string.scanner_button_manual_entry),
+                    onClick = { viewModel.onAction(ScannerAction.RequestManualEntry) },
                     enabled = !uiState.isProcessing,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = AppColors.Primary
-                    )
-                ) {
-                    Text(stringResource(R.string.scanner_button_manual_entry))
-                }
+                    variant = AppButtonVariant.Outlined,
+                    contentColor = AppColors.Primary,
+                    borderColor = AppColors.Primary
+                )
             }
 
             // Total scans counter
@@ -608,27 +602,18 @@ private fun ScanHistory(
                 // Load more button
                 if (hasMoreHistory) {
                     item {
-                        Button(
+                        AppButton(
+                            text = stringResource(R.string.scanner_history_load_more),
                             onClick = onLoadMore,
                             enabled = !isLoadingHistory,
+                            loading = isLoadingHistory,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = AppColors.Primary.copy(alpha = 0.1f),
-                                contentColor = AppColors.Primary
-                            )
-                        ) {
-                            if (isLoadingHistory) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
-                                    strokeWidth = 2.dp,
-                                    color = AppColors.Primary
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                            }
-                            Text(stringResource(R.string.scanner_history_load_more))
-                        }
+                            variant = AppButtonVariant.Secondary,
+                            containerColor = AppColors.Primary.copy(alpha = 0.1f),
+                            contentColor = AppColors.Primary
+                        )
                     }
                 }
             }
@@ -917,15 +902,12 @@ private fun TicketDetailsDialog(
                 }
 
                 // Close button
-                Button(
+                AppButton(
+                    text = stringResource(R.string.scanner_button_close),
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.Primary
-                    )
-                ) {
-                    Text(stringResource(R.string.scanner_button_close))
-                }
+                    variant = AppButtonVariant.Primary
+                )
             }
         }
     }
@@ -1065,16 +1047,14 @@ private fun CurrentGroupCard(
                     }
                     
                     // Commit button
-                    Button(
+                    AppButton(
+                        text = stringResource(R.string.scanner_group_commit_button),
                         onClick = onCommitGroup,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.Success,
-                            contentColor = AppColors.DialogBackground
-                        )
-                    ) {
-                        Text(stringResource(R.string.scanner_group_commit_button))
-                    }
+                        variant = AppButtonVariant.Success,
+                        containerColor = AppColors.Success,
+                        contentColor = AppColors.OnButtonPrimary
+                    )
                 }
             }
         }

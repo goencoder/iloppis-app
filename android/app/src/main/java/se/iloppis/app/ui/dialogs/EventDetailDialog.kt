@@ -16,6 +16,9 @@ import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonSize
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
 import se.iloppis.app.utils.storage.localStorage
@@ -49,12 +52,13 @@ fun EventDetailDialog(
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    text = stringResource(R.string.button_back),
-                    color = AppColors.ButtonDanger
-                )
-            }
+            AppButton(
+                text = stringResource(R.string.button_back),
+                onClick = onDismiss,
+                variant = AppButtonVariant.Text,
+                contentColor = AppColors.ButtonDanger,
+                size = AppButtonSize.Small
+            )
         }
     )
 }
@@ -96,31 +100,31 @@ private fun EventDetailContent(event: Event) {
                         typography = markdownTypography(
                             h1 = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 38.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = AppColors.TextSecondary
                             ),
                             h2 = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 34.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = AppColors.TextSecondary
                             ),
                             h3 = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 30.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = AppColors.TextSecondary
                             ),
                             h4 = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 26.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = AppColors.TextSecondary
                             ),
                             h5 = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 22.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = AppColors.TextSecondary
                             ),
                             h6 = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 18.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = AppColors.TextSecondary
                             ),
                             paragraph = MaterialTheme.typography.bodyLarge.copy(
                                 fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = AppColors.TextSecondary
                             )
                         )
                     )
@@ -151,27 +155,22 @@ private fun EventDetailContent(event: Event) {
             }
         }
 
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors().copy(
-                containerColor = if(!storedEvents.contains(event.id))
-                    MaterialTheme.colorScheme.onSecondary
-                else MaterialTheme.colorScheme.primary
-            ),
+        val isStored = storedEvents.contains(event.id)
+        AppButton(
+            text = if (!isStored) {
+                stringResource(R.string.store_event_locally)
+            } else {
+                stringResource(R.string.remove_event_locally)
+            },
             onClick = {
-                if(!storedEvents.contains(event.id)) storedEvents.add(event.id)
-                else storedEvents.remove(event.id)
+                if (!isStored) storedEvents.add(event.id) else storedEvents.remove(event.id)
                 storage.putJson(key, storedEvents.toSet())
-            }
-        ) {
-            Text(
-                text = if(!storedEvents.contains(event.id))
-                    stringResource(R.string.store_event_locally)
-                else
-                    stringResource(R.string.remove_event_locally),
-                fontWeight = FontWeight.Medium
-            )
-        }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            variant = AppButtonVariant.Secondary,
+            containerColor = if (!isStored) AppColors.BadgeOpenBackground else AppColors.Info,
+            contentColor = if (!isStored) AppColors.TextPrimary else AppColors.OnButtonPrimary
+        )
     }
 }
 

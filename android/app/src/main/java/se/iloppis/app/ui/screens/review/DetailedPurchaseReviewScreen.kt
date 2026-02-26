@@ -10,7 +10,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,8 +23,12 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import se.iloppis.app.R
 import se.iloppis.app.data.models.RejectedItemWithDetails
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonSize
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -41,7 +50,7 @@ fun DetailedPurchaseReviewScreen(
     viewModel: DetailedPurchaseReviewViewModel,
     onBack: () -> Unit
 ) {
-    val uiState = viewModel.uiState
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     // Handle navigation on success/deletion
@@ -60,13 +69,14 @@ fun DetailedPurchaseReviewScreen(
     }
 
     // Seller editor dialog
-    if (uiState.showSellerEditor && uiState.editingItemIndex != null) {
+    val editingIndex = uiState.editingItemIndex
+    if (uiState.showSellerEditor && editingIndex != null) {
         SellerEditorDialog(
             currentSeller = uiState.editingSellerNumber,
             validSellers = uiState.validSellers,
             onSellerChange = { newSeller ->
                 viewModel.onAction(DetailedPurchaseAction.EditSeller(
-                    itemIndex = uiState.editingItemIndex,
+                    itemIndex = editingIndex,
                     newSeller = newSeller
                 ))
             },
@@ -85,36 +95,42 @@ fun DetailedPurchaseReviewScreen(
                 Text(stringResource(R.string.detailed_review_delete_confirmation_message))
             },
             confirmButton = {
-                TextButton(
+                AppButton(
+                    text = stringResource(R.string.detailed_review_delete_confirm),
                     onClick = {
                         showDeleteConfirmation = false
                         viewModel.onAction(DetailedPurchaseAction.DeletePurchase)
                     },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(stringResource(R.string.detailed_review_delete_confirm))
-                }
+                    variant = AppButtonVariant.Text,
+                    contentColor = AppColors.Error,
+                    size = AppButtonSize.Small
+                )
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteConfirmation = false }) {
-                    Text(stringResource(R.string.button_cancel))
-                }
+                AppButton(
+                    text = stringResource(R.string.button_cancel),
+                    onClick = { showDeleteConfirmation = false },
+                    variant = AppButtonVariant.Text,
+                    size = AppButtonSize.Small
+                )
             }
         )
     }
 
-    // Error snackbar
-    if (uiState.error != null) {
+    // Error dialog
+    val currentError = uiState.error
+    if (currentError != null) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(DetailedPurchaseAction.DismissError) },
-            title = { Text("Fel") },
-            text = { Text(uiState.error) },
+            title = { Text(stringResource(R.string.common_error_title)) },
+            text = { Text(currentError.asString()) },
             confirmButton = {
-                TextButton(onClick = { viewModel.onAction(DetailedPurchaseAction.DismissError) }) {
-                    Text("OK")
-                }
+                AppButton(
+                    text = stringResource(R.string.common_ok),
+                    onClick = { viewModel.onAction(DetailedPurchaseAction.DismissError) },
+                    variant = AppButtonVariant.Text,
+                    size = AppButtonSize.Small
+                )
             }
         )
     }
@@ -123,9 +139,10 @@ fun DetailedPurchaseReviewScreen(
         topBar = {
             TopAppBar(
                 title = { 
+                    val currentPurchase = uiState.purchase
                     Text(
-                        text = if (uiState.purchase != null) {
-                            stringResource(R.string.detailed_review_title_with_id, uiState.purchase.purchaseId.takeLast(6))
+                        text = if (currentPurchase != null) {
+                            stringResource(R.string.detailed_review_title_with_id, currentPurchase.purchaseId.takeLast(6))
                         } else {
                             stringResource(R.string.detailed_review_title_generic)
                         }
@@ -147,7 +164,7 @@ fun DetailedPurchaseReviewScreen(
         bottomBar = {
             if (!uiState.isLoading && !uiState.purchaseNotFound) {
                 BottomAppBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = AppColors.CardBackground,
                     tonalElevation = 8.dp
                 ) {
                     Row(
@@ -156,35 +173,30 @@ fun DetailedPurchaseReviewScreen(
                             .padding(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        OutlinedButton(
+                        AppButton(
+                            text = stringResource(R.string.detailed_review_button_delete_purchase),
                             onClick = { showDeleteConfirmation = true },
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(stringResource(R.string.detailed_review_button_delete_purchase))
-                        }
-
-                        Button(
-                            onClick = { viewModel.onAction(DetailedPurchaseAction.RetryUpload) },
-                            enabled = !uiState.isUploading
-                        ) {
-                            if (uiState.isUploading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary
+                            variant = AppButtonVariant.Danger,
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
                             }
-                            Text(if (uiState.isUploading) stringResource(R.string.detailed_review_button_retry_uploading) else stringResource(R.string.detailed_review_button_retry))
-                        }
+                        )
+
+                        AppButton(
+                            text = if (uiState.isUploading) {
+                                stringResource(R.string.detailed_review_button_retry_uploading)
+                            } else {
+                                stringResource(R.string.detailed_review_button_retry)
+                            },
+                            onClick = { viewModel.onAction(DetailedPurchaseAction.RetryUpload) },
+                            enabled = !uiState.isUploading,
+                            loading = uiState.isUploading,
+                            variant = AppButtonVariant.Primary
+                        )
                     }
                 }
             }
@@ -213,7 +225,7 @@ fun DetailedPurchaseReviewScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "❌",
+                            text = stringResource(R.string.icon_error),
                             fontSize = 48.sp
                         )
                         Text(
@@ -275,7 +287,7 @@ private fun PurchaseDetailContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = AppColors.BadgeUpcomingBackground
                 )
             ) {
                 Column(
@@ -297,7 +309,7 @@ private fun PurchaseDetailContent(
                         Text(
                             text = stringResource(R.string.detailed_review_unsaved_changes),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.tertiary,
+                            color = AppColors.TextPrimary,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -369,8 +381,15 @@ private fun ItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
+                    val statusIcon = stringResource(
+                        if (isSellerValid) R.string.icon_success else R.string.icon_error
+                    )
                     Text(
-                        text = stringResource(R.string.detailed_review_seller_with_status, item.seller, if (isSellerValid) "✅" else "❌"),
+                        text = stringResource(
+                            R.string.detailed_review_seller_with_status,
+                            item.seller,
+                            statusIcon
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
                     )
@@ -385,20 +404,20 @@ private fun ItemCard(
             if (rejectedItem.hasPrimaryError) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.errorContainer,
+                    color = AppColors.ErrorContainer,
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
-                        text = "❌ ${rejectedItem.reason}",
+                        text = stringResource(R.string.review_error_prefix, rejectedItem.reason),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(8.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer
+                        color = AppColors.OnErrorContainer
                     )
                 }
             } else if (rejectedItem.isCollateralDamage) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = AppColors.SurfaceVariant,
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
@@ -414,35 +433,34 @@ private fun ItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(
+                AppButton(
+                    text = stringResource(R.string.detailed_review_button_change_seller),
                     onClick = onEditSeller,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.detailed_review_button_change_seller))
-                }
-
-                if (canRemove) {
-                    OutlinedButton(
-                        onClick = onRemoveItem,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.Outlined,
+                    leadingIcon = {
                         Icon(
-                            imageVector = Icons.Default.Delete,
+                            imageVector = Icons.Default.Edit,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.detailed_review_button_remove))
                     }
+                )
+
+                if (canRemove) {
+                    AppButton(
+                        text = stringResource(R.string.detailed_review_button_remove),
+                        onClick = onRemoveItem,
+                        modifier = Modifier.weight(1f),
+                        variant = AppButtonVariant.Danger,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -475,24 +493,25 @@ private fun SellerEditorDialog(
                         text = stringResource(R.string.dialog_seller_editor_valid_sellers, 
                             validSellers.sorted().take(10).joinToString(", ") + if (validSellers.size > 10) "..." else ""),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AppColors.TextSecondary
                     )
                 }
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    onSellerChange(sellerInput)
-                }
-            ) {
-                Text(stringResource(R.string.dialog_seller_editor_save))
-            }
+            AppButton(
+                text = stringResource(R.string.dialog_seller_editor_save),
+                onClick = { onSellerChange(sellerInput) },
+                variant = AppButtonVariant.Primary
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.button_cancel))
-            }
+            AppButton(
+                text = stringResource(R.string.button_cancel),
+                onClick = onDismiss,
+                variant = AppButtonVariant.Text,
+                size = AppButtonSize.Small
+            )
         }
     )
 }

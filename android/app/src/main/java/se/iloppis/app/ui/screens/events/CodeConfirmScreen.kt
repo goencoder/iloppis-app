@@ -14,6 +14,8 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.domain.model.displayStatus
 import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.components.DisplayStatusBadge
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
@@ -127,12 +129,19 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: String) {
             }
 
             // Confirm button
-            Button(
+            AppButton(
+                text = stringResource(
+                    when (mode) {
+                        "CASHIER" -> R.string.open_cashier_button
+                        "SCANNER" -> R.string.open_scanner_button
+                        else -> R.string.confirm_button
+                    }
+                ),
                 onClick = {
                     val toolPage = when (mode) {
                         "CASHIER" -> ScreenPage.Cashier(event, apiKey)
                         "SCANNER" -> ScreenPage.Scanner(event, apiKey)
-                        else -> return@Button
+                        else -> return@AppButton
                     }
                     screen.onAction(
                         ScreenAction.NavigateToPage(toolPage, true)
@@ -140,33 +149,19 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: String) {
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-            ) {
-                Text(
-                    stringResource(
-                        when (mode) {
-                            "CASHIER" -> R.string.open_cashier_button
-                            "SCANNER" -> R.string.open_scanner_button
-                            else -> R.string.confirm_button
-                        }
-                    )
-                )
-            }
+                    .padding(bottom = 8.dp),
+                variant = AppButtonVariant.Primary
+            )
 
             // Cancel button
-            Button(
+            AppButton(
+                text = stringResource(R.string.button_cancel),
                 onClick = { screen.popPage() },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.CardBackground
-                )
-            ) {
-                Text(
-                    stringResource(R.string.button_cancel),
-                    color = AppColors.TextPrimary
-                )
-            }
+                variant = AppButtonVariant.Secondary,
+                containerColor = AppColors.CardBackground,
+                contentColor = AppColors.TextPrimary
+            )
         }
     }
 }
-

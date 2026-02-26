@@ -1,14 +1,15 @@
 package se.iloppis.app.ui.screens.review
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import se.iloppis.app.R
 import se.iloppis.app.data.PurchaseRecoveryManager
 import se.iloppis.app.data.RejectedPurchaseStore
 import se.iloppis.app.data.SoldItemFileStore
@@ -22,6 +23,7 @@ import se.iloppis.app.network.cashier.SoldItemObject
 import se.iloppis.app.network.cashier.SoldItemsRequest
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.ILoppisClient
+import se.iloppis.app.ui.util.UiText
 
 private const val TAG = "DetailedPurchaseReviewVM"
 
@@ -41,8 +43,17 @@ class DetailedPurchaseReviewViewModel(
     private val apiKey: String
 ) : ViewModel() {
 
-    var uiState by mutableStateOf(DetailedPurchaseUiState())
-        private set
+    companion object {
+        fun factory(purchaseId: String, eventId: String, apiKey: String) =
+            object : androidx.lifecycle.ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    DetailedPurchaseReviewViewModel(purchaseId, eventId, apiKey) as T
+            }
+    }
+
+    private val _uiState = MutableStateFlow(DetailedPurchaseUiState())
+    val uiState: StateFlow<DetailedPurchaseUiState> = _uiState.asStateFlow()
 
     private val api: CashierAPI = ILoppisClient(clientConfig()).create()
     // Use global singleton VendorRepository (initialized by CashierViewModel)
@@ -59,8 +70,8 @@ class DetailedPurchaseReviewViewModel(
 
             if (purchase == null) {
                 withContext(Dispatchers.Main) {
-                    uiState = uiState.copy(
-                        error = "Köpet hittades inte",
+                    _uiState.value = _uiState.value.copy(
+                        error = UiText.StringResource(R.string.review_error_purchase_not_found),
                         purchaseNotFound = true
                     )
                 }
@@ -68,7 +79,7 @@ class DetailedPurchaseReviewViewModel(
             }
 
             withContext(Dispatchers.Main) {
-                uiState = uiState.copy(
+                _uiState.value = _uiState.value.copy(
                     purchase = purchase,
                     items = purchase.items.toMutableList(),
                     isLoading = false
@@ -82,7 +93,7 @@ class DetailedPurchaseReviewViewModel(
             try {
                 val sellers = VendorRepository.getOrFetch()
                 withContext(Dispatchers.Main) {
-                    uiState = uiState.copy(validSellers = sellers)
+                    _uiState.value = _uiState.value.copy(validSellers = sellers)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load valid sellers", e)
@@ -103,8 +114,8 @@ class DetailedPurchaseReviewViewModel(
     }
 
     private fun openSellerEditor(itemIndex: Int) {
-        val item = uiState.items.getOrNull(itemIndex) ?: return
-        uiState = uiState.copy(
+        val item = _uiState.value.items.getOrNull(itemIndex) ?: return
+        _uiState.value = _uiState.value.copy(
             showSellerEditor = true,
             editingItemIndex = itemIndex,
             editingSellerNumber = item.item.seller.toString()
@@ -112,7 +123,7 @@ class DetailedPurchaseReviewViewModel(
     }
 
     private fun closeSellerEditor() {
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             showSellerEditor = false,
             editingItemIndex = null,
             editingSellerNumber = ""
@@ -122,17 +133,17 @@ class DetailedPurchaseReviewViewModel(
     private fun editSellerNumber(itemIndex: Int, newSellerStr: String) {
         val newSeller = newSellerStr.toIntOrNull()
         if (newSeller == null || newSeller <= 0) {
-            uiState = uiState.copy(error = "Ogiltigt säljarnummer")
+            _uiState.value = _uiState.value.copy(error = UiText.StringResource(R.string.review_error_invalid_seller))
             return
         }
 
         // Validate against valid sellers if available
-        if (uiState.validSellers.isNotEmpty() && newSeller !in uiState.validSellers) {
-            uiState = uiState.copy(error = "Säljare $newSeller är inte godkänd för detta event")
+        if (_uiState.value.validSellers.isNotEmpty() && newSeller !in _uiState.value.validSellers) {
+            _uiState.value = _uiState.value.copy(error = UiText.StringResource(R.string.review_error_seller_not_approved, listOf(newSeller)))
             return
         }
 
-        val updatedItems = uiState.items.toMutableList()
+        val updatedItems = _uiState.value.items.toMutableList()
         val oldItem = updatedItems.getOrNull(itemIndex) ?: return
 
         // Update the item with new seller number
@@ -144,7 +155,7 @@ class DetailedPurchaseReviewViewModel(
         )
 
         updatedItems[itemIndex] = updatedRejectedItem
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             items = updatedItems,
             hasUnsavedChanges = true,
             showSellerEditor = false,
@@ -154,15 +165,15 @@ class DetailedPurchaseReviewViewModel(
     }
 
     private fun removeItem(itemIndex: Int) {
-        if (uiState.items.size <= 1) {
-            uiState = uiState.copy(error = "Kan inte ta bort sista artikeln. Radera hela köpet istället.")
+        if (_uiState.value.items.size <= 1) {
+            _uiState.value = _uiState.value.copy(error = UiText.StringResource(R.string.review_error_cannot_remove_last))
             return
         }
 
-        val updatedItems = uiState.items.toMutableList()
+        val updatedItems = _uiState.value.items.toMutableList()
         updatedItems.removeAt(itemIndex)
 
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             items = updatedItems,
             hasUnsavedChanges = true
         )
@@ -187,29 +198,29 @@ class DetailedPurchaseReviewViewModel(
                 SoldItemFileStore.saveSoldItems(updatedItems)
 
                 withContext(Dispatchers.Main) {
-                    uiState = uiState.copy(
+                    _uiState.value = _uiState.value.copy(
                         purchaseDeleted = true,
-                        successMessage = "Köpet har raderats"
+                        successMessage = UiText.StringResource(R.string.review_success_deleted)
                     )
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to delete purchase", e)
                 withContext(Dispatchers.Main) {
-                    uiState = uiState.copy(error = "Kunde inte radera köpet: ${e.message}")
+                    _uiState.value = _uiState.value.copy(error = UiText.StringResource(R.string.review_error_delete_failed, listOf(e.message ?: "")))
                 }
             }
         }
     }
 
     private fun retryUpload() {
-        if (uiState.isUploading) return
+        if (_uiState.value.isUploading) return
 
-        uiState = uiState.copy(isUploading = true, error = null)
+        _uiState.value = _uiState.value.copy(isUploading = true, error = null)
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Convert RejectedItemWithDetails back to SoldItemRequest
-                val itemRequests = uiState.items.map { rejectedItem ->
+                val itemRequests = _uiState.value.items.map { rejectedItem ->
                     SoldItemObject(
                         itemId = rejectedItem.item.itemId,
                         purchaseId = "", // Let backend generate new ID
@@ -245,10 +256,10 @@ class DetailedPurchaseReviewViewModel(
                     SoldItemFileStore.saveSoldItems(updatedItems)
 
                     withContext(Dispatchers.Main) {
-                        uiState = uiState.copy(
+                        _uiState.value = _uiState.value.copy(
                             isUploading = false,
                             uploadSuccess = true,
-                            successMessage = "Köpet har laddats upp!"
+                            successMessage = UiText.StringResource(R.string.review_success_uploaded)
                         )
                     }
                 } else if (response.rejectedItems?.isNotEmpty() == true) {
@@ -280,7 +291,7 @@ class DetailedPurchaseReviewViewModel(
                             errorCode = SerializableSoldItemErrorCode.fromString(firstError.errorCode),
                             errorMessage = firstError.reason,
                             timestamp = java.time.Instant.now().toString(),
-                            retryAttempts = (uiState.purchase?.retryAttempts ?: 0) + 1,
+                            retryAttempts = (_uiState.value.purchase?.retryAttempts ?: 0) + 1,
                             autoRecoveryAttempted = true,
                             needsManualReview = true
                         )
@@ -288,11 +299,11 @@ class DetailedPurchaseReviewViewModel(
                         RejectedPurchaseStore.updateRejectedPurchase(updatedPurchase)
 
                         withContext(Dispatchers.Main) {
-                            uiState = uiState.copy(
+                            _uiState.value = _uiState.value.copy(
                                 isUploading = false,
                                 items = newRejectedItems.toMutableList(),
                                 purchase = updatedPurchase,
-                                error = "Uppladdning misslyckades: ${firstError.reason}",
+                                error = UiText.StringResource(R.string.review_error_upload_failed, listOf(firstError.reason)),
                                 hasUnsavedChanges = false
                             )
                         }
@@ -301,9 +312,9 @@ class DetailedPurchaseReviewViewModel(
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to retry upload", e)
                 withContext(Dispatchers.Main) {
-                    uiState = uiState.copy(
+                    _uiState.value = _uiState.value.copy(
                         isUploading = false,
-                        error = "Nätverksfel: ${e.message}"
+                        error = UiText.StringResource(R.string.review_error_network, listOf(e.message ?: ""))
                     )
                 }
             }
@@ -311,7 +322,7 @@ class DetailedPurchaseReviewViewModel(
     }
 
     private fun dismissError() {
-        uiState = uiState.copy(error = null)
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }
 
@@ -322,8 +333,8 @@ data class DetailedPurchaseUiState(
     val isLoading: Boolean = true,
     val isUploading: Boolean = false,
     val hasUnsavedChanges: Boolean = false,
-    val error: String? = null,
-    val successMessage: String? = null,
+    val error: UiText? = null,
+    val successMessage: UiText? = null,
     val purchaseNotFound: Boolean = false,
     val purchaseDeleted: Boolean = false,
     val uploadSuccess: Boolean = false,

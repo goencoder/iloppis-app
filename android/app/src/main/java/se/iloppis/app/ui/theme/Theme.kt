@@ -1,47 +1,42 @@
 package se.iloppis.app.ui.theme
 
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 
+/**
+ * Light-only color scheme sourced entirely from AppColors.
+ * No dynamic colors, no dark theme.
+ */
 private val LightColorScheme = lightColorScheme(
-    primary = Blue,
-    secondary = Green,
-    error = Red,
+    primary = AppColors.Primary,
+    secondary = AppColors.Success,
+    error = AppColors.Error,
 
-    onPrimary = Color.White,
-    primaryContainer = PinkAccent,
-    onPrimaryContainer = Color.Black,
-    onSecondary = GreenBadge,
-    background = PinkBackground,
-    surface = PinkCard,
-    onBackground = Color.Black,
-    onSurfaceVariant = Color.DarkGray,
-    surfaceDim = Color.Gray,
-    tertiary = Text,
-    onTertiaryFixed = Gold,
+    onPrimary = AppColors.OnButtonPrimary,
+    primaryContainer = AppColors.BadgeUpcomingBackground,
+    onPrimaryContainer = AppColors.OnBackground,
+    onSecondary = AppColors.OnButtonPrimary,
+    background = AppColors.Background,
+    surface = AppColors.CardBackground,
+    onBackground = AppColors.OnBackground,
+    onSurface = AppColors.TextPrimary,
+    onSurfaceVariant = AppColors.TextDark,
+    surfaceDim = AppColors.TextMuted,
+    surfaceVariant = AppColors.SurfaceVariant,
+    tertiary = AppColors.TextPrimary,
+    onTertiaryFixed = AppColors.Gold,
+    errorContainer = AppColors.ErrorContainer,
+    onErrorContainer = AppColors.OnErrorContainer,
+    tertiaryContainer = AppColors.WarningContainer,
 )
 
 @Composable
 fun ILoppisTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography(),
+        colorScheme = LightColorScheme,
+        typography = AppTypography,
         content = content
     )
 }

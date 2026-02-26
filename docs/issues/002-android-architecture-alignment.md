@@ -83,13 +83,13 @@ Compose replaces the need for explicit interface contracts (recomposition handle
 data class FeatureUiState(...)                // ↔ *State.java
 sealed class FeatureAction { ... }            // ↔ *ControllerInterface methods
 class FeatureViewModel : ViewModel() {        // ↔ *TabController.java
-    var uiState by mutableStateOf(State())
-        private set
+    private val _uiState = MutableStateFlow(State())
+    val uiState: StateFlow<State> = _uiState.asStateFlow()
     fun onAction(action: FeatureAction) { ... }
 }
 @Composable
 fun FeatureScreen(vm: FeatureViewModel) {     // ↔ *TabPanel.java
-    val state = vm.uiState
+    val state by vm.uiState.collectAsStateWithLifecycle()
     Content(state, onAction = vm::onAction)
 }
 ```
@@ -133,6 +133,12 @@ Both the desktop and Android apps define a centralized `AppColors` object as the
 > **Every color reference in UI code must go through `AppColors`.** No `Color(0xFF...)`, no `Color.White`, no `MaterialTheme.colorScheme.*` in screens, components, or dialogs.
 
 The desktop enforces this strictly — there are zero raw hex values or `Color.YELLOW` constants in any UI file. The Android app has **~81 violations** across three categories.
+
+#### Theme scope (decision 2026-02-26)
+
+- **No dark/dynamic theme yet.** We are preparing for theming, but the **only** active palette is the frontend **Skog** theme.
+- `Theme.kt` should use the **Skog palette only** (static `lightColorScheme` sourced from `AppColors`).
+- Keep the structure ready for future themes, but **do not** depend on `isSystemInDarkTheme()` or dynamic color in UI code for now.
 
 #### Desktop enforcement (reference):
 ```java
@@ -205,7 +211,7 @@ The value mismatches for Blue and Red mean the same semantic concept (e.g., "err
 
 #### Required actions:
 
-1. **Add missing semantic colors** to `AppColors.kt`: `OnButton` (white on colored buttons), `Secondary` (green), `Star`/`Accent` (gold), `NavBarBackground`
+1. **Add missing semantic colors** to `AppColors.kt`: `OnButtonPrimary`, `OnButtonSecondary`, `Secondary`, `Accent`, `NavBarBackground`, `BorderLight`
 2. **Replace all `Color.White`/`Color.Black`** in UI files with `AppColors.*` equivalents
 3. **Replace all `MaterialTheme.colorScheme.*`** references with direct `AppColors.*` usage
 4. **Rewrite `Theme.kt`** to use `AppColors.*` for its `lightColorScheme()` definition
@@ -374,12 +380,12 @@ fun AppButton(
 )
 ```
 
-**Variant → color mapping (aligned with desktop):**
+**Variant → color mapping (aligned with desktop and Skog palette tokens):**
 
 | Variant | Container | Text | Border |
 |---------|-----------|------|--------|
-| `PRIMARY` | `AppColors.ButtonPrimary` | `AppColors.OnButton` | none |
-| `SECONDARY` | `AppColors.DialogBackground` | `AppColors.TextPrimary` | `AppColors.BorderLight` |
+| `PRIMARY` | `AppColors.ButtonPrimary` | `AppColors.OnButtonPrimary` | none |
+| `SECONDARY` | `AppColors.ButtonSecondary` | `AppColors.OnButtonSecondary` | `AppColors.BorderLight` |
 | `OUTLINE` | `Color.Transparent` | `AppColors.Primary` | `AppColors.Primary` |
 | `DANGER` | `Color.Transparent` | `AppColors.Error` | `AppColors.Error` |
 | `GHOST` | `Color.Transparent` | `AppColors.TextSecondary` | none |
@@ -401,24 +407,35 @@ fun AppButton(
 
 **This is the highest-priority design system task.** The ~81 color violations undermine the entire purpose of having `AppColors`.
 
-**Step 1 — Extend `AppColors.kt` with missing semantic constants:**
+**Step 0 — Skog palette source of truth (frontend):**
+
+- Pull the **Skog** theme palette from the iloppis frontend.
+- **Source of truth:** `frontend/src/styles/themes.js` → `Themes.Woods` (Skog).
+- Copy the **exact hex values** into `AppColors.kt` (update existing tokens, avoid duplicates).
+- If the Skog theme is defined in multiple files, choose the canonical theme map and link it in this doc.
+
+**Step 1 — Normalize `AppColors.kt` to the Skog palette and add missing semantic constants:**
+
+**Note:** Hex values in the snippet below are **placeholders**. Replace them with the exact Skog palette values from the frontend.
 ```kotlin
 object AppColors {
     // ... existing colors ...
 
     // NEW — fill gaps found in audit
-    val OnButton = Color.White              // text/icon on colored buttons
-    val Secondary = Color(0xFF388E3C)       // green (scanner, confirm actions)
-    val Star = Color(0xFFF59E0B)            // gold accent (favorites, ratings)
-    val NavBarBackground = Color(0xFF2D3748) // bottom nav dark surface
+    val Secondary = Color(0xFF388E3C)       // secondary/action green (match Skog)
+    val OnButtonPrimary = Color.White       // text/icon on primary buttons
+    val OnButtonSecondary = Color(0xFF2D3748) // text/icon on secondary buttons
+    val BorderLight = Color(0xFFE2E8F0)     // light borders/dividers
+    val Accent = Color(0xFFF59E0B)          // gold accent (favorites, ratings)
+    val NavBarBackground = Color(0xFF2D3748) // bottom nav surface
 }
 ```
 
-**Step 2 — Rewrite `Theme.kt` to source from `AppColors`:**
+**Step 2 — Rewrite `Theme.kt` to source from `AppColors` (Skog palette only):**
 ```kotlin
 private val LightColorScheme = lightColorScheme(
     primary = AppColors.Info,
-    onPrimary = AppColors.OnButton,
+    onPrimary = AppColors.OnButtonPrimary,
     secondary = AppColors.Secondary,
     background = AppColors.Background,
     surface = AppColors.CardBackground,
@@ -430,11 +447,13 @@ private val LightColorScheme = lightColorScheme(
 )
 ```
 
+**Theme rule:** keep `ILoppisTheme` hard-wired to the Skog palette (no dynamic color or dark theme yet). Keep the structure ready for later, but do not branch on `isSystemInDarkTheme()` for now.
+
 **Step 3 — Delete `Color.kt`** — all its constants are now redundant.
 
 **Step 4 — Replace all `MaterialTheme.colorScheme.*` in screens/components/dialogs** with direct `AppColors.*` references. This is a mechanical find-and-replace across ~57 call sites.
 
-**Step 5 — Replace all `Color.White` / `Color.Black`** with `AppColors.OnButton` / `AppColors.TextPrimary` as appropriate (~8 call sites).
+**Step 5 — Replace all `Color.White` / `Color.Black`** with `AppColors.OnButtonPrimary` / `AppColors.TextPrimary` as appropriate (~8 call sites).
 
 **Migration files (by violation count):**
 | File | Violations | Primary replacements |
@@ -445,7 +464,7 @@ private val LightColorScheme = lightColorScheme(
 | `MarkdownText.kt` | 7 | `.onSurfaceVariant` → `AppColors.TextDark` (×7) |
 | `PurchaseReviewScreen.kt` | 6 | `.onSurfaceVariant` → `AppColors.TextDark`, `.error` → `AppColors.Error` |
 | `EventCards.kt` | 6 | `.background` → `AppColors.Background`, `.error` → `AppColors.Error` |
-| `PaymentSection.kt` | 4 | `Color.White` → `AppColors.OnButton` |
+| `PaymentSection.kt` | 4 | `Color.White` → `AppColors.OnButtonPrimary` |
 | `Navigator.kt` | 3 | `.background` → `AppColors.Background` |
 | `EventsDetailsScreen.kt` | 3 | `.secondary` → `AppColors.Secondary` |
 | Other files | ~7 | Various |
@@ -494,8 +513,8 @@ sealed class FeatureAction {
     data object Submit : FeatureAction()
 }
 class FeatureViewModel : ViewModel() {
-    var uiState by mutableStateOf(FeatureUiState())
-        private set
+    private val _uiState = MutableStateFlow(FeatureUiState())
+    val uiState: StateFlow<FeatureUiState> = _uiState.asStateFlow()
     fun onAction(action: FeatureAction) { when (action) { ... } }
 }
 ```
@@ -560,70 +579,89 @@ fun AppScreenScaffold(
 
 This mirrors the desktop's uniform `Scaffold + TopAppBar + error handling` structure that each screen currently rebuilds independently.
 
-#### 4.2.4 Standardize state holder type
+#### 4.2.4 Standardize state holder type (best practice)
 
-All ViewModels should use the same state mechanism. Standardize on `mutableStateOf` (already dominant):
+Standardize on **`StateFlow`** for screen UI state in ViewModels. This aligns with current Android best practices and makes async/state transformations explicit.
 
-- **Migrate** `PendingPurchasesViewModel` from `MutableStateFlow<UiState>` → `var uiState by mutableStateOf(UiState())`
-- This eliminates the need for `collectAsState()` in the Screen composable
+```kotlin
+class FeatureViewModel : ViewModel() {
+    private val _uiState = MutableStateFlow(FeatureUiState())
+    val uiState: StateFlow<FeatureUiState> = _uiState.asStateFlow()
+}
+```
+
+In composables:
+```kotlin
+val state by viewModel.uiState.collectAsStateWithLifecycle()
+```
+
+Use `mutableStateOf` **only** for local, view-only ephemeral state that does not represent the screen model.
 
 ---
 
 ### Phase 3 — Store & Configuration (Priority: High)
 
-#### 4.3.1 Centralize store initialization at Application level
+#### 4.3.1 Centralize **pending-upload** store initialization only
 
-Move all store `initialize()` calls out of ViewModels and into a central coordinator, similar to the desktop's central init:
+We only need local state for **cashier/scanner pending uploads**. Server-backed data should stay server-backed. Based on current usage, keep local stores **only** for offline/pending queues and centralize their initialization:
 
 ```kotlin
 // data/StoreInitializer.kt
 object StoreInitializer {
-    fun initializeForEvent(context: Context, eventId: String, apiKey: String) {
+    fun initializeForEvent(context: Context, eventId: String) {
         PendingItemsStore.initialize(context, eventId)
         SoldItemFileStore.initialize(context, eventId)
         RejectedPurchaseStore.initialize(context, eventId)
         PendingScansStore.initialize(context, eventId)
         CommittedScansStore.initialize(context, eventId)
-        VendorRepository.initialize(apiKey, eventId)
     }
 }
 ```
 
 Call this **once** when the user enters a cashier/scanner session (after code confirmation), not inside each ViewModel.
 
+If a repository is purely server-backed (e.g., vendor lookup), **do not** require `initialize()`; inject what it needs instead (apiKey/eventId) and keep it stateless.
+
 **Benefits:**
 - Eliminates the implicit dependency where `DetailedPurchaseReviewViewModel` assumes CashierViewModel ran first
 - Prevents multiple initializations with potentially different `eventId` values
 - Single point for lifecycle management
 
-#### 4.3.2 Introduce `AppConfigStore` for user preferences
+**Event switching:** define a `resetForEventChange()` path (or require the user to finish pending uploads before switching events) to avoid mixing queues.
 
-Create a configuration persistence layer inspired by the desktop's `ConfigurationStore`:
+#### 4.3.2 Introduce `AppConfigStore` with **DataStore**
+
+Only add this once there is a **real usage** (settings screen, environment switcher, or persisted user preference). Avoid adding an unused store.
+
+Use Preferences DataStore for config persistence (best practice + observable):
 
 ```kotlin
 // config/AppConfigStore.kt
-class AppConfigStore(private val context: Context) {
-    private val prefs = context.getSharedPreferences("iloppis_config", Context.MODE_PRIVATE)
+val Context.appConfigDataStore by preferencesDataStore(name = "iloppis_config")
 
-    var language: String
-        get() = prefs.getString("language", "sv") ?: "sv"
-        set(value) = prefs.edit().putString("language", value).apply()
+class AppConfigStore(private val dataStore: DataStore<Preferences>) {
+    val language: Flow<String> = dataStore.data.map { it[LANGUAGE] ?: "sv" }
+    val lastEventId: Flow<String?> = dataStore.data.map { it[LAST_EVENT_ID] }
+    val apiBaseUrl: Flow<String> = dataStore.data.map { it[API_BASE_URL] ?: DEFAULT_BASE_URL }
 
-    var lastEventId: String?
-        get() = prefs.getString("last_event_id", null)
-        set(value) = prefs.edit().putString("last_event_id", value).apply()
-
-    var apiBaseUrl: String
-        get() = prefs.getString("api_base_url", DEFAULT_BASE_URL) ?: DEFAULT_BASE_URL
-        set(value) = prefs.edit().putString("api_base_url", value).apply()
+    suspend fun setLanguage(value: String) = dataStore.edit { it[LANGUAGE] = value }
+    suspend fun setLastEventId(value: String?) = dataStore.edit {
+        if (value == null) it.remove(LAST_EVENT_ID) else it[LAST_EVENT_ID] = value
+    }
+    suspend fun setApiBaseUrl(value: String) = dataStore.edit { it[API_BASE_URL] = value }
 
     companion object {
+        private val LANGUAGE = stringPreferencesKey("language")
+        private val LAST_EVENT_ID = stringPreferencesKey("last_event_id")
+        private val API_BASE_URL = stringPreferencesKey("api_base_url")
         private const val DEFAULT_BASE_URL = "https://iloppis.fly.dev/"
     }
 }
 ```
 
 Provide via CompositionLocal or as a singleton in `ILoppisApp.kt`.
+
+**Environment note:** `DEFAULT_BASE_URL` should match the currently intended environment (staging today, production later) and be the single source used by `ApiClient`.
 
 ---
 
@@ -733,12 +771,14 @@ The screen architecture standardization (§4.2.1) should come **first** because 
 - [ ] **All screens follow State + Action + ViewModel pattern** — zero screens with inline business logic or missing ViewModels
 - [ ] **All colors reference `AppColors.*`** — zero `Color(0x...)`, `Color.White`, `Color.Black`, or `MaterialTheme.colorScheme.*` in screens/components/dialogs
 - [ ] **`Color.kt` deleted** — `Theme.kt` sources all colors from `AppColors`
+- [ ] **Skog palette applied** — `AppColors` values match the frontend Skog theme and `Theme.kt` uses it as the only active palette (no dark/dynamic yet)
 - [ ] All buttons use `AppButton` — zero raw `Button()` with inline colors outside of `AppButton` internals
 - [ ] All spacing uses `Spacing.*` tokens — zero literal `dp` values for padding/gaps in screen files
 - [ ] All font styles use `AppTypography.*` — zero inline `fontSize` in screen files
 - [ ] All ViewModels created via `viewModel()` factory — zero `remember { ViewModel() }` patterns
+- [ ] All ViewModels expose UI state as `StateFlow` and screens use `collectAsStateWithLifecycle()`
 - [ ] All stores initialized via `StoreInitializer` — zero `*.initialize()` calls in ViewModels
-- [ ] `AppConfigStore` exists and persists at least language preference
+- [ ] `AppConfigStore` uses DataStore and persists language, last event id, and API base URL
 - [ ] Zero hardcoded user-facing strings — all text from `stringResource()`
 - [ ] Build succeeds: `./gradlew assembleDebug`
 - [ ] Manual test: cashier flow, scanner flow, event list, code entry all functional
@@ -756,7 +796,7 @@ The following table maps equivalent architectural concepts across the three code
 | Spacing tokens | `xs/sm/md/lg/xl` constants | Literal dp values | `Spacing.xs/sm/md/lg/xl` object |
 | Typography scale | 20/16/14/11/28-36px layers | Default Material3 | `AppTypography` object |
 | View contract | `*PanelInterface` (Java interface) | N/A (Compose reactive) | Not needed — Compose handles this ✓ |
-| State model | `*State` + `PropertyChangeSupport` | `data class *UiState` + `mutableStateOf` | Standardize across all screens |
+| State model | `*State` + `PropertyChangeSupport` | `data class *UiState` + mixed `mutableStateOf`/`StateFlow` | Standardize on `StateFlow` across all screens |
 | Action dispatch | View calls controller method | `sealed class *Action` + `onAction()` | Standardize across all screens |
 | Controller lifecycle | Singleton (`getInstance()`) | `remember {}` or `viewModel()` | `viewModel()` with Factory |
 | Mode strategy | `CashierStrategy` interface | N/A (online only) | Adopt if offline mode is added |

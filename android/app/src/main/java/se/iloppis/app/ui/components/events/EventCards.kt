@@ -72,13 +72,13 @@ fun SwipeToDismissEventCard(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(lerp(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.secondary,
+                                AppColors.Background,
+                                AppColors.Success,
                                 state.progress
                             ), shape = RoundedCornerShape(16.dp))
                             .wrapContentSize(Alignment.CenterStart)
                             .padding(12.dp),
-                        tint = MaterialTheme.colorScheme.background
+                        tint = AppColors.Background
                     )
                 }
                 SwipeToDismissBoxValue.EndToStart -> {
@@ -88,13 +88,13 @@ fun SwipeToDismissEventCard(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(lerp(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.error,
+                                AppColors.Background,
+                                AppColors.Error,
                                 state.progress
                             ), shape = RoundedCornerShape(16.dp))
                             .wrapContentSize(Alignment.CenterEnd)
                             .padding(12.dp),
-                        tint = MaterialTheme.colorScheme.background
+                        tint = AppColors.Background
                     )
                 }
                 SwipeToDismissBoxValue.Settled -> {}

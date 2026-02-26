@@ -8,16 +8,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
 import se.iloppis.app.data.models.RejectedPurchase
-import se.iloppis.app.data.models.SerializableSoldItemErrorCode
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,11 +38,14 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PurchaseReviewScreen(
-    rejectedPurchases: List<RejectedPurchase>,
     onBack: () -> Unit,
     onRetryPurchase: (String) -> Unit,
-    onReviewPurchase: (String) -> Unit
+    onReviewPurchase: (String) -> Unit,
+    viewModel: PurchaseReviewViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val rejectedPurchases = uiState.purchases
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,7 +64,16 @@ fun PurchaseReviewScreen(
             )
         }
     ) { paddingValues ->
-        if (rejectedPurchases.isEmpty()) {
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (rejectedPurchases.isEmpty()) {
             // Empty state
             Box(
                 modifier = Modifier
@@ -70,7 +86,7 @@ fun PurchaseReviewScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "✅",
+                        text = stringResource(R.string.icon_success),
                         fontSize = 48.sp
                     )
                     Text(
@@ -80,7 +96,7 @@ fun PurchaseReviewScreen(
                     Text(
                         text = stringResource(R.string.review_all_uploaded),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = AppColors.TextSecondary
                     )
                 }
             }
@@ -102,10 +118,10 @@ fun PurchaseReviewScreen(
                 if (serverErrors.isNotEmpty()) {
                     item {
                         Text(
-                            text = "🔴 SERVERFEL (${serverErrors.size} köp)",
+                            text = stringResource(R.string.review_section_server_error, serverErrors.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error
+                            color = AppColors.TextError
                         )
                     }
                     
@@ -124,10 +140,10 @@ fun PurchaseReviewScreen(
                 if (needsReview.isNotEmpty()) {
                     item {
                         Text(
-                            text = "🟡 KRÄVER GRANSKNING (${needsReview.size} köp)",
+                            text = stringResource(R.string.review_section_needs_review, needsReview.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.tertiary
+                            color = AppColors.TextPrimary
                         )
                     }
                     
@@ -184,7 +200,7 @@ private fun PurchaseCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "📦 Köp ${purchase.purchaseId.takeLast(6)} - $timeString",
+                    text = stringResource(R.string.review_purchase_header, purchase.purchaseId.takeLast(6), timeString),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -192,7 +208,7 @@ private fun PurchaseCard(
             
             // Details
             Text(
-                text = "$itemCount artiklar, $total kr",
+                text = stringResource(R.string.review_items_total, itemCount, total),
                 style = MaterialTheme.typography.bodyMedium
             )
             
@@ -200,24 +216,24 @@ private fun PurchaseCard(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = when (type) {
-                    PurchaseCardType.ServerError -> MaterialTheme.colorScheme.errorContainer
-                    PurchaseCardType.NeedsReview -> MaterialTheme.colorScheme.tertiaryContainer
+                    PurchaseCardType.ServerError -> AppColors.ErrorContainer
+                    PurchaseCardType.NeedsReview -> AppColors.WarningContainer
                 },
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Text(
                     text = when (type) {
-                        PurchaseCardType.ServerError -> "❌ ${purchase.errorMessage}\nSynkar automatiskt när servern svarar."
+                        PurchaseCardType.ServerError -> stringResource(R.string.review_error_server_auto_sync, purchase.errorMessage)
                         PurchaseCardType.NeedsReview -> {
                             // Show item-specific errors
                             val errorsWithItems = purchase.items
                                 .filter { !it.isCollateralDamage }
-                                .map { "Säljare ${it.item.seller}: ${it.reason}" }
+                                .map { stringResource(R.string.review_seller_error, it.item.seller, it.reason) }
                             
                             if (errorsWithItems.isNotEmpty()) {
-                                "❌ " + errorsWithItems.joinToString("\n")
+                                stringResource(R.string.review_error_prefix, errorsWithItems.joinToString("\n"))
                             } else {
-                                "❌ ${purchase.errorMessage}"
+                                stringResource(R.string.review_error_prefix, purchase.errorMessage)
                             }
                         }
                     },
@@ -235,16 +251,18 @@ private fun PurchaseCard(
                     PurchaseCardType.ServerError -> {
                         // No button - auto-retry
                         Text(
-                            text = "Väntar på server...",
+                            text = stringResource(R.string.review_waiting_for_server),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = AppColors.TextSecondary
                         )
                     }
                     PurchaseCardType.NeedsReview -> {
                         if (onReview != null) {
-                            Button(onClick = onReview) {
-                                Text(stringResource(R.string.review_navigate_arrow))
-                            }
+                            AppButton(
+                                text = stringResource(R.string.review_navigate_arrow),
+                                onClick = onReview,
+                                variant = AppButtonVariant.Primary
+                            )
                         }
                     }
                 }

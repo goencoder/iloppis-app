@@ -1,13 +1,13 @@
 package se.iloppis.app.ui.screens.scanner
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -126,11 +126,20 @@ class ScannerViewModel(
     private val apiKey: String
 ) : ViewModel() {
 
+    companion object {
+        fun factory(eventId: String, eventName: String, apiKey: String) =
+            object : androidx.lifecycle.ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    ScannerViewModel(eventId, eventName, apiKey) as T
+            }
+    }
+
     private val visitorTicketApi: VisitorAPI = ILoppisClient(clientConfig()).create()
     private val groupManager = GroupScanManager()
     private val recentScanIds = ArrayDeque<String>(RECENT_SCAN_BUFFER)
 
-    var uiState by mutableStateOf(
+    private val _uiState = MutableStateFlow(
         ScannerUiState(
             eventName = eventName,
             currentGroupEmail = groupManager.groupEmail,
@@ -138,13 +147,12 @@ class ScannerViewModel(
             currentGroup = groupManager.scans
         )
     )
-        private set
+    val uiState: StateFlow<ScannerUiState> = _uiState.asStateFlow()
 
     init {
         // Initialize file stores for this event
         val context = se.iloppis.app.ILoppisAppHolder.appContext
-        PendingScansStore.initialize(context, eventId)
-        CommittedScansStore.initialize(context, eventId)
+        se.iloppis.app.data.EventStoreManager.initializeForEvent(context, eventId)
 
         loadInitialData()
         // Ticket type name resolution
@@ -155,25 +163,25 @@ class ScannerViewModel(
 
     fun onAction(action: ScannerAction) {
         when (action) {
-            is ScannerAction.RequestManualEntry -> uiState = uiState.copy(manualEntryVisible = true)
-            is ScannerAction.DismissManualEntry -> uiState = uiState.copy(
+            is ScannerAction.RequestManualEntry -> _uiState.value = _uiState.value.copy(manualEntryVisible = true)
+            is ScannerAction.DismissManualEntry -> _uiState.value = _uiState.value.copy(
                 manualEntryVisible = false,
                 manualEntryError = null
             )
             is ScannerAction.SubmitCode -> handleCodeSubmission(action.code)
-            is ScannerAction.ClearManualError -> uiState = uiState.copy(manualEntryError = null)
-            is ScannerAction.DismissResult -> uiState = uiState.copy(activeResult = null)
-            is ScannerAction.ShowTicketDetails -> uiState = uiState.copy(ticketDetailsResult = action.result)
-            is ScannerAction.DismissTicketDetails -> uiState = uiState.copy(ticketDetailsResult = null)
+            is ScannerAction.ClearManualError -> _uiState.value = _uiState.value.copy(manualEntryError = null)
+            is ScannerAction.DismissResult -> _uiState.value = _uiState.value.copy(activeResult = null)
+            is ScannerAction.ShowTicketDetails -> _uiState.value = _uiState.value.copy(ticketDetailsResult = action.result)
+            is ScannerAction.DismissTicketDetails -> _uiState.value = _uiState.value.copy(ticketDetailsResult = null)
             is ScannerAction.CommitCurrentGroup -> viewModelScope.launch { commitCurrentGroup() }
-            is ScannerAction.ToggleGroupExpanded -> uiState = uiState.copy(
-                isGroupExpanded = !uiState.isGroupExpanded
+            is ScannerAction.ToggleGroupExpanded -> _uiState.value = _uiState.value.copy(
+                isGroupExpanded = !_uiState.value.isGroupExpanded
             )
             is ScannerAction.RemoveFromGroup -> removeFromGroup(action.ticketId)
             is ScannerAction.LoadMoreHistory -> viewModelScope.launch { loadMoreHistory() }
             is ScannerAction.ToggleErrorScans -> {
-                val newShowErrors = !uiState.showErrorScans
-                uiState = uiState.copy(showErrorScans = newShowErrors)
+                val newShowErrors = !_uiState.value.showErrorScans
+                _uiState.value = _uiState.value.copy(showErrorScans = newShowErrors)
                 // Re-filter history
                 updateGroupedHistory()
             }
@@ -185,18 +193,18 @@ class ScannerViewModel(
 
         when {
             trimmed.isEmpty() -> {
-                uiState = uiState.copy(manualEntryError = ManualEntryError.EMPTY_INPUT)
+                _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.EMPTY_INPUT)
                 return
             }
         }
 
         val payload = decodePayload(trimmed) ?: run {
-            uiState = uiState.copy(manualEntryError = ManualEntryError.INVALID_FORMAT)
+            _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.INVALID_FORMAT)
             return
         }
 
         if (!payload.eventId.isNullOrBlank() && payload.eventId != eventId) {
-            uiState = uiState.copy(manualEntryError = ManualEntryError.WRONG_EVENT)
+            _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.WRONG_EVENT)
             return
         }
 
@@ -204,13 +212,13 @@ class ScannerViewModel(
     }
 
     private fun performScan(payload: TicketPayload) {
-        if (uiState.isProcessing) {
+        if (_uiState.value.isProcessing) {
             Log.w(TAG, "Scan already in progress, ignoring")
             return
         }
 
         viewModelScope.launch {
-            uiState = uiState.copy(isProcessing = true, manualEntryError = null)
+            _uiState.value = _uiState.value.copy(isProcessing = true, manualEntryError = null)
             val scanId = UUID.randomUUID().toString()
             val now = Instant.now().toString()
 
@@ -254,7 +262,7 @@ class ScannerViewModel(
         if (groupManager.isDuplicate(ticketId)) {
             Log.d(TAG, "Ticket $ticketId already in current group, ignoring")
             withContext(Dispatchers.Main) {
-                uiState = uiState.copy(isProcessing = false)
+                _uiState.value = _uiState.value.copy(isProcessing = false)
             }
             return@withContext
         }
@@ -307,7 +315,7 @@ class ScannerViewModel(
         if (groupManager.isDuplicate(ticketId)) {
             Log.d(TAG, "Duplicate offline scan in group, ignoring")
             withContext(Dispatchers.Main) {
-                uiState = uiState.copy(isProcessing = false)
+                _uiState.value = _uiState.value.copy(isProcessing = false)
             }
             return@withContext
         }
@@ -404,11 +412,11 @@ class ScannerViewModel(
 
     private fun showResult(handler: ScanResultHandler, closeManual: Boolean = true) {
         val result = ScanResultHandler.toScanResult(handler)
-        val updatedHistory = (listOf(result) + uiState.history).take(MAX_HISTORY)
+        val updatedHistory = (listOf(result) + _uiState.value.history).take(MAX_HISTORY)
 
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             isProcessing = false,
-            manualEntryVisible = if (closeManual) false else uiState.manualEntryVisible,
+            manualEntryVisible = if (closeManual) false else _uiState.value.manualEntryVisible,
             manualEntryError = null,
             activeResult = result,
             history = updatedHistory
@@ -428,7 +436,7 @@ class ScannerViewModel(
     }
 
     private fun updateGroupState() {
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             currentGroupEmail = groupManager.groupEmail,
             currentGroupTicketType = groupManager.groupTicketType,
             currentGroup = groupManager.scans
@@ -436,15 +444,15 @@ class ScannerViewModel(
     }
 
     private fun updateGroupedHistory() {
-        val filteredHistory = if (uiState.showErrorScans) {
-            uiState.history
+        val filteredHistory = if (_uiState.value.showErrorScans) {
+            _uiState.value.history
         } else {
-            uiState.history.filter {
+            _uiState.value.history.filter {
                 it.status == ScanStatus.SUCCESS || it.status == ScanStatus.OFFLINE_SUCCESS
             }
         }
         val grouped = HistoryGrouper.groupHistory(filteredHistory)
-        uiState = uiState.copy(groupedHistory = grouped)
+        _uiState.value = _uiState.value.copy(groupedHistory = grouped)
     }
 
     private fun loadInitialData() {
@@ -490,7 +498,7 @@ class ScannerViewModel(
         val hasMore = history.size < totalCount
 
         withContext(Dispatchers.Main) {
-            uiState = uiState.copy(
+            _uiState.value = _uiState.value.copy(
                 history = history,
                 hasMoreHistory = hasMore
             )
@@ -499,14 +507,14 @@ class ScannerViewModel(
     }
 
     private suspend fun loadMoreHistory() {
-        if (uiState.isLoadingHistory || !uiState.hasMoreHistory) return
+        if (_uiState.value.isLoadingHistory || !_uiState.value.hasMoreHistory) return
 
         withContext(Dispatchers.Main) {
-            uiState = uiState.copy(isLoadingHistory = true)
+            _uiState.value = _uiState.value.copy(isLoadingHistory = true)
         }
 
         withContext(Dispatchers.IO) {
-            val currentSize = uiState.history.size
+            val currentSize = _uiState.value.history.size
             val scans = CommittedScansStore.getRecentScansForEvent(eventId, currentSize + HISTORY_PAGE_SIZE)
             val history = scans.map { scan ->
                 val ticket = if (scan.ticketType != null || scan.email != null) {
@@ -541,7 +549,7 @@ class ScannerViewModel(
             val hasMore = history.size < totalCount
 
             withContext(Dispatchers.Main) {
-                uiState = uiState.copy(
+                _uiState.value = _uiState.value.copy(
                     history = history,
                     hasMoreHistory = hasMore,
                     isLoadingHistory = false
@@ -557,14 +565,14 @@ class ScannerViewModel(
             PendingScan(ticketId = scan.ticketId, createdAt = Instant.parse(scan.scannedAt))
         }
         withContext(Dispatchers.Main) {
-            uiState = uiState.copy(pendingScans = pendingList)
+            _uiState.value = _uiState.value.copy(pendingScans = pendingList)
         }
     }
 
     private suspend fun updateTotalCount() = withContext(Dispatchers.IO) {
         val count = CommittedScansStore.countScansForEvent(eventId)
         withContext(Dispatchers.Main) {
-            uiState = uiState.copy(totalScansCount = count)
+            _uiState.value = _uiState.value.copy(totalScansCount = count)
         }
     }
 

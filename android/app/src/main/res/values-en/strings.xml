@@ -242,4 +242,45 @@
     <!-- Swipe to dismiss box -->
     <string name="swipe_box_remove">Remove</string>
     <string name="swipe_box_archive">Archive</string>
+
+    <!-- Common -->
+    <string name="common_ok">OK</string>
+    <string name="common_error_title">Error</string>
+    <string name="icon_success">✅</string>
+    <string name="icon_error">❌</string>
+    <string name="icon_warning">⚠️</string>
+    <string name="icon_info">ℹ️</string>
+    <string name="icon_critical">🔴</string>
+    <string name="content_description_hide">Hide</string>
+    <string name="content_description_show">Show</string>
+    <string name="content_description_delete">Delete</string>
+    <string name="content_description_pending_info">Pending upload info</string>
+    <string name="content_description_processing">Processing</string>
+
+    <!-- Purchase Review Screen - Section Headers -->
+    <string name="review_section_server_error">🔴 SERVER ERROR (%1$d purchases)</string>
+    <string name="review_section_needs_review">🟡 NEEDS REVIEW (%1$d purchases)</string>
+    <string name="review_purchase_header">📦 Purchase %1$s - %2$s</string>
+    <string name="review_items_total">%1$d items, %2$d kr</string>
+    <string name="review_error_server_auto_sync">❌ %1$s\nWill sync automatically when server responds.</string>
+    <string name="review_error_prefix">❌ %1$s</string>
+    <string name="review_seller_error">Seller %1$d: %2$s</string>
+    <string name="review_waiting_for_server">Waiting for server…</string>
+
+    <!-- ViewModel error/warning messages -->
+    <string name="cashier_warning_saved_locally">Saved locally. Will sync in background when network returns.</string>
+    <string name="cashier_error_load_sellers">Could not load sellers: %1$s</string>
+    <string name="cashier_warning_invalid_seller">Invalid seller number</string>
+    <string name="cashier_warning_enter_price">Enter at least one price</string>
+    <string name="cashier_warning_invalid_price">Invalid price: %1$s</string>
+    <string name="cashier_warning_no_items">No items to pay for</string>
+    <string name="review_error_purchase_not_found">Purchase not found</string>
+    <string name="review_error_invalid_seller">Invalid seller number</string>
+    <string name="review_error_seller_not_approved">Seller %1$d is not approved for this event</string>
+    <string name="review_error_cannot_remove_last">Cannot remove last item. Delete the entire purchase instead.</string>
+    <string name="review_success_deleted">Purchase has been deleted</string>
+    <string name="review_success_uploaded">Purchase has been uploaded!</string>
+    <string name="review_error_upload_failed">Upload failed: %1$s</string>
+    <string name="review_error_network">Network error: %1$s</string>
+    <string name="review_error_delete_failed">Could not delete purchase: %1$s</string>
 </resources>

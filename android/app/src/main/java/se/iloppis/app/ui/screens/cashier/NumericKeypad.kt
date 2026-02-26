@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -113,7 +112,7 @@ private fun KeypadButton(
     isPrimary: Boolean = false
 ) {
     val backgroundColor = if (isPrimary) AppColors.ButtonSuccess else AppColors.CardBackground
-    val textColor = if (isPrimary) Color.White else AppColors.TextPrimary
+    val textColor = if (isPrimary) AppColors.OnButtonPrimary else AppColors.TextPrimary
 
     Box(
         modifier = modifier

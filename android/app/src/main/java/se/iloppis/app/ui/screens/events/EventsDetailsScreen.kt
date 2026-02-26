@@ -21,8 +21,6 @@ import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.QrCode
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +39,8 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.domain.model.displayStatus
 import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.components.DisplayStatusBadge
 import se.iloppis.app.ui.components.map.Map
 import se.iloppis.app.ui.components.text.MarkdownText
@@ -207,7 +207,8 @@ private fun EventActionButtons(event: Event) {
 
     // Navigate button (Google Maps intent)
     if (event.latitude != null && event.longitude != null) {
-        Button(
+        AppButton(
+            text = stringResource(R.string.event_detail_navigate),
             onClick = {
                 val uri = Uri.parse(
                     "geo:${event.latitude},${event.longitude}?q=${event.latitude},${event.longitude}(${Uri.encode(event.name)})"
@@ -225,19 +226,22 @@ private fun EventActionButtons(event: Event) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Info)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Map,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 8.dp)
-            )
-            Text(stringResource(R.string.event_detail_navigate))
-        }
+            variant = AppButtonVariant.Primary,
+            containerColor = AppColors.Info,
+            contentColor = AppColors.OnButtonPrimary,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.Map,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+        )
     }
 
     // Website button (browser intent)
-    Button(
+    AppButton(
+        text = stringResource(R.string.event_detail_website),
         onClick = {
             val url = "https://iloppis.se/?event=${event.id}"
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
@@ -245,15 +249,17 @@ private fun EventActionButtons(event: Event) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonSecondary)
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.OpenInBrowser,
-            contentDescription = null,
-            modifier = Modifier.padding(end = 8.dp)
-        )
-        Text(stringResource(R.string.event_detail_website))
-    }
+        variant = AppButtonVariant.Secondary,
+        containerColor = AppColors.ButtonSecondary,
+        contentColor = AppColors.OnButtonSecondary,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Outlined.OpenInBrowser,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
+    )
 }
 
 
@@ -279,40 +285,41 @@ private fun EventToolButtons(event: Event) {
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Cashier button
-        Button(
+        AppButton(
+            text = stringResource(R.string.home_open_cashier),
             onClick = {
                 screen.onAction(
                     ScreenAction.NavigateToPage(ScreenPage.CodeEntry("CASHIER"))
                 )
             },
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonPrimary)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Payments,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 4.dp)
-            )
-            Text(stringResource(R.string.home_open_cashier))
-        }
+            variant = AppButtonVariant.Primary,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.Payments,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+            }
+        )
 
         // Scanner button
-        Button(
+        AppButton(
+            text = stringResource(R.string.home_open_scanner),
             onClick = {
                 screen.onAction(
                     ScreenAction.NavigateToPage(ScreenPage.CodeEntry("SCANNER"))
                 )
             },
             modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(containerColor = AppColors.ButtonSecondary)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.QrCode,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 4.dp)
-            )
-            Text(stringResource(R.string.home_open_scanner))
-        }
+            variant = AppButtonVariant.Success,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.QrCode,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+            }
+        )
     }
 }
-

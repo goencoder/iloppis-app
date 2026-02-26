@@ -15,6 +15,7 @@ work = "2.11.0"
 camerax = "1.5.2"
 mlkitBarcode = "17.3.0"
 accompanistPermissions = "0.37.3"
+coreSplashscreen = "1.0.1"
 kotlinxSerialization = "1.9.0"
 kotlinxCoroutinesTest = "1.10.2"
 junit = "4.13.2"
@@ -51,6 +52,9 @@ camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = 
 
 # ML Kit Barcode
 mlkit-barcode = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkitBarcode" }
+
+# Splash Screen
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 
 # Accompanist Permissions
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanistPermissions" }

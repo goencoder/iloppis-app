@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.sp
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
+import se.iloppis.app.ui.theme.AppColors
 
 /**
  * iLoppis styled markdown text object
@@ -20,31 +21,31 @@ fun MarkdownText(text: String) {
         typography = markdownTypography(
             h1 = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 38.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AppColors.TextSecondary
             ),
             h2 = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 34.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AppColors.TextSecondary
             ),
             h3 = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 30.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AppColors.TextSecondary
             ),
             h4 = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 26.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AppColors.TextSecondary
             ),
             h5 = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 22.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AppColors.TextSecondary
             ),
             h6 = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AppColors.TextSecondary
             ),
             paragraph = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = AppColors.TextSecondary
             )
         )
     )

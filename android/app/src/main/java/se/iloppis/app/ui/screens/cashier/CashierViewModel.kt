@@ -1,25 +1,27 @@
 package se.iloppis.app.ui.screens.cashier
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import se.iloppis.app.ILoppisAppHolder
 import se.iloppis.app.data.OfflineToastGatekeeper
+import se.iloppis.app.R
 import se.iloppis.app.data.PendingItemsStore
 import se.iloppis.app.data.RejectedPurchaseStore
 import se.iloppis.app.data.SoldItemFileStore
 import se.iloppis.app.data.VendorRepository
 import se.iloppis.app.data.models.PendingItem
 import se.iloppis.app.data.models.SerializableSoldItemErrorCode
+import se.iloppis.app.ui.util.UiText
 import se.iloppis.app.work.SyncScheduler
 import kotlin.math.ceil
 
@@ -100,8 +102,8 @@ data class CashierUiState(
     // Loading/error states
     val isLoading: Boolean = false,
     val isProcessingPayment: Boolean = false,
-    val errorMessage: String? = null,
-    val warningMessage: String? = null
+    val errorMessage: UiText? = null,
+    val warningMessage: UiText? = null
 ) {
     val total: Int get() = transactions.sumOf { it.price }
     val change: Int get() = (paidAmount.toIntOrNull() ?: 0) - total
@@ -153,8 +155,17 @@ class CashierViewModel(
     private val apiKey: String
 ) : ViewModel() {
 
-    var uiState by mutableStateOf(CashierUiState(eventName = eventName))
-        private set
+    companion object {
+        fun factory(eventId: String, eventName: String, apiKey: String) =
+            object : androidx.lifecycle.ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    CashierViewModel(eventId, eventName, apiKey) as T
+            }
+    }
+
+    private val _uiState = MutableStateFlow(CashierUiState(eventName = eventName))
+    val uiState: StateFlow<CashierUiState> = _uiState.asStateFlow()
 
     private val toastGatekeeper = OfflineToastGatekeeper()
     private var workObserverRegistered = false
@@ -167,9 +178,7 @@ class CashierViewModel(
     init {
         // Initialize file stores for this event
         val context = ILoppisAppHolder.appContext
-        PendingItemsStore.initialize(context, eventId)
-        SoldItemFileStore.initialize(context, eventId)
-        RejectedPurchaseStore.initialize(context, eventId)
+        se.iloppis.app.data.EventStoreManager.initializeForEvent(context, eventId)
 
         // Initialize global VendorRepository singleton
         if (!VendorRepository.isInitialized()) {
@@ -238,7 +247,7 @@ class CashierViewModel(
                     .distinct()
                     .count()
             }
-            uiState = uiState.copy(pendingSoldItemsCount = pending)
+            _uiState.value = _uiState.value.copy(pendingSoldItemsCount = pending)
 
             // If we successfully refreshed and count is 0, we can consider ourselves online
             if (pending == 0) {
@@ -261,8 +270,8 @@ class CashierViewModel(
                 val shouldShowToast = toastGatekeeper.recordMissedUpload(purchaseId)
                 if (shouldShowToast) {
                     withContext(Dispatchers.Main) {
-                        uiState = uiState.copy(
-                            warningMessage = "Sparade lokalt. Synkar i bakgrunden när nätet är tillbaka."
+                        _uiState.value = _uiState.value.copy(
+                            warningMessage = UiText.StringResource(R.string.cashier_warning_saved_locally)
                         )
                     }
                 }
@@ -303,17 +312,17 @@ class CashierViewModel(
             is CashierAction.DismissWarning -> dismissWarning()
             is CashierAction.DismissError -> dismissError()
             is CashierAction.DismissServerErrorDialog -> {
-                uiState = uiState.copy(showServerErrorDialog = false)
+                _uiState.value = _uiState.value.copy(showServerErrorDialog = false)
             }
             is CashierAction.DismissInvalidSellerDialog -> {
-                uiState = uiState.copy(
+                _uiState.value = _uiState.value.copy(
                     showInvalidSellerDialog = false,
                     invalidSellerDialogData = null
                 )
             }
             is CashierAction.OpenReviewScreen -> {
                 // This will be handled by the screen to navigate
-                uiState = uiState.copy(
+                _uiState.value = _uiState.value.copy(
                     showInvalidSellerDialog = false,
                     invalidSellerDialogData = null
                 )
@@ -322,7 +331,7 @@ class CashierViewModel(
     }
 
     private fun loadVendors() {
-        uiState = uiState.copy(isLoading = true)
+        _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 Log.d(TAG, "Loading vendors from VendorRepository...")
@@ -331,7 +340,7 @@ class CashierViewModel(
 
                 Log.d(TAG, "Loaded ${allSellers.size} valid seller numbers from VendorRepository")
                 withContext(Dispatchers.Main) {
-                    uiState = uiState.copy(
+                    _uiState.value = _uiState.value.copy(
                         validSellers = allSellers,
                         isLoading = false
                     )
@@ -339,9 +348,9 @@ class CashierViewModel(
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load vendors: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    uiState = uiState.copy(
+                    _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = "Kunde inte ladda säljare: ${e.message}"
+                        errorMessage = UiText.StringResource(R.string.cashier_error_load_sellers, listOf(e.message ?: ""))
                     )
                 }
             }
@@ -349,53 +358,53 @@ class CashierViewModel(
     }
 
     private fun handleKeypadPress(digit: String) {
-        when (uiState.activeField) {
+        when (_uiState.value.activeField) {
             ActiveField.SELLER -> {
-                uiState = uiState.copy(sellerNumber = uiState.sellerNumber + digit)
+                _uiState.value = _uiState.value.copy(sellerNumber = _uiState.value.sellerNumber + digit)
             }
             ActiveField.PRICE -> {
-                uiState = uiState.copy(priceString = uiState.priceString + digit)
+                _uiState.value = _uiState.value.copy(priceString = _uiState.value.priceString + digit)
             }
         }
     }
 
     private fun handleClear() {
-        when (uiState.activeField) {
-            ActiveField.SELLER -> uiState = uiState.copy(sellerNumber = "")
-            ActiveField.PRICE -> uiState = uiState.copy(priceString = "")
+        when (_uiState.value.activeField) {
+            ActiveField.SELLER -> _uiState.value = _uiState.value.copy(sellerNumber = "")
+            ActiveField.PRICE -> _uiState.value = _uiState.value.copy(priceString = "")
         }
     }
 
     private fun handleBackspace() {
-        when (uiState.activeField) {
+        when (_uiState.value.activeField) {
             ActiveField.SELLER -> {
-                if (uiState.sellerNumber.isNotEmpty()) {
-                    uiState = uiState.copy(sellerNumber = uiState.sellerNumber.dropLast(1))
+                if (_uiState.value.sellerNumber.isNotEmpty()) {
+                    _uiState.value = _uiState.value.copy(sellerNumber = _uiState.value.sellerNumber.dropLast(1))
                 }
             }
             ActiveField.PRICE -> {
-                if (uiState.priceString.isNotEmpty()) {
-                    uiState = uiState.copy(priceString = uiState.priceString.dropLast(1))
+                if (_uiState.value.priceString.isNotEmpty()) {
+                    _uiState.value = _uiState.value.copy(priceString = _uiState.value.priceString.dropLast(1))
                 }
             }
         }
     }
 
     private fun handleSpace() {
-        if (uiState.activeField == ActiveField.PRICE) {
+        if (_uiState.value.activeField == ActiveField.PRICE) {
             // Space separates multiple prices
-            uiState = uiState.copy(priceString = uiState.priceString + " ")
+            _uiState.value = _uiState.value.copy(priceString = _uiState.value.priceString + " ")
         }
     }
 
     private fun handleOk() {
-        when (uiState.activeField) {
+        when (_uiState.value.activeField) {
             ActiveField.SELLER -> {
                 // Validate seller against GLOBAL repository (always current)
-                val sellerNum = uiState.sellerNumber.toIntOrNull()
+                val sellerNum = _uiState.value.sellerNumber.toIntOrNull()
                 val validSellers = VendorRepository.getCached() ?: emptySet()
                 if (sellerNum == null || !validSellers.contains(sellerNum)) {
-                    uiState = uiState.copy(warningMessage = "Ogiltigt säljarnummer")
+                    _uiState.value = _uiState.value.copy(warningMessage = UiText.StringResource(R.string.cashier_warning_invalid_seller))
                     // Refresh vendor list in background - seller may have been added recently
                     viewModelScope.launch(Dispatchers.IO) {
                         try {
@@ -407,7 +416,7 @@ class CashierViewModel(
                     }
                     return
                 }
-                uiState = uiState.copy(activeField = ActiveField.PRICE)
+                _uiState.value = _uiState.value.copy(activeField = ActiveField.PRICE)
             }
             ActiveField.PRICE -> {
                 // Add prices to transaction list
@@ -417,10 +426,10 @@ class CashierViewModel(
     }
 
     private fun addPrices() {
-        val sellerNum = uiState.sellerNumber.toIntOrNull()
+        val sellerNum = _uiState.value.sellerNumber.toIntOrNull()
         val validSellers = VendorRepository.getCached() ?: emptySet()
         if (sellerNum == null || !validSellers.contains(sellerNum)) {
-            uiState = uiState.copy(warningMessage = "Ogiltigt säljarnummer")
+            _uiState.value = _uiState.value.copy(warningMessage = UiText.StringResource(R.string.cashier_warning_invalid_seller))
             // Refresh vendor list in background - seller may have been added recently
             viewModelScope.launch(Dispatchers.IO) {
                 try {
@@ -434,9 +443,9 @@ class CashierViewModel(
         }
 
         // Parse prices (space-separated)
-        val priceStrings = uiState.priceString.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        val priceStrings = _uiState.value.priceString.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
         if (priceStrings.isEmpty()) {
-            uiState = uiState.copy(warningMessage = "Ange minst ett pris")
+            _uiState.value = _uiState.value.copy(warningMessage = UiText.StringResource(R.string.cashier_warning_enter_price))
             return
         }
 
@@ -444,18 +453,18 @@ class CashierViewModel(
         for (priceStr in priceStrings) {
             val price = priceStr.toIntOrNull()
             if (price == null || price <= 0) {
-                uiState = uiState.copy(warningMessage = "Ogiltigt pris: $priceStr")
+                _uiState.value = _uiState.value.copy(warningMessage = UiText.StringResource(R.string.cashier_warning_invalid_price, listOf(priceStr)))
                 return
             }
             newItems.add(TransactionItem(sellerNumber = sellerNum, price = price))
         }
 
         // Add items to front of list, update paid amount to next hundred
-        val updatedTransactions = newItems + uiState.transactions
+        val updatedTransactions = newItems + _uiState.value.transactions
         val newTotal = updatedTransactions.sumOf { it.price }
         val nextHundred = (ceil(newTotal / 100.0) * 100).toInt()
 
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             transactions = updatedTransactions,
             sellerNumber = "",
             priceString = "",
@@ -465,22 +474,22 @@ class CashierViewModel(
     }
 
     private fun setActiveField(field: ActiveField) {
-        uiState = uiState.copy(activeField = field)
+        _uiState.value = _uiState.value.copy(activeField = field)
     }
 
     private fun removeItem(id: String) {
-        val updatedTransactions = uiState.transactions.filter { it.id != id }
+        val updatedTransactions = _uiState.value.transactions.filter { it.id != id }
         val newTotal = updatedTransactions.sumOf { it.price }
         val nextHundred = if (newTotal > 0) (ceil(newTotal / 100.0) * 100).toInt() else 0
 
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             transactions = updatedTransactions,
             paidAmount = nextHundred.toString()
         )
     }
 
     private fun clearAllItems() {
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             transactions = emptyList(),
             paidAmount = "0"
         )
@@ -489,7 +498,7 @@ class CashierViewModel(
     private fun setPaidAmount(amount: String) {
         // Only allow digits
         val filtered = amount.filter { it.isDigit() }
-        uiState = uiState.copy(paidAmount = filtered)
+        _uiState.value = _uiState.value.copy(paidAmount = filtered)
     }
 
     /**
@@ -564,16 +573,16 @@ class CashierViewModel(
      * @param method Payment method (CASH or SWISH)
      */
     private fun checkout(method: PaymentMethodType) {
-        val transactionsSnapshot = uiState.transactions
+        val transactionsSnapshot = _uiState.value.transactions
         if (transactionsSnapshot.isEmpty()) {
-            uiState = uiState.copy(warningMessage = "Inga varor att betala")
+            _uiState.value = _uiState.value.copy(warningMessage = UiText.StringResource(R.string.cashier_warning_no_items))
             return
         }
 
         // STEP 1: Generate stable unique IDs
         // purchaseId: ULID groups all items in this purchase (26-char time-ordered ID)
         // itemId: Already in TransactionItem.id (ULID from creation)
-        val purchaseTotal = uiState.total
+        val purchaseTotal = _uiState.value.total
         val purchaseId = se.iloppis.app.utils.Ulid.random()
         val paymentMethodStr = when (method) {
             PaymentMethodType.CASH -> "KONTANT"
@@ -592,7 +601,7 @@ class CashierViewModel(
         // STEP 3: Clear UI immediately
         // User sees cleared screen + receipt, can start next purchase
         // This happens BEFORE persistence starts (optimistic UI)
-        uiState = uiState.copy(
+        _uiState.value = _uiState.value.copy(
             transactions = emptyList(),
             sellerNumber = "",
             priceString = "",
@@ -606,7 +615,7 @@ class CashierViewModel(
         // STEP 4: Persist purchase data (background thread)
         // CRITICAL: This is SYNCHRONOUS - blocks until file write completes
         viewModelScope.launch(Dispatchers.IO) {
-            uiState = uiState.copy(isProcessingPayment = true)
+            _uiState.value = _uiState.value.copy(isProcessingPayment = true)
 
             // STEP 4a: Map UI items to pending items
             // Each item gets stable itemId from TransactionItem.id
@@ -642,7 +651,7 @@ class CashierViewModel(
             viewModelScope.launch {
                 refreshPendingCount()
                 refreshRejectedPurchasesCount()
-                uiState = uiState.copy(isProcessingPayment = false)
+                _uiState.value = _uiState.value.copy(isProcessingPayment = false)
             }
 
             // Upload happens asynchronously via WorkManager
@@ -651,11 +660,11 @@ class CashierViewModel(
     }
 
     private fun dismissWarning() {
-        uiState = uiState.copy(warningMessage = null, lastCheckoutQueuedOffline = false)
+        _uiState.value = _uiState.value.copy(warningMessage = null, lastCheckoutQueuedOffline = false)
     }
 
     private fun dismissError() {
-        uiState = uiState.copy(errorMessage = null)
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 
     /**
@@ -677,7 +686,7 @@ class CashierViewModel(
             }
 
             withContext(Dispatchers.Main) {
-                uiState = uiState.copy(
+                _uiState.value = _uiState.value.copy(
                     rejectedPurchasesCount = count,
                     rejectedPurchases = emptyList() // No longer used
                 )
@@ -689,7 +698,7 @@ class CashierViewModel(
      * Check if a popup should be shown and show it if conditions are met.
      */
     private fun checkAndShowPopupsIfNeeded() {
-        if (!uiState.isIdle) {
+        if (!_uiState.value.isIdle) {
             return  // Never show popup when kassa is busy
         }
 
@@ -714,7 +723,7 @@ class CashierViewModel(
                     withContext(Dispatchers.Main) {
                         lastPopupShown = now
                         serverErrorShownThisSession = true
-                        uiState = uiState.copy(showServerErrorDialog = true)
+                        _uiState.value = _uiState.value.copy(showServerErrorDialog = true)
                     }
                     return@launch
                 }
@@ -733,7 +742,7 @@ class CashierViewModel(
 
                 withContext(Dispatchers.Main) {
                     lastPopupShown = now
-                    uiState = uiState.copy(
+                    _uiState.value = _uiState.value.copy(
                         showInvalidSellerDialog = true,
                         invalidSellerDialogData = InvalidSellerDialogData(
                             purchaseId = first.purchaseId,

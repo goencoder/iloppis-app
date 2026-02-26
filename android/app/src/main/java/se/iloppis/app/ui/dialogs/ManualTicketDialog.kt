@@ -4,12 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,6 +17,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonSize
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.screens.scanner.ManualEntryError
 import se.iloppis.app.ui.theme.AppColors
 
@@ -78,31 +78,26 @@ fun ManualTicketDialog(
                     Text(
                         text = message,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
+                        color = AppColors.TextError
                     )
                 }
             }
         },
         confirmButton = {
-            Button(
+            AppButton(
+                text = stringResource(R.string.scanner_manual_confirm),
                 onClick = { onSubmit(code) },
                 enabled = code.isNotBlank() && !isProcessing,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Primary
-                )
-            ) {
-                Text(text = stringResource(R.string.scanner_manual_confirm))
-            }
+                variant = AppButtonVariant.Primary
+            )
         },
         dismissButton = {
-            TextButton(
+            AppButton(
+                text = stringResource(R.string.button_cancel),
                 onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = AppColors.TextSecondary
-                )
-            ) {
-                Text(text = stringResource(R.string.button_cancel))
-            }
+                variant = AppButtonVariant.Text,
+                size = AppButtonSize.Small
+            )
         }
     )
 }

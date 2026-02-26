@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.EventDisplayStatus
 import se.iloppis.app.domain.model.EventState
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonSize
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
 
 /**
@@ -76,7 +79,7 @@ fun StarIcon() {
     Icon(
         imageVector = Icons.Filled.Star,
         contentDescription = stringResource(R.string.store_event_locally),
-        tint = MaterialTheme.colorScheme.onTertiaryFixed,
+        tint = AppColors.Gold,
         modifier = Modifier.padding(horizontal = 8.dp)
     )
 }
@@ -131,24 +134,14 @@ fun PrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    Button(
+    AppButton(
+        text = text,
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(50.dp),
-        shape = RoundedCornerShape(25.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = AppColors.ButtonPrimary,
-            disabledContainerColor = AppColors.ButtonPrimaryDisabled
-        )
-    ) {
-        Text(
-            text = text,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
+        modifier = modifier.fillMaxWidth(),
+        variant = AppButtonVariant.Primary,
+        size = AppButtonSize.XLarge
+    )
 }
 
 /**
@@ -156,14 +149,14 @@ fun PrimaryButton(
  */
 @Composable
 fun CancelTextButton(
-    text: String = "Avbryt",
+    text: String = stringResource(R.string.button_cancel),
     onClick: () -> Unit
 ) {
-    TextButton(onClick = onClick) {
-        Text(
-            text = text,
-            color = AppColors.TextError,
-            fontSize = 14.sp
-        )
-    }
+    AppButton(
+        text = text,
+        onClick = onClick,
+        variant = AppButtonVariant.Text,
+        contentColor = AppColors.TextError,
+        size = AppButtonSize.Small
+    )
 }

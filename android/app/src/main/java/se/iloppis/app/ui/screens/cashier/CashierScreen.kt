@@ -10,27 +10,32 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.dialogs.InvalidSellerDialog
 import se.iloppis.app.ui.dialogs.ServerErrorDialog
 import se.iloppis.app.ui.screens.pending.PendingPurchasesScreen
 import se.iloppis.app.ui.screens.review.PurchaseReviewScreen
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonSize
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
 
 /**
@@ -43,14 +48,15 @@ fun CashierScreen(
     apiKey: String,
     onBack: () -> Unit
 ) {
-    val viewModel = remember(event.id, apiKey) {
-        CashierViewModel(
+    val viewModel: CashierViewModel = viewModel(
+        key = "cashier-${event.id}-$apiKey",
+        factory = CashierViewModel.factory(
             eventId = event.id,
             eventName = event.name,
             apiKey = apiKey
         )
-    }
-    val uiState = viewModel.uiState
+    )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var showPendingInfoDialog by remember { mutableStateOf(false) }
     var showReviewScreen by remember { mutableStateOf(false) }
@@ -58,13 +64,14 @@ fun CashierScreen(
     
     // Show detailed purchase review if requested
     if (showDetailedReview != null) {
-        val detailedViewModel = remember(showDetailedReview, event.id, apiKey) {
-            se.iloppis.app.ui.screens.review.DetailedPurchaseReviewViewModel(
+        val detailedViewModel: se.iloppis.app.ui.screens.review.DetailedPurchaseReviewViewModel = viewModel(
+            key = "detailed-$showDetailedReview",
+            factory = se.iloppis.app.ui.screens.review.DetailedPurchaseReviewViewModel.factory(
                 purchaseId = showDetailedReview!!,
                 eventId = event.id,
                 apiKey = apiKey
             )
-        }
+        )
         se.iloppis.app.ui.screens.review.DetailedPurchaseReviewScreen(
             viewModel = detailedViewModel,
             onBack = { 
@@ -90,9 +97,12 @@ fun CashierScreen(
         AlertDialog(
             onDismissRequest = { showPendingInfoDialog = false },
             confirmButton = {
-                TextButton(onClick = { showPendingInfoDialog = false }) {
-                    Text("OK")
-                }
+                AppButton(
+                    text = stringResource(R.string.common_ok),
+                    onClick = { showPendingInfoDialog = false },
+                    variant = AppButtonVariant.Text,
+                    size = AppButtonSize.Small
+                )
             },
             title = { Text(stringResource(R.string.cashier_pending_info_title)) },
             text = {
@@ -112,11 +122,12 @@ fun CashierScreen(
     }
     
     // Invalid seller dialog
-    if (uiState.showInvalidSellerDialog && uiState.invalidSellerDialogData != null) {
+    val dialogData = uiState.invalidSellerDialogData
+    if (uiState.showInvalidSellerDialog && dialogData != null) {
         InvalidSellerDialog(
-            purchaseId = uiState.invalidSellerDialogData.purchaseId,
-            timestamp = uiState.invalidSellerDialogData.timestamp,
-            invalidSellers = uiState.invalidSellerDialogData.invalidSellers,
+            purchaseId = dialogData.purchaseId,
+            timestamp = dialogData.timestamp,
+            invalidSellers = dialogData.invalidSellers,
             onDismiss = { viewModel.onAction(CashierAction.DismissInvalidSellerDialog) },
             onReviewNow = { 
                 viewModel.onAction(CashierAction.DismissInvalidSellerDialog)
@@ -141,25 +152,19 @@ fun CashierScreen(
                 actions = {
                     // Show rejected purchases badge
                     if (uiState.rejectedPurchasesCount > 0) {
-                        TextButton(
-                            onClick = { showReviewScreen = true }
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "⚠️",
-                                    fontSize = 20.sp
-                                )
-                                Text(
-                                    text = uiState.rejectedPurchasesCount.toString(),
-                                    color = AppColors.DialogBackground,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
+                        AppButton(
+                            text = uiState.rejectedPurchasesCount.toString(),
+                            onClick = { showReviewScreen = true },
+                            variant = AppButtonVariant.Text,
+                            contentColor = AppColors.DialogBackground,
+                            size = AppButtonSize.Small,
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = stringResource(R.string.pending_purchases_title)
                                 )
                             }
-                        }
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                     
@@ -167,7 +172,7 @@ fun CashierScreen(
                         IconButton(onClick = { showPendingInfoDialog = true }) {
                             Icon(
                                 imageVector = Icons.Filled.Info,
-                                contentDescription = "Pending uploads info",
+                                contentDescription = stringResource(R.string.content_description_pending_info),
                                 tint = AppColors.DialogBackground
                             )
                         }
@@ -181,7 +186,7 @@ fun CashierScreen(
                     } else if (uiState.isProcessingPayment) {
                         Icon(
                             imageVector = Icons.Filled.Info,
-                            contentDescription = "Processing",
+                            contentDescription = stringResource(R.string.content_description_processing),
                             tint = AppColors.DialogBackground
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -208,26 +213,34 @@ fun CashierScreen(
                 Snackbar(
                     modifier = Modifier.padding(16.dp),
                     action = {
-                        TextButton(onClick = { viewModel.onAction(CashierAction.DismissWarning) }) {
-                            Text("OK", color = Color.White)
-                        }
+                        AppButton(
+                            text = stringResource(R.string.common_ok),
+                            onClick = { viewModel.onAction(CashierAction.DismissWarning) },
+                            variant = AppButtonVariant.Text,
+                            contentColor = AppColors.OnButtonPrimary,
+                            size = AppButtonSize.Small
+                        )
                     },
                     containerColor = AppColors.Warning
                 ) {
-                    Text(message)
+                    Text(message.asString())
                 }
             }
             uiState.errorMessage?.let { message ->
                 Snackbar(
                     modifier = Modifier.padding(16.dp),
                     action = {
-                        TextButton(onClick = { viewModel.onAction(CashierAction.DismissError) }) {
-                            Text("OK", color = Color.White)
-                        }
+                        AppButton(
+                            text = stringResource(R.string.common_ok),
+                            onClick = { viewModel.onAction(CashierAction.DismissError) },
+                            variant = AppButtonVariant.Text,
+                            contentColor = AppColors.OnButtonPrimary,
+                            size = AppButtonSize.Small
+                        )
                     },
                     containerColor = AppColors.Error
                 ) {
-                    Text(message)
+                    Text(message.asString())
                 }
             }
         }

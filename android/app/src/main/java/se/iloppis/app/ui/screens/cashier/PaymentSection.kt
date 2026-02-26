@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -19,6 +18,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonSize
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
 
 /**
@@ -129,59 +131,29 @@ fun PaymentSection(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
+                AppButton(
+                    text = stringResource(R.string.cashier_button_cash),
                     onClick = onCashPayment,
                     enabled = !isProcessing && total > 0,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.TextPrimary,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    if (isProcessing) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.cashier_button_cash),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
+                    loading = isProcessing,
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.Primary,
+                    size = AppButtonSize.Large,
+                    containerColor = AppColors.TextPrimary,
+                    contentColor = AppColors.OnButtonPrimary
+                )
 
-                Button(
+                AppButton(
+                    text = stringResource(R.string.cashier_button_swish),
                     onClick = onSwishPayment,
                     enabled = !isProcessing && total > 0,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.SwishBlue,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    if (isProcessing) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.cashier_button_swish),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
+                    loading = isProcessing,
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.Primary,
+                    size = AppButtonSize.Large,
+                    containerColor = AppColors.SwishBlue,
+                    contentColor = AppColors.OnButtonPrimary
+                )
             }
         }
     }

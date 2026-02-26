@@ -2,7 +2,9 @@ package se.iloppis.app.ui.dialogs
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonSize
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
@@ -75,14 +77,19 @@ fun InvalidSellerDialog(
             )
         },
         confirmButton = {
-            TextButton(onClick = onReviewNow) {
-                Text(stringResource(R.string.dialog_invalid_seller_review_now))
-            }
+            AppButton(
+                text = stringResource(R.string.dialog_invalid_seller_review_now),
+                onClick = onReviewNow,
+                variant = AppButtonVariant.Primary
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_invalid_seller_continue))
-            }
+            AppButton(
+                text = stringResource(R.string.dialog_invalid_seller_continue),
+                onClick = onDismiss,
+                variant = AppButtonVariant.Text,
+                size = AppButtonSize.Small
+            )
         }
     )
 }

@@ -39,16 +39,40 @@ enum class PurchaseSeverity {
     CRITICAL   // Contains "serverfel"
 }
 
+// ──────────────────────────────────────────────
+// Actions
+// ──────────────────────────────────────────────
+
+sealed class PendingPurchasesAction {
+    data class ToggleExpanded(val purchaseId: String) : PendingPurchasesAction()
+    data class ChangeSeller(val purchaseId: String, val itemId: String, val newSeller: Int) : PendingPurchasesAction()
+    data class DeleteItem(val purchaseId: String, val itemId: String) : PendingPurchasesAction()
+    data class DeletePurchase(val purchaseId: String) : PendingPurchasesAction()
+    data class RetryPurchase(val purchaseId: String, val apiKey: String, val eventId: String, val context: android.content.Context) : PendingPurchasesAction()
+}
+
+// ──────────────────────────────────────────────
+// ViewModel
+// ──────────────────────────────────────────────
+
 class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
+
+    companion object {
+        fun factory(eventId: String) = object : androidx.lifecycle.ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                PendingPurchasesViewModel(eventId) as T
+        }
+    }
     private val _uiState = MutableStateFlow(PendingPurchasesUiState())
     val uiState: StateFlow<PendingPurchasesUiState> = _uiState.asStateFlow()
     
     private var processingJob: Job? = null
 
     init {
-        // Initialize file store for this event
+        // Initialize file stores for this event
         val context = se.iloppis.app.ILoppisAppHolder.appContext
-        PendingItemsStore.initialize(context, eventId)
+        se.iloppis.app.data.EventStoreManager.initializeForEvent(context, eventId)
         
         loadPurchases()
         
@@ -60,11 +84,23 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
         }
     }
 
+    fun onAction(action: PendingPurchasesAction) {
+        when (action) {
+            is PendingPurchasesAction.ToggleExpanded -> toggleExpanded(action.purchaseId)
+            is PendingPurchasesAction.ChangeSeller -> changeSeller(action.purchaseId, action.itemId, action.newSeller)
+            is PendingPurchasesAction.DeleteItem -> deleteItem(action.purchaseId, action.itemId)
+            is PendingPurchasesAction.DeletePurchase -> deletePurchase(action.purchaseId)
+            is PendingPurchasesAction.RetryPurchase -> retryPurchase(action.purchaseId, action.apiKey, action.eventId, action.context)
+        }
+    }
+
     private fun loadPurchases() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            
-            val items = PendingItemsStore.readAll()
+
+            val items = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                PendingItemsStore.readAll()
+            }
             val purchases = items
                 .groupBy { it.purchaseId }
                 .map { (purchaseId, purchaseItems) ->
@@ -106,7 +142,7 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
         }
     }
 
-    fun toggleExpanded(purchaseId: String) {
+    private fun toggleExpanded(purchaseId: String) {
         _uiState.value = _uiState.value.copy(
             expandedPurchaseId = if (_uiState.value.expandedPurchaseId == purchaseId) {
                 null
@@ -116,7 +152,7 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
         )
     }
 
-    fun changeSeller(purchaseId: String, itemId: String, newSeller: Int) {
+    private fun changeSeller(purchaseId: String, itemId: String, newSeller: Int) {
         startProcessing(purchaseId) {
             PendingItemsStore.updateItems(purchaseId) { item ->
                 if (item.itemId == itemId) {
@@ -128,7 +164,7 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
         }
     }
 
-    fun deleteItem(purchaseId: String, itemId: String) {
+    private fun deleteItem(purchaseId: String, itemId: String) {
         startProcessing(purchaseId) {
             PendingItemsStore.updateItems(purchaseId) { item ->
                 if (item.itemId == itemId) null else item
@@ -136,13 +172,13 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
         }
     }
 
-    fun deletePurchase(purchaseId: String) {
+    private fun deletePurchase(purchaseId: String) {
         startProcessing(purchaseId) {
             PendingItemsStore.deleteByPurchaseId(purchaseId)
         }
     }
 
-    fun retryPurchase(purchaseId: String, apiKey: String, eventId: String, context: android.content.Context) {
+    private fun retryPurchase(purchaseId: String, apiKey: String, eventId: String, context: android.content.Context) {
         startProcessing(purchaseId) {
             // Trigger immediate sync via WorkManager
             se.iloppis.app.work.SyncScheduler.enqueueImmediate(context, apiKey, eventId)
@@ -153,7 +189,9 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
                 delay(100)
                 
                 // Check if purchase still exists
-                val remainingItems = PendingItemsStore.readAll().filter { it.purchaseId == purchaseId }
+                val remainingItems = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    PendingItemsStore.readAll().filter { it.purchaseId == purchaseId }
+                }
                 if (remainingItems.isEmpty()) {
                     // Success! All items uploaded
                     Log.d("PendingPurchasesVM", "Purchase $purchaseId successfully uploaded")

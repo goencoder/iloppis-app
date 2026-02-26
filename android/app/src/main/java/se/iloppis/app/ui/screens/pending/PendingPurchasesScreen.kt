@@ -18,15 +18,23 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
+import se.iloppis.app.ui.theme.AppColors
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -47,9 +55,12 @@ fun PendingPurchasesScreen(
     apiKey: String,
     eventId: String,
     onNavigateBack: () -> Unit,
-    viewModel: PendingPurchasesViewModel = remember(eventId) { PendingPurchasesViewModel(eventId) }
+    viewModel: PendingPurchasesViewModel = viewModel(
+        key = "pending-$eventId",
+        factory = PendingPurchasesViewModel.factory(eventId)
+    )
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
@@ -87,7 +98,7 @@ fun PendingPurchasesScreen(
                             Icons.Default.CheckCircle,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = AppColors.Info
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -113,18 +124,20 @@ fun PendingPurchasesScreen(
                             purchase = purchase,
                             isExpanded = purchase.purchaseId == uiState.expandedPurchaseId,
                             isProcessing = purchase.purchaseId == uiState.processingPurchaseId,
-                            onToggleExpand = { viewModel.toggleExpanded(purchase.purchaseId) },
+                            onToggleExpand = {
+                                viewModel.onAction(PendingPurchasesAction.ToggleExpanded(purchase.purchaseId))
+                            },
                             onChangeSeller = { itemId, newSeller ->
-                                viewModel.changeSeller(purchase.purchaseId, itemId, newSeller)
+                                viewModel.onAction(PendingPurchasesAction.ChangeSeller(purchase.purchaseId, itemId, newSeller))
                             },
                             onDeleteItem = { itemId ->
-                                viewModel.deleteItem(purchase.purchaseId, itemId)
+                                viewModel.onAction(PendingPurchasesAction.DeleteItem(purchase.purchaseId, itemId))
                             },
                             onDeletePurchase = {
-                                viewModel.deletePurchase(purchase.purchaseId)
+                                viewModel.onAction(PendingPurchasesAction.DeletePurchase(purchase.purchaseId))
                             },
                             onRetry = {
-                                viewModel.retryPurchase(purchase.purchaseId, apiKey, eventId, context)
+                                viewModel.onAction(PendingPurchasesAction.RetryPurchase(purchase.purchaseId, apiKey, eventId, context))
                             }
                         )
                     }
@@ -169,9 +182,9 @@ private fun PurchaseCard(
                     // Badge icon
                     Text(
                         text = when (purchase.severity) {
-                            PurchaseSeverity.CRITICAL -> "🔴"
-                            PurchaseSeverity.WARNING -> "⚠️"
-                            PurchaseSeverity.INFO -> "ℹ️"
+                            PurchaseSeverity.CRITICAL -> stringResource(R.string.icon_critical)
+                            PurchaseSeverity.WARNING -> stringResource(R.string.icon_warning)
+                            PurchaseSeverity.INFO -> stringResource(R.string.icon_info)
                         },
                         style = MaterialTheme.typography.headlineSmall
                     )
@@ -185,7 +198,7 @@ private fun PurchaseCard(
                         Text(
                             text = formatTimestamp(purchase.timestamp),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = AppColors.TextSecondary
                         )
                     }
                 }
@@ -195,7 +208,7 @@ private fun PurchaseCard(
                 } else {
                     Icon(
                         imageVector = if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Dölj" else "Visa"
+                        contentDescription = if (isExpanded) stringResource(R.string.content_description_hide) else stringResource(R.string.content_description_show)
                     )
                 }
             }
@@ -232,26 +245,25 @@ private fun PurchaseCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(
+                        AppButton(
+                            text = stringResource(R.string.pending_purchases_button_retry),
                             onClick = onRetry,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.pending_purchases_button_retry))
-                        }
+                            modifier = Modifier.weight(1f),
+                            variant = AppButtonVariant.Outlined,
+                            leadingIcon = {
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                            }
+                        )
                         
-                        OutlinedButton(
+                        AppButton(
+                            text = stringResource(R.string.pending_purchases_button_delete_all),
                             onClick = onDeletePurchase,
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.pending_purchases_button_delete_all))
-                        }
+                            variant = AppButtonVariant.Danger,
+                            leadingIcon = {
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                            }
+                        )
                     }
                 }
             }
@@ -271,9 +283,9 @@ private fun ItemRow(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = if (item.errorText.isNotBlank()) {
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                AppColors.ErrorContainer.copy(alpha = 0.3f)
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                AppColors.SurfaceVariant.copy(alpha = 0.5f)
             }
         )
     ) {
@@ -307,8 +319,8 @@ private fun ItemRow(
                     IconButton(onClick = onDeleteItem) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Ta bort",
-                            tint = MaterialTheme.colorScheme.error
+                            contentDescription = stringResource(R.string.content_description_delete),
+                            tint = AppColors.Error
                         )
                     }
                 }
@@ -323,12 +335,12 @@ private fun ItemRow(
                         Icons.Default.Warning,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.error
+                        tint = AppColors.Error
                     )
                     Text(
                         text = item.errorText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
+                        color = AppColors.TextError
                     )
                 }
             }
@@ -370,22 +382,24 @@ private fun ChangeSellerDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            AppButton(
+                text = stringResource(R.string.dialog_change_seller_confirm),
                 onClick = {
                     val newSeller = sellerInput.toIntOrNull()
                     if (newSeller != null && newSeller > 0) {
                         onConfirm(newSeller)
                     }
                 },
-                enabled = sellerInput.toIntOrNull()?.let { it > 0 } == true
-            ) {
-                Text(stringResource(R.string.dialog_change_seller_confirm))
-            }
+                enabled = sellerInput.toIntOrNull()?.let { it > 0 } == true,
+                variant = AppButtonVariant.Primary
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.button_cancel))
-            }
+            AppButton(
+                text = stringResource(R.string.button_cancel),
+                onClick = onDismiss,
+                variant = AppButtonVariant.Text
+            )
         }
     )
 }

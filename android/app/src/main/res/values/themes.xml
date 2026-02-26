@@ -4,4 +4,11 @@
         <item name="android:statusBarColor">@color/pink_background</item>
         <item name="android:windowBackground">@color/pink_background</item>
     </style>
+
+    <!-- Splash screen theme: green background, no visible icon -->
+    <style name="Theme.ILoppis.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_green</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.ILoppis</item>
+    </style>
 </resources>

@@ -12,12 +12,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.QrCode
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.components.buttons.IconButton
 import se.iloppis.app.ui.components.dialogs.CodeEntryDialog
 import se.iloppis.app.ui.components.navigation.ILoppisHeader
@@ -67,15 +67,16 @@ private fun SelectionScreenButtonsRow(
     ) {
         IconButton(
             text = R.string.home_open_cashier,
-            icon = Icons.Outlined.Payments
-        ) { onAction(CodeStateMode.CASHIER) }
+            icon = Icons.Outlined.Payments,
+            variant = AppButtonVariant.Primary,
+            onClick = { onAction(CodeStateMode.CASHIER) }
+        )
 
         IconButton(
             text = R.string.home_open_scanner,
-            colors = ButtonDefaults.buttonColors().copy(
-                containerColor = MaterialTheme.colorScheme.secondary
-            ),
-            icon = Icons.Outlined.QrCode
-        ) { onAction(CodeStateMode.SCANNER) }
+            icon = Icons.Outlined.QrCode,
+            variant = AppButtonVariant.Success,
+            onClick = { onAction(CodeStateMode.SCANNER) }
+        )
     }
 }

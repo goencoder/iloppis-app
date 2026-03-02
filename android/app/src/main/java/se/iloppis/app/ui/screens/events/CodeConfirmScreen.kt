@@ -11,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
+import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.domain.model.displayStatus
 import se.iloppis.app.navigation.ScreenPage
@@ -29,7 +30,7 @@ import se.iloppis.app.ui.theme.AppColors
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CodeConfirmScreen(event: Event, apiKey: String, mode: String) {
+fun CodeConfirmScreen(event: Event, apiKey: String, mode: CodeEntryMode) {
     val screen = screenContext()
 
     Scaffold(
@@ -132,16 +133,14 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: String) {
             AppButton(
                 text = stringResource(
                     when (mode) {
-                        "CASHIER" -> R.string.open_cashier_button
-                        "SCANNER" -> R.string.open_scanner_button
-                        else -> R.string.confirm_button
+                        CodeEntryMode.CASHIER -> R.string.open_cashier_button
+                        CodeEntryMode.SCANNER -> R.string.open_scanner_button
                     }
                 ),
                 onClick = {
                     val toolPage = when (mode) {
-                        "CASHIER" -> ScreenPage.Cashier(event, apiKey)
-                        "SCANNER" -> ScreenPage.Scanner(event, apiKey)
-                        else -> return@AppButton
+                        CodeEntryMode.CASHIER -> ScreenPage.Cashier(event, apiKey)
+                        CodeEntryMode.SCANNER -> ScreenPage.Scanner(event, apiKey)
                     }
                     screen.onAction(
                         ScreenAction.NavigateToPage(toolPage, true)

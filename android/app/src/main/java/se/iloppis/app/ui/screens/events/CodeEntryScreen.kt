@@ -22,10 +22,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
+import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
@@ -42,7 +44,7 @@ import se.iloppis.app.ui.theme.AppColors
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CodeEntryScreen(mode: String) {
+fun CodeEntryScreen(mode: CodeEntryMode) {
     val screen = screenContext()
     val viewModel: CodeEntryViewModel = viewModel(
         key = "code-entry-$mode",
@@ -93,9 +95,8 @@ fun CodeEntryScreen(mode: String) {
             // Mode hint
             Text(
                 text = when (mode) {
-                    "CASHIER" -> stringResource(R.string.code_entry_cashier_hint)
-                    "SCANNER" -> stringResource(R.string.code_entry_scanner_hint)
-                    else -> stringResource(R.string.code_entry_label)
+                    CodeEntryMode.CASHIER -> stringResource(R.string.code_entry_cashier_hint)
+                    CodeEntryMode.SCANNER -> stringResource(R.string.code_entry_scanner_hint)
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 24.dp)
@@ -104,6 +105,7 @@ fun CodeEntryScreen(mode: String) {
             // Code input field with XXX-YYY auto-formatting
             OutlinedTextField(
                 value = state.displayCode,
+                visualTransformation = CodeEntryFormatTransform(),
                 onValueChange = { viewModel.onAction(CodeEntryAction.UpdateCode(it)) },
                 label = { Text(stringResource(R.string.code_entry_label)) },
                 placeholder = { Text(stringResource(R.string.code_entry_placeholder)) },

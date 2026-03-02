@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -16,31 +17,38 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.CodeBox
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
+
+private const val CODE_LENGTH = 6
 
 /**
  * Screen for direct code entry to access Cashier/Scanner modes.
@@ -97,6 +105,9 @@ fun CodeEntryScreen(mode: CodeEntryMode, eventId: String? = null) {
             )
         }
     ) { paddingValues ->
+        val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,57 +120,121 @@ fun CodeEntryScreen(mode: CodeEntryMode, eventId: String? = null) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
                     text = when (mode) {
-                        CodeEntryMode.CASHIER -> stringResource(R.string.code_entry_cashier_hint)
-                        CodeEntryMode.SCANNER -> stringResource(R.string.code_entry_scanner_hint)
+                        CodeEntryMode.CASHIER -> stringResource(R.string.code_entry_subtitle_cashier)
+                        CodeEntryMode.SCANNER -> stringResource(R.string.code_entry_subtitle_scanner)
                     },
                     style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
             }
 
-            // ── Code input field with XXX-YYY auto-formatting ──
+            // ── 6-box code input (XXX - YYY) ──
             item {
-                OutlinedTextField(
-                    value = state.displayCode,
-                    visualTransformation = CodeEntryFormatTransform(),
+                val hasError = state.errorKey != null
+                BasicTextField(
+                    value = state.rawCode,
                     onValueChange = { viewModel.onAction(CodeEntryAction.UpdateCode(it)) },
-                    label = { Text(stringResource(R.string.code_entry_label)) },
-                    placeholder = { Text(stringResource(R.string.code_entry_placeholder)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    enabled = !state.isLoading,
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done,
-                        capitalization = KeyboardCapitalization.Characters
+                        autoCorrectEnabled = false,
+                        capitalization = KeyboardCapitalization.Characters,
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = { viewModel.onAction(CodeEntryAction.VerifyCode) }
                     ),
-                    singleLine = true
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
+                    decorationBox = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // First 3 boxes
+                            repeat(3) { index ->
+                                CodeBox(
+                                    char = state.rawCode.getOrNull(index)?.toString() ?: "",
+                                    isFocused = state.rawCode.length == index,
+                                    hasError = hasError && state.isCodeComplete,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (index < 2) Spacer(modifier = Modifier.width(6.dp))
+                            }
+                            // Dash separator
+                            Text(
+                                text = stringResource(R.string.code_separator),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AppColors.TextMuted,
+                                modifier = Modifier.padding(horizontal = 6.dp)
+                            )
+                            // Last 3 boxes
+                            repeat(3) { index ->
+                                CodeBox(
+                                    char = state.rawCode.getOrNull(index + 3)?.toString() ?: "",
+                                    isFocused = state.rawCode.length == index + 3,
+                                    hasError = hasError && state.isCodeComplete,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (index < 2) Spacer(modifier = Modifier.width(6.dp))
+                            }
+                        }
+                    }
                 )
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // ── Error message ──
+            // ── Error / loading indicator ──
             item {
-                val errorText = when (state.errorKey) {
-                    "inactive" -> stringResource(R.string.code_entry_error_inactive)
-                    "wrong_type_cashier" -> stringResource(R.string.code_entry_error_wrong_type_cashier)
-                    "wrong_type_scanner" -> stringResource(R.string.code_entry_error_wrong_type_scanner)
-                    "not_found" -> stringResource(R.string.code_entry_error_not_found)
-                    "network" -> stringResource(R.string.code_entry_error_network)
-                    else -> null
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        state.isLoading -> {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    strokeWidth = 2.dp,
+                                    color = AppColors.TextMuted
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.code_validating),
+                                    fontSize = 12.sp,
+                                    color = AppColors.TextMuted
+                                )
+                            }
+                        }
+                        state.errorKey != null -> {
+                            val errorText = when (state.errorKey) {
+                                "inactive" -> stringResource(R.string.code_entry_error_inactive)
+                                "wrong_type_cashier" -> stringResource(R.string.code_entry_error_wrong_type_cashier)
+                                "wrong_type_scanner" -> stringResource(R.string.code_entry_error_wrong_type_scanner)
+                                "not_found" -> stringResource(R.string.code_entry_error_not_found)
+                                "network" -> stringResource(R.string.code_entry_error_network)
+                                else -> null
+                            }
+                            if (errorText != null) {
+                                Text(
+                                    text = errorText,
+                                    fontSize = 12.sp,
+                                    color = AppColors.TextError,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
                 }
-                if (errorText != null) {
-                    Text(
-                        text = errorText,
-                        color = AppColors.TextError,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                    )
-                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
             // ── Verify button ──

@@ -30,7 +30,6 @@ import se.iloppis.app.R
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.navigation.ScreenPage
-import se.iloppis.app.ui.theme.AppColors
 
 /**
  * Application navigator
@@ -62,7 +61,7 @@ fun Navigator(
 
     NavigationBar(
         modifier = Modifier.height(height),
-        containerColor = AppColors.NavigatorOverlay.copy(alpha)
+        containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha)
     ) {
         Row(modifier = Modifier
             .fillMaxSize()
@@ -114,9 +113,9 @@ fun NavigatorButton(
                 imageVector = image,
                 contentDescription = description,
                 tint = if(enable)
-                    AppColors.Background
+                    MaterialTheme.colorScheme.background
                 else
-                    AppColors.Background.copy(alpha = 0.4f)
+                    MaterialTheme.colorScheme.background.copy(alpha = 0.4f)
             )
         }
     }

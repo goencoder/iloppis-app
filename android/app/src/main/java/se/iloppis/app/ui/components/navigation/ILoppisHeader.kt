@@ -2,6 +2,7 @@ package se.iloppis.app.ui.components.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,21 +20,26 @@ import androidx.compose.ui.unit.sp
 import se.iloppis.app.ui.theme.AppColors
 
 /**
- * App header — "Soft Band" design.
+ * Unified app header — "Soft Band" design.
  *
- * Warm neutral background (#F7F6F4) avoids green-on-green with the logo.
- * 1px warm gray border provides clear separation from content.
- * Logo centered, sized Large for prominence.
+ * Warm neutral background with logo centered at the top.
+ * Accepts an optional [content] slot for toolbar elements (buttons, search,
+ * filter chips) that should visually belong to the header zone.
+ * A single 1px warm gray divider separates the entire header from scrollable content.
  *
- * @param subtitle Optional string resource ID for a subtitle below the logo.
+ * @param subtitle Optional page subtitle below the logo.
+ * @param content  Optional composable slot for toolbar items (buttons, search, filters).
  */
 @Composable
-fun ILoppisHeader(subtitle: Int? = null) {
+fun ILoppisHeader(
+    subtitle: Int? = null,
+    content: (@Composable ColumnScope.() -> Unit)? = null
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFFF7F6F4))
-            .padding(top = 16.dp, bottom = 0.dp),
+            .padding(top = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ILoppisLogo(size = LogoSize.Large)
@@ -48,7 +54,18 @@ fun ILoppisHeader(subtitle: Int? = null) {
             )
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        if (content != null) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                content()
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         HorizontalDivider(
             color = Color(0xFFE8E5E0),

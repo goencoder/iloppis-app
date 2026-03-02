@@ -57,13 +57,14 @@
     <string name="code_entry_label">Ange kod</string>
     <string name="code_entry_cashier_hint">Ange kassans kod</string>
     <string name="code_entry_scanner_hint">Ange skannerns kod</string>
-    <string name="code_entry_placeholder">XXX-YYY</string>
     <string name="code_entry_error_inactive">Koden är inte aktiv</string>
     <string name="code_entry_error_wrong_type_cashier">Koden är inte en kassakod</string>
     <string name="code_entry_error_wrong_type_scanner">Koden är inte en skannerkod</string>
     <string name="code_entry_error_not_found">Koden hittades inte</string>
     <string name="code_entry_error_network">Nätverksfel. Kontrollera din anslutning.</string>
     <string name="verify_button">Verifiera</string>
+    <string name="cancel_button">Avbryt</string>
+    <string name="back">Tillbaka</string>
 
     <!-- Code Confirmation Screen -->
     <string name="confirm_event_title">Bekräfta</string>
@@ -257,45 +258,4 @@
     <!-- Swipe to dismiss box -->
     <string name="swipe_box_remove">Ta bort</string>
     <string name="swipe_box_archive">Arkivera</string>
-
-    <!-- Common -->
-    <string name="common_ok">OK</string>
-    <string name="common_error_title">Fel</string>
-    <string name="icon_success">✅</string>
-    <string name="icon_error">❌</string>
-    <string name="icon_warning">⚠️</string>
-    <string name="icon_info">ℹ️</string>
-    <string name="icon_critical">🔴</string>
-    <string name="content_description_hide">Dölj</string>
-    <string name="content_description_show">Visa</string>
-    <string name="content_description_delete">Ta bort</string>
-    <string name="content_description_pending_info">Info om väntande uppladdningar</string>
-    <string name="content_description_processing">Bearbetar</string>
-
-    <!-- Purchase Review Screen - Section Headers -->
-    <string name="review_section_server_error">🔴 SERVERFEL (%1$d köp)</string>
-    <string name="review_section_needs_review">🟡 KRÄVER GRANSKNING (%1$d köp)</string>
-    <string name="review_purchase_header">📦 Köp %1$s - %2$s</string>
-    <string name="review_items_total">%1$d artiklar, %2$d kr</string>
-    <string name="review_error_server_auto_sync">❌ %1$s\nSynkar automatiskt när servern svarar.</string>
-    <string name="review_error_prefix">❌ %1$s</string>
-    <string name="review_seller_error">Säljare %1$d: %2$s</string>
-    <string name="review_waiting_for_server">Väntar på server…</string>
-
-    <!-- ViewModel error/warning messages (resolved in Screen via stringResource) -->
-    <string name="cashier_warning_saved_locally">Sparade lokalt. Synkar i bakgrunden när nätet är tillbaka.</string>
-    <string name="cashier_error_load_sellers">Kunde inte ladda säljare: %1$s</string>
-    <string name="cashier_warning_invalid_seller">Ogiltigt säljarnummer</string>
-    <string name="cashier_warning_enter_price">Ange minst ett pris</string>
-    <string name="cashier_warning_invalid_price">Ogiltigt pris: %1$s</string>
-    <string name="cashier_warning_no_items">Inga varor att betala</string>
-    <string name="review_error_purchase_not_found">Köpet hittades inte</string>
-    <string name="review_error_invalid_seller">Ogiltigt säljarnummer</string>
-    <string name="review_error_seller_not_approved">Säljare %1$d är inte godkänd för detta event</string>
-    <string name="review_error_cannot_remove_last">Kan inte ta bort sista artikeln. Radera hela köpet istället.</string>
-    <string name="review_success_deleted">Köpet har raderats</string>
-    <string name="review_success_uploaded">Köpet har laddats upp!</string>
-    <string name="review_error_upload_failed">Uppladdning misslyckades: %1$s</string>
-    <string name="review_error_network">Nätverksfel: %1$s</string>
-    <string name="review_error_delete_failed">Kunde inte radera köpet: %1$s</string>
 </resources>

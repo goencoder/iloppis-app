@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
-import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.components.buttons.IconButton
 import se.iloppis.app.ui.components.events.SwipeableEventList
 import se.iloppis.app.ui.components.navigation.ILoppisHeader
@@ -89,7 +88,7 @@ private fun UnifiedEventListContent(
             .statusBarsPadding()
     ) {
         // Header
-        ILoppisHeader()
+        ILoppisHeader(R.string.pages_home)
 
         Column(
             modifier = Modifier
@@ -140,17 +139,16 @@ private fun ToolAccessButtons(
     ) {
         IconButton(
             text = R.string.home_open_cashier,
-            icon = Icons.Outlined.Payments,
-            variant = AppButtonVariant.Primary,
-            onClick = onCashierClick
-        )
+            icon = Icons.Outlined.Payments
+        ) { onCashierClick() }
 
         IconButton(
             text = R.string.home_open_scanner,
-            icon = Icons.Outlined.QrCode,
-            variant = AppButtonVariant.Success,
-            onClick = onScannerClick
-        )
+            colors = ButtonDefaults.buttonColors().copy(
+                containerColor = MaterialTheme.colorScheme.secondary
+            ),
+            icon = Icons.Outlined.QrCode
+        ) { onScannerClick() }
     }
 }
 

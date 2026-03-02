@@ -38,6 +38,7 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.domain.model.displayStatus
 import se.iloppis.app.ui.components.DisplayStatusBadge
+import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
 
 /**
@@ -72,13 +73,13 @@ fun SwipeToDismissEventCard(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(lerp(
-                                AppColors.Background,
-                                AppColors.Success,
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.secondary,
                                 state.progress
                             ), shape = RoundedCornerShape(16.dp))
                             .wrapContentSize(Alignment.CenterStart)
                             .padding(12.dp),
-                        tint = AppColors.Background
+                        tint = MaterialTheme.colorScheme.background
                     )
                 }
                 SwipeToDismissBoxValue.EndToStart -> {
@@ -88,13 +89,13 @@ fun SwipeToDismissEventCard(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(lerp(
-                                AppColors.Background,
-                                AppColors.Error,
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.error,
                                 state.progress
                             ), shape = RoundedCornerShape(16.dp))
                             .wrapContentSize(Alignment.CenterEnd)
                             .padding(12.dp),
-                        tint = AppColors.Background
+                        tint = MaterialTheme.colorScheme.background
                     )
                 }
                 SwipeToDismissBoxValue.Settled -> {}

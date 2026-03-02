@@ -72,7 +72,7 @@ struct EventListScreen: View {
 
     private var quickAccessButtons: some View {
         HStack(spacing: 16) {
-            Button(action: { viewModel.onAction(.startCodeEntry(mode: .cashier, event: nil)) }) {
+            Button(action: { viewModel.onAction(.startCodeEntry(mode: .cashier, event: Event.placeholder)) }) {
                 HStack {
                     Image(systemName: "creditcard.fill")
                     VStack(alignment: .leading, spacing: 2) {
@@ -88,7 +88,7 @@ struct EventListScreen: View {
             }
             .buttonStyle(.plain)
 
-            Button(action: { viewModel.onAction(.startCodeEntry(mode: .scanner, event: nil)) }) {
+            Button(action: { viewModel.onAction(.startCodeEntry(mode: .scanner, event: Event.placeholder)) }) {
                 HStack {
                     Image(systemName: "qrcode")
                     VStack(alignment: .leading, spacing: 2) {

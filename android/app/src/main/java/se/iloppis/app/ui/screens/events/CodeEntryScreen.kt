@@ -1,21 +1,13 @@
 package se.iloppis.app.ui.screens.events
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -23,15 +15,22 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import se.iloppis.app.R
+import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.navigation.ScreenPage
-import se.iloppis.app.ui.components.buttons.AppButton
-import se.iloppis.app.ui.components.buttons.AppButtonVariant
+import se.iloppis.app.network.ILoppisClient
+import se.iloppis.app.network.config.clientConfig
+import se.iloppis.app.network.events.EventAPI
+import se.iloppis.app.network.keys.KeyAPI
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
+
+private const val TAG = "CodeEntryScreen"
+
+@OptIn(ExperimentalMaterial3Api::class)
 
 /**
  * Screen for direct code entry to access Cashier/Scanner modes.
@@ -40,29 +39,98 @@ import se.iloppis.app.ui.theme.AppColors
  * On verify: resolves alias via API, validates type/active,
  * then navigates to CodeConfirmScreen on success.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CodeEntryScreen(mode: String) {
     val screen = screenContext()
-    val viewModel: CodeEntryViewModel = viewModel(
-        key = "code-entry-$mode",
-        factory = CodeEntryViewModel.factory(mode)
-    )
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var rawCode by remember { mutableStateOf("") } // Up to 6 alphanumeric chars
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
-    // React to successful verification → navigate to CodeConfirm
-    LaunchedEffect(state.verifiedResult) {
-        val result = state.verifiedResult ?: return@LaunchedEffect
-        screen.onAction(
-            ScreenAction.NavigateToPage(
-                ScreenPage.CodeConfirm(
-                    event = result.event,
-                    apiKey = result.apiKey,
-                    mode = result.mode
+    // Format for display: XXX-YYY
+    val displayCode = if (rawCode.length > 3) {
+        "${rawCode.substring(0, 3)}-${rawCode.substring(3)}"
+    } else {
+        rawCode
+    }
+
+    val isCodeComplete = rawCode.length == 6
+
+    fun onCodeChange(input: String) {
+        // Strip dashes, whitespace, and non-alphanumeric, limit to 6
+        val cleaned = input.replace("-", "").replace(" ", "")
+            .filter { it.isLetterOrDigit() }
+            .take(6)
+            .uppercase()
+        rawCode = cleaned
+        errorMessage = null
+    }
+
+    fun verifyCode() {
+        if (!isCodeComplete || isLoading) return
+        val formattedAlias = "${rawCode.substring(0, 3)}-${rawCode.substring(3, 6)}"
+        scope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                val keyApi = ILoppisClient(clientConfig()).create<KeyAPI>()
+                val response = keyApi.getApiKeyByAlias(formattedAlias)
+                Log.d(TAG, "Alias resolved: eventId=${response.eventId}, type=${response.type}, active=${response.isActive}")
+
+                // Validate isActive
+                if (!response.isActive) {
+                    errorMessage = "inactive"
+                    isLoading = false
+                    return@launch
+                }
+
+                // Validate type matches mode
+                val responseType = response.type?.uppercase() ?: ""
+                val isValidType = when (mode) {
+                    "CASHIER" -> responseType.contains("CASHIER")
+                    "SCANNER" -> responseType.contains("SCANNER")
+                    else -> true
+                }
+                if (responseType.isNotEmpty() && !isValidType) {
+                    errorMessage = if (mode == "CASHIER") "wrong_type_cashier" else "wrong_type_scanner"
+                    isLoading = false
+                    return@launch
+                }
+
+                // Fetch the event to show in confirmation
+                val eventApi = ILoppisClient(clientConfig()).create<EventAPI>()
+                val eventResponse = eventApi.get(response.eventId)
+                val event = eventResponse.events.firstOrNull()?.toDomain()
+
+                if (event == null) {
+                    errorMessage = "not_found"
+                    isLoading = false
+                    return@launch
+                }
+
+                // Navigate to Code Confirm
+                screen.onAction(
+                    ScreenAction.NavigateToPage(
+                        ScreenPage.CodeConfirm(
+                            event = event,
+                            apiKey = response.apiKey,
+                            mode = mode
+                        )
+                    )
                 )
-            )
-        )
-        viewModel.onAction(CodeEntryAction.NavigationConsumed)
+            } catch (e: HttpException) {
+                Log.e(TAG, "HTTP Error ${e.code()}", e)
+                errorMessage = when (e.code()) {
+                    404 -> "not_found"
+                    else -> "network"
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error verifying code", e)
+                errorMessage = "network"
+            } finally {
+                isLoading = false
+            }
+        }
     }
 
     Scaffold(
@@ -75,7 +143,7 @@ fun CodeEntryScreen(mode: String) {
                     IconButton(onClick = { screen.popPage() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.button_back)
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 }
@@ -103,27 +171,27 @@ fun CodeEntryScreen(mode: String) {
 
             // Code input field with XXX-YYY auto-formatting
             OutlinedTextField(
-                value = state.displayCode,
-                onValueChange = { viewModel.onAction(CodeEntryAction.UpdateCode(it)) },
+                value = displayCode,
+                onValueChange = { onCodeChange(it) },
                 label = { Text(stringResource(R.string.code_entry_label)) },
-                placeholder = { Text(stringResource(R.string.code_entry_placeholder)) },
+                placeholder = { Text("XXX-YYY") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                enabled = !state.isLoading,
+                enabled = !isLoading,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done,
                     capitalization = KeyboardCapitalization.Characters
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = { viewModel.onAction(CodeEntryAction.VerifyCode) }
+                    onDone = { verifyCode() }
                 ),
                 singleLine = true
             )
 
             // Error message
-            val errorText = when (state.errorKey) {
+            val errorText = when (errorMessage) {
                 "inactive" -> stringResource(R.string.code_entry_error_inactive)
                 "wrong_type_cashier" -> stringResource(R.string.code_entry_error_wrong_type_cashier)
                 "wrong_type_scanner" -> stringResource(R.string.code_entry_error_wrong_type_scanner)
@@ -142,26 +210,37 @@ fun CodeEntryScreen(mode: String) {
             }
 
             // Verify button
-            AppButton(
-                text = stringResource(R.string.verify_button),
-                onClick = { viewModel.onAction(CodeEntryAction.VerifyCode) },
+            Button(
+                onClick = { verifyCode() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
-                enabled = state.isCodeComplete,
-                loading = state.isLoading,
-                variant = AppButtonVariant.Primary
-            )
+                enabled = isCodeComplete && !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(stringResource(R.string.verify_button))
+            }
 
             // Cancel button
-            AppButton(
-                text = stringResource(R.string.button_cancel),
+            Button(
                 onClick = { screen.popPage() },
                 modifier = Modifier.fillMaxWidth(),
-                variant = AppButtonVariant.Secondary,
-                containerColor = AppColors.Background,
-                contentColor = AppColors.TextPrimary
-            )
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.Background
+                )
+            ) {
+                Text(
+                    stringResource(R.string.cancel_button),
+                    color = AppColors.TextPrimary
+                )
+            }
         }
     }
 }
+

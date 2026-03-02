@@ -20,4 +20,3 @@ struct Event: Identifiable, Equatable {
         addressCity: nil,
         lifecycleState: nil
     )
-}

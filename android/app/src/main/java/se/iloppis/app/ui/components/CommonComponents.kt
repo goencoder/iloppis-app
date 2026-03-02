@@ -17,9 +17,6 @@ import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.EventDisplayStatus
 import se.iloppis.app.domain.model.EventState
-import se.iloppis.app.ui.components.buttons.AppButton
-import se.iloppis.app.ui.components.buttons.AppButtonSize
-import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
 
 /**
@@ -79,7 +76,7 @@ fun StarIcon() {
     Icon(
         imageVector = Icons.Filled.Star,
         contentDescription = stringResource(R.string.store_event_locally),
-        tint = AppColors.Gold,
+        tint = MaterialTheme.colorScheme.onTertiaryFixed,
         modifier = Modifier.padding(horizontal = 8.dp)
     )
 }
@@ -134,14 +131,24 @@ fun PrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    AppButton(
-        text = text,
+    Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.fillMaxWidth(),
-        variant = AppButtonVariant.Primary,
-        size = AppButtonSize.XLarge
-    )
+        modifier = modifier
+            .fillMaxWidth()
+            .height(50.dp),
+        shape = RoundedCornerShape(25.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = AppColors.ButtonPrimary,
+            disabledContainerColor = AppColors.ButtonPrimaryDisabled
+        )
+    ) {
+        Text(
+            text = text,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
 
 /**
@@ -149,14 +156,14 @@ fun PrimaryButton(
  */
 @Composable
 fun CancelTextButton(
-    text: String = stringResource(R.string.button_cancel),
+    text: String = "Avbryt",
     onClick: () -> Unit
 ) {
-    AppButton(
-        text = text,
-        onClick = onClick,
-        variant = AppButtonVariant.Text,
-        contentColor = AppColors.TextError,
-        size = AppButtonSize.Small
-    )
+    TextButton(onClick = onClick) {
+        Text(
+            text = text,
+            color = AppColors.TextError,
+            fontSize = 14.sp
+        )
+    }
 }

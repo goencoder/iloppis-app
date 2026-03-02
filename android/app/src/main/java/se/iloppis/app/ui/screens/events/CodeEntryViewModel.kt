@@ -1,6 +1,10 @@
 package se.iloppis.app.ui.screens.events
 
 import android.util.Log
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import se.iloppis.app.data.mappers.EventMapper.toDomain
+import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.config.clientConfig
@@ -22,7 +27,7 @@ private const val TAG = "CodeEntryViewModel"
 // ──────────────────────────────────────────────
 
 data class CodeEntryUiState(
-    val mode: String = "",
+    val mode: CodeEntryMode = CodeEntryMode.CASHIER,
     val rawCode: String = "",
     val isLoading: Boolean = false,
     val errorKey: String? = null,
@@ -31,11 +36,7 @@ data class CodeEntryUiState(
 ) {
     /** Formatted display code: XXX-YYY */
     val displayCode: String
-        get() = if (rawCode.length > 3) {
-            "${rawCode.substring(0, 3)}-${rawCode.substring(3)}"
-        } else {
-            rawCode
-        }
+        get() = rawCode
 
     val isCodeComplete: Boolean get() = rawCode.length == 6
 }
@@ -43,8 +44,37 @@ data class CodeEntryUiState(
 data class CodeVerifiedResult(
     val event: Event,
     val apiKey: String,
-    val mode: String
+    val mode: CodeEntryMode
 )
+
+// ──────────────────────────────────────────────
+// Code entry format transform
+// ──────────────────────────────────────────────
+
+class CodeEntryFormatTransform : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val format = AnnotatedString.Builder(
+            if(text.length > 3) {
+                "${text.substring(0, 3)}-${text.substring(3)}"
+            } else {
+                text.text
+            }
+        ).toAnnotatedString()
+
+        val mapper = object : OffsetMapping  {
+            override fun originalToTransformed(offset: Int): Int {
+                return if(offset <= 3) offset
+                else offset + 1
+            }
+            override fun transformedToOriginal(offset: Int): Int {
+                return if(offset <= 4) offset
+                else offset - 1
+            }
+        }
+
+        return TransformedText(format, mapper)
+    }
+}
 
 // ──────────────────────────────────────────────
 // Actions
@@ -60,10 +90,10 @@ sealed class CodeEntryAction {
 // ViewModel
 // ──────────────────────────────────────────────
 
-class CodeEntryViewModel(private val mode: String) : ViewModel() {
+class CodeEntryViewModel(private val mode: CodeEntryMode) : ViewModel() {
 
     companion object {
-        fun factory(mode: String) = object : androidx.lifecycle.ViewModelProvider.Factory {
+        fun factory(mode: CodeEntryMode) = object : androidx.lifecycle.ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                 CodeEntryViewModel(mode) as T
@@ -115,14 +145,13 @@ class CodeEntryViewModel(private val mode: String) : ViewModel() {
                 // Validate type matches mode
                 val responseType = response.type?.uppercase() ?: ""
                 val isValidType = when (mode) {
-                    "CASHIER" -> responseType.contains("CASHIER")
-                    "SCANNER" -> responseType.contains("SCANNER")
-                    else -> true
+                    CodeEntryMode.CASHIER -> responseType.contains("CASHIER")
+                    CodeEntryMode.SCANNER -> responseType.contains("SCANNER")
                 }
                 if (responseType.isNotEmpty() && !isValidType) {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorKey = if (mode == "CASHIER") "wrong_type_cashier" else "wrong_type_scanner"
+                        errorKey = if (mode == CodeEntryMode.CASHIER) "wrong_type_cashier" else "wrong_type_scanner"
                     )
                     return@launch
                 }

@@ -1,5 +1,6 @@
 package se.iloppis.app.ui.screens.events
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,8 +18,9 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.buttons.AppButton
+import se.iloppis.app.ui.components.buttons.AppButtonSize
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
-import se.iloppis.app.ui.components.buttons.IconButton
 import se.iloppis.app.ui.components.events.SwipeableEventList
 import se.iloppis.app.ui.components.navigation.ILoppisHeader
 import se.iloppis.app.ui.screens.screenContext
@@ -89,22 +91,16 @@ private fun UnifiedEventListContent(
             .fillMaxSize()
             .statusBarsPadding()
     ) {
-        // Header
-        ILoppisHeader(R.string.app_title)
+        // Header with logo
+        ILoppisHeader()
 
+        // Scrollable content area
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
+                .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            // Quick access buttons for Cashier/Scanner
-            ToolAccessButtons(
-                onCashierClick = onCashierClick,
-                onScannerClick = onScannerClick
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
             // Functional Search bar
             SearchBar(
                 query = state.searchQuery,
@@ -122,36 +118,77 @@ private fun UnifiedEventListContent(
                 state = state,
                 onReload = onReload,
                 onEventClick = onEventClick,
+                modifier = Modifier.weight(1f)
             )
         }
+
+        // Sticky footer with tool buttons
+        FooterToolButtons(
+            onCashierClick = onCashierClick,
+            onScannerClick = onScannerClick
+        )
     }
 }
 
 /**
- * Row with quick access buttons for Cashier and Scanner
+ * Sticky footer with Cashier and Scanner buttons.
+ * Styled identically to EventToolButtons in the event detail screen.
  */
 @Composable
-private fun ToolAccessButtons(
+private fun FooterToolButtons(
     onCashierClick: () -> Unit,
     onScannerClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AppColors.Background)
+            .navigationBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        IconButton(
-            text = R.string.home_open_cashier,
-            icon = Icons.Outlined.Payments,
-            variant = AppButtonVariant.Primary,
-            onClick = onCashierClick
+        HorizontalDivider(
+            color = AppColors.Border,
+            thickness = 1.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
         )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Cashier button
+            AppButton(
+                text = stringResource(R.string.home_open_cashier),
+                onClick = onCashierClick,
+                modifier = Modifier.weight(1f),
+                variant = AppButtonVariant.Primary,
+                size = AppButtonSize.Large,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Payments,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                }
+            )
 
-        IconButton(
-            text = R.string.home_open_scanner,
-            icon = Icons.Outlined.QrCode,
-            variant = AppButtonVariant.Success,
-            onClick = onScannerClick
-        )
+            // Scanner button
+            AppButton(
+                text = stringResource(R.string.home_open_scanner),
+                onClick = onScannerClick,
+                modifier = Modifier.weight(1f),
+                variant = AppButtonVariant.Success,
+                size = AppButtonSize.Large,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.QrCode,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                }
+            )
+        }
     }
 }
 
@@ -223,8 +260,10 @@ private fun EventListBody(
     state: EventListUiState,
     onReload: () -> Unit,
     onEventClick: (Event) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
+        modifier = modifier.fillMaxWidth(),
         isRefreshing = false,
         onRefresh = onReload
     ) {

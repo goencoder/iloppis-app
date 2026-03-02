@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
+import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
@@ -56,14 +57,14 @@ fun EventListScreen() {
         onCashierClick = {
             screen.onAction(
                 ScreenAction.NavigateToPage(
-                    ScreenPage.CodeEntry("CASHIER")
+                    ScreenPage.CodeEntry(CodeEntryMode.CASHIER)
                 )
             )
         },
         onScannerClick = {
             screen.onAction(
                 ScreenAction.NavigateToPage(
-                    ScreenPage.CodeEntry("SCANNER")
+                    ScreenPage.CodeEntry(CodeEntryMode.SCANNER)
                 )
             )
         }
@@ -89,7 +90,7 @@ private fun UnifiedEventListContent(
             .statusBarsPadding()
     ) {
         // Header
-        ILoppisHeader(R.string.pages_home)
+        ILoppisHeader(R.string.app_title)
 
         Column(
             modifier = Modifier

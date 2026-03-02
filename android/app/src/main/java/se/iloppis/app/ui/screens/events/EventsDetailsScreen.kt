@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
+import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.domain.model.displayStatus
 import se.iloppis.app.navigation.ScreenPage
@@ -289,7 +290,7 @@ private fun EventToolButtons(event: Event) {
             text = stringResource(R.string.home_open_cashier),
             onClick = {
                 screen.onAction(
-                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry("CASHIER"))
+                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.CASHIER))
                 )
             },
             modifier = Modifier.weight(1f),
@@ -308,7 +309,7 @@ private fun EventToolButtons(event: Event) {
             text = stringResource(R.string.home_open_scanner),
             onClick = {
                 screen.onAction(
-                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry("SCANNER"))
+                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.SCANNER))
                 )
             },
             modifier = Modifier.weight(1f),

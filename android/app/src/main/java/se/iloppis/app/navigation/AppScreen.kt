@@ -1,33 +1,11 @@
 package se.iloppis.app.navigation
 
+import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.domain.model.Event
 
 /**
- * Represents the current navigation destination in the app.
- */
-@Deprecated("use new screen model system")
-sealed class AppScreen {
-    /** Event list / home screen */
-    data object EventList : AppScreen()
-
-    /** Cashier mode screen */
-    data class Cashier(
-        val event: Event,
-        val apiKey: String
-    ) : AppScreen()
-
-    /** Scanner mode screen */
-    data class Scanner(
-        val event: Event,
-        val apiKey: String
-    ) : AppScreen()
-}
-
-
-
-/**
  * Screen view state page - unified navigation structure
- * 
+ *
  * Navigation flow:
  * - EventList: Primary screen showing events with search/filters and tool entry buttons
  * - EventsDetailPage: Event details with full information and tool options
@@ -43,7 +21,7 @@ sealed class ScreenPage {
 
     /**
      * Unified event list screen (merged Home + Search)
-     * 
+     *
      * Shows:
      * - Event search and filters
      * - List of events
@@ -74,7 +52,7 @@ sealed class ScreenPage {
         /**
          * Tool mode (CASHIER or SCANNER)
          */
-        val mode: String
+        val mode: CodeEntryMode
     ) : ScreenPage()
 
     /**
@@ -97,7 +75,7 @@ sealed class ScreenPage {
         /**
          * Tool mode (CASHIER or SCANNER)
          */
-        val mode: String
+        val mode: CodeEntryMode
     ) : ScreenPage()
 
     /**

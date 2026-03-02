@@ -33,7 +33,7 @@ import se.iloppis.app.ui.theme.AppColors
  * Shop icon + "iLoppis" text in a pill-shaped container.
  *
  * The "i" is colored with [AppColors.Success] (green) and
- * "Loppis" with [AppColors.Primary] (teal), matching the web frontend.
+ * "Loppis" with [AppColors.Primary] (brand primary/red), matching the web frontend.
  */
 @Composable
 fun ILoppisLogo(
@@ -43,7 +43,7 @@ fun ILoppisLogo(
     Row(
         modifier = modifier
             .background(
-                color = Color(0xFFEFEDEA),
+                color = AppColors.LogoBackground,
                 shape = RoundedCornerShape(999.dp)
             )
             .padding(horizontal = size.paddingH, vertical = size.paddingV),

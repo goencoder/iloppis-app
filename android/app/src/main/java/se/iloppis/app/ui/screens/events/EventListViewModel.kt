@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -39,6 +40,8 @@ class EventListViewModel : ViewModel() {
         private set
 
     private var searchJob: Job? = null
+    private var loadJob: Job? = null
+    private var loadGeneration: Long = 0
 
     init {
         loadEvents()
@@ -77,15 +80,21 @@ class EventListViewModel : ViewModel() {
      * Load events based on current search + filter state.
      */
     private fun loadEvents() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        val generation = ++loadGeneration
+        loadJob = viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null)
             try {
                 val events = loadFilteredEvents()
+                if (generation != loadGeneration) return@launch
                 uiState = uiState.copy(
                     events = events,
                     isLoading = false
                 )
+            } catch (_: CancellationException) {
+                // Ignore cancellation when newer requests supersede this one.
             } catch (e: Exception) {
+                if (generation != loadGeneration) return@launch
                 val errorMsg = when (e) {
                     is HttpException -> "HTTP ${e.code()}: ${e.message()}"
                     else -> "Network Error: ${e.message}"

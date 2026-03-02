@@ -17,7 +17,7 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
-            resValue("string", "app_name", "iLoppis ( Staging )")
+            resValue("string", "app_name", "iLoppis")
         }
         create("production") {
             dimension = "environment"

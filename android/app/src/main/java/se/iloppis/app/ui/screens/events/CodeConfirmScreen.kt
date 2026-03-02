@@ -40,7 +40,7 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: String) {
                     IconButton(onClick = { screen.popPage() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
+                            contentDescription = stringResource(R.string.button_back)
                         )
                     }
                 }
@@ -162,11 +162,10 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: String) {
                 )
             ) {
                 Text(
-                    stringResource(R.string.cancel_button),
+                    stringResource(R.string.button_cancel),
                     color = AppColors.TextPrimary
                 )
             }
         }
     }
 }
-

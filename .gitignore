@@ -71,3 +71,4 @@ npm-debug.log*
 # Test outputs
 test-results/
 coverage/
+.idea/

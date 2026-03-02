@@ -67,7 +67,7 @@ fun EventsDetailsScreen(event: Event) {
                     IconButton(onClick = { screen.popPage() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
+                            contentDescription = stringResource(R.string.button_back)
                         )
                     }
                 }
@@ -316,4 +316,3 @@ private fun EventToolButtons(event: Event) {
         }
     }
 }
-

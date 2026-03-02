@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
  * All colors used in the app should be referenced from here.
  * 
  * Button Color Guidelines:
- * - Primary (Orange): Main actions (Scan, Verify, Submit, Continue)
+ * - Primary (Red): Main actions (Scan, Verify, Submit, Continue)
  * - Secondary (Gray): Less important actions (Back, Cancel as button)
  * - TextSecondary: Dismiss/Cancel as text link
  * - Success (Green): Positive confirmations (in result sheets only)
@@ -72,6 +72,31 @@ object AppColors {
     val BadgeInfoBackground = Color(0xFFBBDEFB)
     val BadgeInfoText = Color(0xFF1565C0)
 
-    // Splash screen
-    val SplashBackground = Success  // #4CAF50
+    // Header / logo surfaces
+    val HeaderBackground = Color(0xFFF7F6F4)
+    val HeaderDivider = Color(0xFFE8E5E0)
+    val LogoBackground = Color(0xFFEFEDEA)
+
+    // Splash screen — matches native splash_green so the
+    // transition from the Android 12 splash to Compose is seamless.
+    val SplashBackground = Color(0xFF2E7D6B)
+    val OnSplashBackground = Color.White
+
+    // On-button text colors
+    val OnButtonPrimary = Color.White
+    val OnButtonSecondary = TextPrimary
+
+    // Accent / decoration
+    val Gold = Warning
+
+    // Surface variants (for containers, backgrounds)
+    val SurfaceVariant = Border
+    val ErrorContainer = Error.copy(alpha = 0.12f)
+    val OnErrorContainer = Error
+    val WarningContainer = Warning.copy(alpha = 0.12f)
+    val OnWarningContainer = Warning
+
+    // Top-level text on surface
+    val OnBackground = TextPrimary
+    val NavigatorOverlay = TextPrimary
 }

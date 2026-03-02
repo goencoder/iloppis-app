@@ -1,13 +1,31 @@
 package se.iloppis.app.ui.screens.events
 
-import android.util.Log
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -15,20 +33,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
-import retrofit2.HttpException
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
-import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.navigation.ScreenPage
-import se.iloppis.app.network.ILoppisClient
-import se.iloppis.app.network.config.clientConfig
-import se.iloppis.app.network.events.EventAPI
-import se.iloppis.app.network.keys.KeyAPI
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
-
-private const val TAG = "CodeEntryScreen"
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -42,95 +53,38 @@ private const val TAG = "CodeEntryScreen"
 @Composable
 fun CodeEntryScreen(mode: String) {
     val screen = screenContext()
-    var rawCode by remember { mutableStateOf("") } // Up to 6 alphanumeric chars
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+    val viewModel: CodeEntryViewModel = viewModel(factory = CodeEntryViewModel.factory(mode))
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Format for display: XXX-YYY
-    val displayCode = if (rawCode.length > 3) {
-        "${rawCode.substring(0, 3)}-${rawCode.substring(3)}"
-    } else {
-        rawCode
+    LaunchedEffect(uiState.verifiedResult) {
+        val verifiedResult = uiState.verifiedResult ?: return@LaunchedEffect
+        screen.onAction(
+            ScreenAction.NavigateToPage(
+                ScreenPage.CodeConfirm(
+                    event = verifiedResult.event,
+                    apiKey = verifiedResult.apiKey,
+                    mode = verifiedResult.mode
+                )
+            )
+        )
+        viewModel.onAction(CodeEntryAction.NavigationConsumed)
     }
 
-    val isCodeComplete = rawCode.length == 6
-
-    fun onCodeChange(input: String) {
-        // Strip dashes, whitespace, and non-alphanumeric, limit to 6
-        val cleaned = input.replace("-", "").replace(" ", "")
-            .filter { it.isLetterOrDigit() }
-            .take(6)
-            .uppercase()
-        rawCode = cleaned
-        errorMessage = null
+    val errorText = when (uiState.errorKey) {
+        "inactive" -> stringResource(R.string.code_entry_error_inactive)
+        "wrong_type_cashier" -> stringResource(R.string.code_entry_error_wrong_type_cashier)
+        "wrong_type_scanner" -> stringResource(R.string.code_entry_error_wrong_type_scanner)
+        "not_found" -> stringResource(R.string.code_entry_error_not_found)
+        "network" -> stringResource(R.string.code_entry_error_network)
+        else -> null
     }
 
     fun verifyCode() {
-        if (!isCodeComplete || isLoading) return
-        val formattedAlias = "${rawCode.substring(0, 3)}-${rawCode.substring(3, 6)}"
-        scope.launch {
-            isLoading = true
-            errorMessage = null
-            try {
-                val keyApi = ILoppisClient(clientConfig()).create<KeyAPI>()
-                val response = keyApi.getApiKeyByAlias(formattedAlias)
-                Log.d(TAG, "Alias resolved: eventId=${response.eventId}, type=${response.type}, active=${response.isActive}")
+        viewModel.onAction(CodeEntryAction.VerifyCode)
+    }
 
-                // Validate isActive
-                if (!response.isActive) {
-                    errorMessage = "inactive"
-                    isLoading = false
-                    return@launch
-                }
-
-                // Validate type matches mode
-                val responseType = response.type?.uppercase() ?: ""
-                val isValidType = when (mode) {
-                    "CASHIER" -> responseType.contains("CASHIER")
-                    "SCANNER" -> responseType.contains("SCANNER")
-                    else -> true
-                }
-                if (responseType.isNotEmpty() && !isValidType) {
-                    errorMessage = if (mode == "CASHIER") "wrong_type_cashier" else "wrong_type_scanner"
-                    isLoading = false
-                    return@launch
-                }
-
-                // Fetch the event to show in confirmation
-                val eventApi = ILoppisClient(clientConfig()).create<EventAPI>()
-                val eventResponse = eventApi.get(response.eventId)
-                val event = eventResponse.events.firstOrNull()?.toDomain()
-
-                if (event == null) {
-                    errorMessage = "not_found"
-                    isLoading = false
-                    return@launch
-                }
-
-                // Navigate to Code Confirm
-                screen.onAction(
-                    ScreenAction.NavigateToPage(
-                        ScreenPage.CodeConfirm(
-                            event = event,
-                            apiKey = response.apiKey,
-                            mode = mode
-                        )
-                    )
-                )
-            } catch (e: HttpException) {
-                Log.e(TAG, "HTTP Error ${e.code()}", e)
-                errorMessage = when (e.code()) {
-                    404 -> "not_found"
-                    else -> "network"
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error verifying code", e)
-                errorMessage = "network"
-            } finally {
-                isLoading = false
-            }
-        }
+    fun updateCode(input: String) {
+        viewModel.onAction(CodeEntryAction.UpdateCode(input))
     }
 
     Scaffold(
@@ -143,7 +97,7 @@ fun CodeEntryScreen(mode: String) {
                     IconButton(onClick = { screen.popPage() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
+                            contentDescription = stringResource(R.string.button_back)
                         )
                     }
                 }
@@ -171,14 +125,14 @@ fun CodeEntryScreen(mode: String) {
 
             // Code input field with XXX-YYY auto-formatting
             OutlinedTextField(
-                value = displayCode,
-                onValueChange = { onCodeChange(it) },
+                value = uiState.displayCode,
+                onValueChange = { updateCode(it) },
                 label = { Text(stringResource(R.string.code_entry_label)) },
-                placeholder = { Text("XXX-YYY") },
+                placeholder = { Text(stringResource(R.string.code_entry_placeholder)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                enabled = !isLoading,
+                enabled = !uiState.isLoading,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Done,
@@ -191,14 +145,6 @@ fun CodeEntryScreen(mode: String) {
             )
 
             // Error message
-            val errorText = when (errorMessage) {
-                "inactive" -> stringResource(R.string.code_entry_error_inactive)
-                "wrong_type_cashier" -> stringResource(R.string.code_entry_error_wrong_type_cashier)
-                "wrong_type_scanner" -> stringResource(R.string.code_entry_error_wrong_type_scanner)
-                "not_found" -> stringResource(R.string.code_entry_error_not_found)
-                "network" -> stringResource(R.string.code_entry_error_network)
-                else -> null
-            }
             if (errorText != null) {
                 Text(
                     text = errorText,
@@ -215,9 +161,9 @@ fun CodeEntryScreen(mode: String) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
-                enabled = isCodeComplete && !isLoading
+                enabled = uiState.isCodeComplete && !uiState.isLoading
             ) {
-                if (isLoading) {
+                if (uiState.isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         color = MaterialTheme.colorScheme.onPrimary
@@ -236,11 +182,10 @@ fun CodeEntryScreen(mode: String) {
                 )
             ) {
                 Text(
-                    stringResource(R.string.cancel_button),
+                    stringResource(R.string.button_cancel),
                     color = AppColors.TextPrimary
                 )
             }
         }
     }
 }
-

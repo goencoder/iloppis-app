@@ -156,7 +156,17 @@ fun PrimaryButton(
  */
 @Composable
 fun CancelTextButton(
-    text: String = "Avbryt",
+    onClick: () -> Unit
+) {
+    CancelTextButton(
+        text = stringResource(R.string.button_cancel),
+        onClick = onClick
+    )
+}
+
+@Composable
+fun CancelTextButton(
+    text: String,
     onClick: () -> Unit
 ) {
     TextButton(onClick = onClick) {

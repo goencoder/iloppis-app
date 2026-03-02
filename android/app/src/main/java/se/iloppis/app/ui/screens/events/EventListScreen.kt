@@ -1,5 +1,6 @@
 package se.iloppis.app.ui.screens.events
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
+import se.iloppis.app.ui.components.buttons.AppButtonSize
+import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.components.buttons.IconButton
 import se.iloppis.app.ui.components.events.SwipeableEventList
 import se.iloppis.app.ui.components.navigation.ILoppisHeader
@@ -92,17 +95,10 @@ private fun UnifiedEventListContent(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
+                .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            // Quick access buttons for Cashier/Scanner
-            ToolAccessButtons(
-                onCashierClick = onCashierClick,
-                onScannerClick = onScannerClick
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
             // Functional Search bar
             SearchBar(
                 query = state.searchQuery,
@@ -120,8 +116,14 @@ private fun UnifiedEventListContent(
                 state = state,
                 onReload = onReload,
                 onEventClick = onEventClick,
+                modifier = Modifier.weight(1f)
             )
         }
+
+        FooterToolAccessButtons(
+            onCashierClick = onCashierClick,
+            onScannerClick = onScannerClick
+        )
     }
 }
 
@@ -129,26 +131,46 @@ private fun UnifiedEventListContent(
  * Row with quick access buttons for Cashier and Scanner
  */
 @Composable
-private fun ToolAccessButtons(
+private fun FooterToolAccessButtons(
     onCashierClick: () -> Unit,
     onScannerClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AppColors.HeaderBackground)
+            .navigationBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        IconButton(
-            text = R.string.home_open_cashier,
-            icon = Icons.Outlined.Payments
-        ) { onCashierClick() }
+        HorizontalDivider(
+            color = AppColors.HeaderDivider,
+            thickness = 1.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            IconButton(
+                modifier = Modifier.weight(1f),
+                text = R.string.home_open_cashier,
+                icon = Icons.Outlined.Payments,
+                variant = AppButtonVariant.Primary,
+                size = AppButtonSize.Large,
+                onClick = onCashierClick
+            )
 
-        IconButton(
-            text = R.string.home_open_scanner,
-            colors = ButtonDefaults.buttonColors().copy(
-                containerColor = MaterialTheme.colorScheme.secondary
-            ),
-            icon = Icons.Outlined.QrCode
-        ) { onScannerClick() }
+            IconButton(
+                modifier = Modifier.weight(1f),
+                text = R.string.home_open_scanner,
+                icon = Icons.Outlined.QrCode,
+                variant = AppButtonVariant.Success,
+                size = AppButtonSize.Large,
+                onClick = onScannerClick
+            )
+        }
     }
 }
 
@@ -220,8 +242,10 @@ private fun EventListBody(
     state: EventListUiState,
     onReload: () -> Unit,
     onEventClick: (Event) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
+        modifier = modifier.fillMaxWidth(),
         isRefreshing = false,
         onRefresh = onReload
     ) {

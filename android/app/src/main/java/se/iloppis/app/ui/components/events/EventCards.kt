@@ -38,7 +38,6 @@ import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.domain.model.displayStatus
 import se.iloppis.app.ui.components.DisplayStatusBadge
-import se.iloppis.app.ui.components.StateBadge
 import se.iloppis.app.ui.theme.AppColors
 
 /**

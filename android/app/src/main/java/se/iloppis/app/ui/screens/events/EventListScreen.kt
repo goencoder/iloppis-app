@@ -74,7 +74,8 @@ fun EventListScreen() {
 }
 
 /**
- * Unified content layout combining Home buttons and Event List.
+ * Unified content layout with header (logo + search + filters),
+ * scrollable event list, and sticky footer tool buttons.
  */
 @Composable
 private fun UnifiedEventListContent(
@@ -91,15 +92,11 @@ private fun UnifiedEventListContent(
             .fillMaxSize()
             .statusBarsPadding()
     ) {
-        // Header with logo
+        // ── Header: logo + search + filters ──
         ILoppisHeader()
 
-        // Scrollable content area
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             // Functional Search bar
             SearchBar(
@@ -112,17 +109,19 @@ private fun UnifiedEventListContent(
                 activeFilter = state.activeFilter,
                 onSelect = onFilterSelect
             )
-
-            // Content based on state
-            EventListBody(
-                state = state,
-                onReload = onReload,
-                onEventClick = onEventClick,
-                modifier = Modifier.weight(1f)
-            )
         }
 
-        // Sticky footer with tool buttons
+        HorizontalDivider(color = AppColors.Border)
+
+        // ── Scrollable event list ──
+        EventListBody(
+            state = state,
+            onReload = onReload,
+            onEventClick = onEventClick,
+            modifier = Modifier.weight(1f)
+        )
+
+        // ── Sticky footer: Cashier / Scanner buttons ──
         FooterToolButtons(
             onCashierClick = onCashierClick,
             onScannerClick = onScannerClick
@@ -131,8 +130,7 @@ private fun UnifiedEventListContent(
 }
 
 /**
- * Sticky footer with Cashier and Scanner buttons.
- * Styled identically to EventToolButtons in the event detail screen.
+ * Sticky footer with Cashier and Scanner tool buttons.
  */
 @Composable
 private fun FooterToolButtons(
@@ -141,23 +139,16 @@ private fun FooterToolButtons(
 ) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(AppColors.Background)
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .background(AppColors.Background)
     ) {
-        HorizontalDivider(
-            color = AppColors.Border,
-            thickness = 1.dp,
+        HorizontalDivider(color = AppColors.Border)
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp)
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Cashier button
             AppButton(
                 text = stringResource(R.string.home_open_cashier),
                 onClick = onCashierClick,
@@ -172,8 +163,6 @@ private fun FooterToolButtons(
                     )
                 }
             )
-
-            // Scanner button
             AppButton(
                 text = stringResource(R.string.home_open_scanner),
                 onClick = onScannerClick,
@@ -263,9 +252,9 @@ private fun EventListBody(
     modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
-        modifier = modifier.fillMaxWidth(),
         isRefreshing = false,
-        onRefresh = onReload
+        onRefresh = onReload,
+        modifier = modifier
     ) {
         when {
             state.isLoading -> LoadingState()

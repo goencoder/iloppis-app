@@ -65,6 +65,10 @@
     <string name="code_entry_error_network">Nätverksfel. Kontrollera din anslutning.</string>
     <string name="verify_button">Verifiera</string>
 
+    <!-- Saved Codes -->
+    <string name="saved_codes_header">Använda koder</string>
+    <string name="saved_codes_remove">Ta bort sparad kod</string>
+
     <!-- Code Confirmation Screen -->
     <string name="confirm_event_title">Bekräfta</string>
     <string name="confirm_event_message">Kod hittade event:</string>

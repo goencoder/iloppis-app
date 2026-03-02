@@ -27,7 +27,7 @@ fun EventSelectionScreen(onAction: (Event) -> Unit) {
             .padding(horizontal = 16.dp)
             .statusBarsPadding()
     ) {
-        ILoppisHeader(R.string.pages_selection)
+        ILoppisHeader()
 
         SearchBar()
 

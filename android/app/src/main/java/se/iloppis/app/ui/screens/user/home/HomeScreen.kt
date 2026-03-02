@@ -35,7 +35,7 @@ fun HomeScreen() {
             .padding(horizontal = 16.dp)
             .statusBarsPadding()
     ) {
-        ILoppisHeader(R.string.pages_home)
+        ILoppisHeader()
 
         Spacer(modifier = Modifier.height(14.dp))
         SelectionScreenButtonsRow { mode ->

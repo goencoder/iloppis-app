@@ -1,11 +1,18 @@
 package se.iloppis.app.ui.screens.events
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -19,10 +26,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -41,14 +48,20 @@ import se.iloppis.app.ui.theme.AppColors
  * User enters code in XXX-YYY format (auto-formatted).
  * On verify: resolves alias via API, validates type/active,
  * then navigates to CodeConfirmScreen on success.
+ *
+ * Below the code input, previously-used codes are shown in a list.
+ * Tapping a saved code re-validates it and navigates automatically.
+ *
+ * @param mode Cashier or Scanner
+ * @param eventId Optional filter — when non-null only codes for this event are shown
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CodeEntryScreen(mode: CodeEntryMode) {
+fun CodeEntryScreen(mode: CodeEntryMode, eventId: String? = null) {
     val screen = screenContext()
     val viewModel: CodeEntryViewModel = viewModel(
-        key = "code-entry-$mode",
-        factory = CodeEntryViewModel.factory(mode)
+        key = "code-entry-$mode-${eventId.orEmpty()}",
+        factory = CodeEntryViewModel.factory(mode, eventId)
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -84,86 +97,201 @@ fun CodeEntryScreen(mode: CodeEntryMode) {
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
+                .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Mode hint
-            Text(
-                text = when (mode) {
-                    CodeEntryMode.CASHIER -> stringResource(R.string.code_entry_cashier_hint)
-                    CodeEntryMode.SCANNER -> stringResource(R.string.code_entry_scanner_hint)
-                },
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-
-            // Code input field with XXX-YYY auto-formatting
-            OutlinedTextField(
-                value = state.displayCode,
-                visualTransformation = CodeEntryFormatTransform(),
-                onValueChange = { viewModel.onAction(CodeEntryAction.UpdateCode(it)) },
-                label = { Text(stringResource(R.string.code_entry_label)) },
-                placeholder = { Text(stringResource(R.string.code_entry_placeholder)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                enabled = !state.isLoading,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done,
-                    capitalization = KeyboardCapitalization.Characters
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { viewModel.onAction(CodeEntryAction.VerifyCode) }
-                ),
-                singleLine = true
-            )
-
-            // Error message
-            val errorText = when (state.errorKey) {
-                "inactive" -> stringResource(R.string.code_entry_error_inactive)
-                "wrong_type_cashier" -> stringResource(R.string.code_entry_error_wrong_type_cashier)
-                "wrong_type_scanner" -> stringResource(R.string.code_entry_error_wrong_type_scanner)
-                "not_found" -> stringResource(R.string.code_entry_error_not_found)
-                "network" -> stringResource(R.string.code_entry_error_network)
-                else -> null
-            }
-            if (errorText != null) {
+            // ── Mode hint ──
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = errorText,
-                    color = AppColors.TextError,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                    text = when (mode) {
+                        CodeEntryMode.CASHIER -> stringResource(R.string.code_entry_cashier_hint)
+                        CodeEntryMode.SCANNER -> stringResource(R.string.code_entry_scanner_hint)
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 24.dp)
                 )
             }
 
-            // Verify button
-            AppButton(
-                text = stringResource(R.string.verify_button),
-                onClick = { viewModel.onAction(CodeEntryAction.VerifyCode) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                enabled = state.isCodeComplete,
-                loading = state.isLoading,
-                variant = AppButtonVariant.Primary
-            )
+            // ── Code input field with XXX-YYY auto-formatting ──
+            item {
+                OutlinedTextField(
+                    value = state.displayCode,
+                    visualTransformation = CodeEntryFormatTransform(),
+                    onValueChange = { viewModel.onAction(CodeEntryAction.UpdateCode(it)) },
+                    label = { Text(stringResource(R.string.code_entry_label)) },
+                    placeholder = { Text(stringResource(R.string.code_entry_placeholder)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    enabled = !state.isLoading,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                        capitalization = KeyboardCapitalization.Characters
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { viewModel.onAction(CodeEntryAction.VerifyCode) }
+                    ),
+                    singleLine = true
+                )
+            }
 
-            // Cancel button
-            AppButton(
-                text = stringResource(R.string.button_cancel),
-                onClick = { screen.popPage() },
-                modifier = Modifier.fillMaxWidth(),
-                variant = AppButtonVariant.Secondary,
-                containerColor = AppColors.Background,
-                contentColor = AppColors.TextPrimary
+            // ── Error message ──
+            item {
+                val errorText = when (state.errorKey) {
+                    "inactive" -> stringResource(R.string.code_entry_error_inactive)
+                    "wrong_type_cashier" -> stringResource(R.string.code_entry_error_wrong_type_cashier)
+                    "wrong_type_scanner" -> stringResource(R.string.code_entry_error_wrong_type_scanner)
+                    "not_found" -> stringResource(R.string.code_entry_error_not_found)
+                    "network" -> stringResource(R.string.code_entry_error_network)
+                    else -> null
+                }
+                if (errorText != null) {
+                    Text(
+                        text = errorText,
+                        color = AppColors.TextError,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+                }
+            }
+
+            // ── Verify button ──
+            item {
+                AppButton(
+                    text = stringResource(R.string.verify_button),
+                    onClick = { viewModel.onAction(CodeEntryAction.VerifyCode) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    enabled = state.isCodeComplete,
+                    loading = state.isLoading,
+                    variant = AppButtonVariant.Primary
+                )
+            }
+
+            // ── Cancel button ──
+            item {
+                AppButton(
+                    text = stringResource(R.string.button_cancel),
+                    onClick = { screen.popPage() },
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = AppButtonVariant.Secondary,
+                    containerColor = AppColors.Background,
+                    contentColor = AppColors.TextPrimary
+                )
+            }
+
+            // ── Saved codes section ──
+            val validCodes = state.savedCodes.filter { it.isValid || it.isValidating }
+            if (validCodes.isNotEmpty() || state.isSavedCodesLoading) {
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    HorizontalDivider(color = AppColors.Border)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.saved_codes_header),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = AppColors.TextSecondary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+            }
+
+            if (state.isSavedCodesLoading) {
+                item {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = AppColors.Primary
+                    )
+                }
+            }
+
+            items(
+                items = validCodes,
+                key = { it.savedCode.alias }
+            ) { entry ->
+                SavedCodeRow(
+                    entry = entry,
+                    onClick = {
+                        viewModel.onAction(CodeEntryAction.SelectSavedCode(entry.savedCode))
+                    },
+                    onRemove = {
+                        viewModel.onAction(CodeEntryAction.RemoveSavedCode(entry.savedCode.alias))
+                    }
+                )
+            }
+
+            // Bottom spacing
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+        }
+    }
+}
+
+/**
+ * Row displaying a previously-saved code with event name.
+ * Tap to re-use, delete icon to remove.
+ */
+@Composable
+private fun SavedCodeRow(
+    entry: ValidatedSavedCode,
+    onClick: () -> Unit,
+    onRemove: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = entry.isValid && !entry.isValidating, onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Code and event name
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = entry.savedCode.alias,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = if (entry.isValidating) AppColors.TextSecondary else AppColors.TextPrimary
+            )
+            Text(
+                text = entry.savedCode.eventName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppColors.TextSecondary
+            )
+        }
+
+        // Validating spinner or action icons
+        if (entry.isValidating) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
+                color = AppColors.TextSecondary
+            )
+        } else {
+            IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(R.string.saved_codes_remove),
+                    tint = AppColors.TextSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Icon(
+                imageVector = Icons.Outlined.ChevronRight,
+                contentDescription = null,
+                tint = AppColors.TextSecondary,
+                modifier = Modifier.size(20.dp)
             )
         }
     }
+    HorizontalDivider(color = AppColors.Border.copy(alpha = 0.5f))
 }

@@ -34,7 +34,7 @@ fun LibraryScreen() {
             .padding(horizontal = 16.dp)
             .statusBarsPadding()
     ) {
-        ILoppisHeader(R.string.pages_library)
+        ILoppisHeader()
         ListContent(state) {
             screen.onAction(ScreenAction.NavigateToPage(
                 ScreenPage.EventsDetailPage(it)

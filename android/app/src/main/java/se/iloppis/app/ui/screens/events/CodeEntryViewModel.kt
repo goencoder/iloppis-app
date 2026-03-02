@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import se.iloppis.app.data.SavedCode
+import se.iloppis.app.data.SavedCodesStore
 import se.iloppis.app.data.mappers.EventMapper.toDomain
 import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.domain.model.Event
@@ -26,13 +28,28 @@ private const val TAG = "CodeEntryViewModel"
 // State
 // ──────────────────────────────────────────────
 
+/**
+ * A saved code entry that has been validated against the API.
+ */
+data class ValidatedSavedCode(
+    val savedCode: SavedCode,
+    /** True if the API confirmed this code is still active + correct type. */
+    val isValid: Boolean,
+    /** True while the async validation is running. */
+    val isValidating: Boolean = false
+)
+
 data class CodeEntryUiState(
     val mode: CodeEntryMode = CodeEntryMode.CASHIER,
     val rawCode: String = "",
     val isLoading: Boolean = false,
     val errorKey: String? = null,
     /** Set on successful verification — screen reads this to navigate. */
-    val verifiedResult: CodeVerifiedResult? = null
+    val verifiedResult: CodeVerifiedResult? = null,
+    /** Saved codes (filtered by eventId if applicable, and by mode). */
+    val savedCodes: List<ValidatedSavedCode> = emptyList(),
+    /** Whether saved codes are still being loaded/validated. */
+    val isSavedCodesLoading: Boolean = true
 ) {
     /** Formatted display code: XXX-YYY */
     val displayCode: String
@@ -84,24 +101,36 @@ sealed class CodeEntryAction {
     data class UpdateCode(val input: String) : CodeEntryAction()
     data object VerifyCode : CodeEntryAction()
     data object NavigationConsumed : CodeEntryAction()
+    /** User tapped a previously saved code to re-use it. */
+    data class SelectSavedCode(val savedCode: SavedCode) : CodeEntryAction()
+    /** User swiped to remove a saved code. */
+    data class RemoveSavedCode(val alias: String) : CodeEntryAction()
 }
 
 // ──────────────────────────────────────────────
 // ViewModel
 // ──────────────────────────────────────────────
 
-class CodeEntryViewModel(private val mode: CodeEntryMode) : ViewModel() {
+class CodeEntryViewModel(
+    private val mode: CodeEntryMode,
+    private val eventId: String?
+) : ViewModel() {
 
     companion object {
-        fun factory(mode: CodeEntryMode) = object : androidx.lifecycle.ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                CodeEntryViewModel(mode) as T
-        }
+        fun factory(mode: CodeEntryMode, eventId: String?) =
+            object : androidx.lifecycle.ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    CodeEntryViewModel(mode, eventId) as T
+            }
     }
 
     private val _uiState = MutableStateFlow(CodeEntryUiState(mode = mode))
     val uiState: StateFlow<CodeEntryUiState> = _uiState.asStateFlow()
+
+    init {
+        loadSavedCodes()
+    }
 
     fun onAction(action: CodeEntryAction) {
         when (action) {
@@ -110,6 +139,111 @@ class CodeEntryViewModel(private val mode: CodeEntryMode) : ViewModel() {
             is CodeEntryAction.NavigationConsumed -> {
                 _uiState.value = _uiState.value.copy(verifiedResult = null)
             }
+            is CodeEntryAction.SelectSavedCode -> useSavedCode(action.savedCode)
+            is CodeEntryAction.RemoveSavedCode -> removeSavedCode(action.alias)
+        }
+    }
+
+    // ── Saved codes ─────────────────────────────
+
+    private fun loadSavedCodes() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSavedCodesLoading = true)
+            try {
+                val allCodes = SavedCodesStore.loadAll()
+
+                // Filter by mode
+                val modeStr = mode.name
+                val filtered = allCodes
+                    .filter { it.codeType == modeStr }
+                    .let { codes ->
+                        // Filter by eventId if navigating from event page
+                        if (eventId != null) codes.filter { it.eventId == eventId }
+                        else codes
+                    }
+
+                // Show immediately, then validate async
+                val initial = filtered.map {
+                    ValidatedSavedCode(savedCode = it, isValid = true, isValidating = true)
+                }
+                _uiState.value = _uiState.value.copy(
+                    savedCodes = initial,
+                    isSavedCodesLoading = false
+                )
+
+                // Validate each code asynchronously
+                for (code in filtered) {
+                    launch { validateSavedCode(code) }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load saved codes", e)
+                _uiState.value = _uiState.value.copy(
+                    savedCodes = emptyList(),
+                    isSavedCodesLoading = false
+                )
+            }
+        }
+    }
+
+    private suspend fun validateSavedCode(code: SavedCode) {
+        try {
+            val keyApi = ILoppisClient(clientConfig()).create<KeyAPI>()
+            val response = keyApi.getApiKeyByAlias(code.alias)
+
+            val responseType = response.type?.uppercase() ?: ""
+            val isTypeValid = when (mode) {
+                CodeEntryMode.CASHIER -> responseType.contains("CASHIER")
+                CodeEntryMode.SCANNER -> responseType.contains("SCANNER")
+            }
+            val isValid = response.isActive && (responseType.isEmpty() || isTypeValid)
+
+            updateSavedCodeValidation(code.alias, isValid)
+
+            // If invalid, remove from persistent store
+            if (!isValid) {
+                SavedCodesStore.remove(code.alias)
+            }
+        } catch (e: HttpException) {
+            if (e.code() == 404) {
+                // Code no longer exists
+                updateSavedCodeValidation(code.alias, isValid = false)
+                SavedCodesStore.remove(code.alias)
+            } else {
+                // Network error — assume still valid
+                updateSavedCodeValidation(code.alias, isValid = true)
+            }
+        } catch (e: Exception) {
+            // Network error — assume still valid to not degrade offline experience
+            Log.w(TAG, "Could not validate saved code ${code.alias}", e)
+            updateSavedCodeValidation(code.alias, isValid = true)
+        }
+    }
+
+    private fun updateSavedCodeValidation(alias: String, isValid: Boolean) {
+        val current = _uiState.value
+        val updated = current.savedCodes.map { entry ->
+            if (entry.savedCode.alias == alias) {
+                entry.copy(isValid = isValid, isValidating = false)
+            } else entry
+        }
+        // Remove invalid entries from the displayed list
+        _uiState.value = current.copy(savedCodes = updated.filter { it.isValid || it.isValidating })
+    }
+
+    private fun useSavedCode(code: SavedCode) {
+        // Navigate directly via verify flow using the saved alias
+        val raw = code.alias.replace("-", "")
+        _uiState.value = _uiState.value.copy(rawCode = raw, errorKey = null)
+        verifyCode()
+    }
+
+    private fun removeSavedCode(alias: String) {
+        viewModelScope.launch {
+            SavedCodesStore.remove(alias)
+            val current = _uiState.value
+            _uiState.value = current.copy(
+                savedCodes = current.savedCodes.filter { it.savedCode.alias != alias }
+            )
         }
     }
 
@@ -165,6 +299,17 @@ class CodeEntryViewModel(private val mode: CodeEntryMode) : ViewModel() {
                     _uiState.value = _uiState.value.copy(isLoading = false, errorKey = "not_found")
                     return@launch
                 }
+
+                // Save the code for future quick access
+                SavedCodesStore.save(
+                    SavedCode(
+                        alias = formattedAlias,
+                        eventId = event.id,
+                        eventName = event.name,
+                        codeType = mode.name,
+                        apiKey = response.apiKey
+                    )
+                )
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

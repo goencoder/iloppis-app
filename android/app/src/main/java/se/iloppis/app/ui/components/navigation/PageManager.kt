@@ -47,7 +47,7 @@ fun PageManager() {
                 is ScreenPage.EventsDetailPage -> NavEntry(page) { EventsDetailsScreen(page.event) }
 
                 /* Code entry screen for direct tool access */
-                is ScreenPage.CodeEntry -> NavEntry(page) { CodeEntryScreen(page.mode) }
+                is ScreenPage.CodeEntry -> NavEntry(page) { CodeEntryScreen(mode = page.mode, eventId = page.eventId) }
 
                 /* Code confirmation screen after code resolves */
                 is ScreenPage.CodeConfirm -> NavEntry(page) {

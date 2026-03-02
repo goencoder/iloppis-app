@@ -47,12 +47,15 @@ sealed class ScreenPage {
      *
      * Shows code input field with mode (Cashier or Scanner).
      * No event selection needed - code resolves the event.
+     *
+     * @param mode Tool mode (CASHIER or SCANNER)
+     * @param eventId Optional event ID filter. When non-null, only saved codes
+     *   for this event are shown (navigating from event detail).
+     *   When null, all saved codes are shown (navigating from main page).
      */
     data class CodeEntry(
-        /**
-         * Tool mode (CASHIER or SCANNER)
-         */
-        val mode: CodeEntryMode
+        val mode: CodeEntryMode,
+        val eventId: String? = null
     ) : ScreenPage()
 
     /**

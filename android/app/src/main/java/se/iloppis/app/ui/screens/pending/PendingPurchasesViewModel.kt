@@ -180,8 +180,8 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
 
     private fun retryPurchase(purchaseId: String, apiKey: String, eventId: String, context: android.content.Context) {
         startProcessing(purchaseId) {
-            // Trigger immediate sync via WorkManager
-            se.iloppis.app.work.SyncScheduler.enqueueImmediate(context, apiKey, eventId)
+            // Trigger immediate sync via BackgroundSyncManager
+            se.iloppis.app.data.BackgroundSyncManager.triggerImmediateSync()
             
             // Wait for sync to complete (max 5 seconds)
             var attempts = 0

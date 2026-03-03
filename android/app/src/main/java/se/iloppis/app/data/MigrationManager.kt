@@ -5,7 +5,9 @@ import android.util.Log
 import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import se.iloppis.app.data.models.PendingItem
+import se.iloppis.app.data.models.StoredSoldItem
 import java.io.File
 
 /**
@@ -66,11 +68,17 @@ object MigrationManager {
         }
     }
 
+    private val json = Json { ignoreUnknownKeys = true }
+
     private fun migrateSoldItems(context: Context): List<PendingItem> {
         val items = mutableListOf<PendingItem>()
 
         try {
-            val allSoldItems = SoldItemFileStore.getAllSoldItems()
+            val file = File(context.filesDir, "sold_items.json")
+            if (!file.exists()) return items
+            val content = file.readText()
+            if (content.isBlank()) return items
+            val allSoldItems = json.decodeFromString<List<StoredSoldItem>>(content)
             val pending = allSoldItems.filter { !it.uploaded }
 
             pending.forEach { sold ->

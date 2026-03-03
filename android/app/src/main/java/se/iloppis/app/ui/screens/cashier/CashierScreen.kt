@@ -183,13 +183,6 @@ fun CashierScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                    } else if (uiState.isProcessingPayment) {
-                        Icon(
-                            imageVector = Icons.Filled.Info,
-                            contentDescription = stringResource(R.string.content_description_processing),
-                            tint = AppColors.DialogBackground
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
                     }
                 },
                 navigationIcon = {

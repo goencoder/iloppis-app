@@ -48,8 +48,6 @@ import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
 
-private const val CODE_LENGTH = 6
-
 /**
  * Screen for direct code entry to access Cashier/Scanner modes.
  *

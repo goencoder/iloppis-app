@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import se.iloppis.app.R
 import se.iloppis.app.ui.theme.AppColors
 
 /**
@@ -93,13 +95,15 @@ private fun ILoppisLogo(
     ) {
         ShopIcon(size = iconSize, color = AppColors.Primary)
         Spacer(modifier = Modifier.width(8.dp))
+        val prefix = stringResource(R.string.logo_prefix)
+        val suffix = stringResource(R.string.logo_suffix)
         Text(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = AppColors.Success)) {
-                    append("i")
+                    append(prefix)
                 }
                 withStyle(SpanStyle(color = AppColors.Primary)) {
-                    append("Loppis")
+                    append(suffix)
                 }
             },
             fontSize = 30.sp,

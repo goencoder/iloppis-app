@@ -306,14 +306,14 @@ class CodeEntryViewModel(
                     return@launch
                 }
 
-                // Save the code for future quick access
+                // Save the code for future quick access.
+                // Do not persist the API key — it is re-fetched on next use.
                 SavedCodesStore.save(
                     SavedCode(
                         alias = formattedAlias,
                         eventId = event.id,
                         eventName = event.name,
-                        codeType = mode.name,
-                        apiKey = response.apiKey
+                        codeType = mode.name
                     )
                 )
 

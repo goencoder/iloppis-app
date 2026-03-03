@@ -141,7 +141,7 @@ private fun FooterToolButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AppButton(
                 text = stringResource(R.string.home_open_cashier),

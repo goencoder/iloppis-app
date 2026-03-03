@@ -82,7 +82,8 @@ class ScreenModel : ViewModel() {
             }
             is ScreenPage.CodeEntry -> {
                 // Keep: EventList > CodeEntry
-                if(pages.lastOrNull() !is ScreenPage.EventList) {
+                // or:   EventList > EventsDetailPage > CodeEntry
+                if(pages.lastOrNull() !is ScreenPage.EventList && pages.lastOrNull() !is ScreenPage.EventsDetailPage) {
                     pages.clear()
                     pages.add(ScreenPage.EventList)
                 }

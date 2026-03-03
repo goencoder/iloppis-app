@@ -3,8 +3,6 @@ package se.iloppis.app.ui.screens.cashier
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,16 +11,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import se.iloppis.app.ILoppisAppHolder
-import se.iloppis.app.data.OfflineToastGatekeeper
 import se.iloppis.app.R
+import se.iloppis.app.data.BackgroundSyncManager
 import se.iloppis.app.data.PendingItemsStore
 import se.iloppis.app.data.RejectedPurchaseStore
-import se.iloppis.app.data.SoldItemFileStore
 import se.iloppis.app.data.VendorRepository
 import se.iloppis.app.data.models.PendingItem
 import se.iloppis.app.data.models.SerializableSoldItemErrorCode
 import se.iloppis.app.ui.util.UiText
-import se.iloppis.app.work.SyncScheduler
 import kotlin.math.ceil
 
 private const val TAG = "CashierViewModel"
@@ -167,124 +163,60 @@ class CashierViewModel(
     private val _uiState = MutableStateFlow(CashierUiState(eventName = eventName))
     val uiState: StateFlow<CashierUiState> = _uiState.asStateFlow()
 
-    private val toastGatekeeper = OfflineToastGatekeeper()
-    private var workObserverRegistered = false
-
     // Rejected purchase popup management
     private var lastPopupShown: Long = 0
     private var serverErrorShownThisSession = false
     private val MIN_POPUP_INTERVAL_MS = 5 * 60 * 1000L  // 5 minutes
 
     init {
-        // Initialize file stores for this event
+        // Start BackgroundSyncManager (single sync loop, like LoppisKassan)
         val context = ILoppisAppHolder.appContext
-        se.iloppis.app.data.EventStoreManager.initializeForEvent(context, eventId)
+        BackgroundSyncManager.start(context, eventId, apiKey)
 
         // Initialize global VendorRepository singleton
         if (!VendorRepository.isInitialized()) {
             VendorRepository.initialize(eventId, apiKey)
         }
         loadVendors()
-        refreshPendingCount()
-        refreshRejectedPurchasesCount()
-        registerSyncObserverIfPossible()
 
-        // Observe pending items changes for reactive badge updates
+        // Observe pending count from BackgroundSyncManager (single source of truth).
+        // Debounce: only show the badge after a 2s grace period so that successful
+        // uploads don't cause a brief flicker of the warning icon.
         viewModelScope.launch {
-            PendingItemsStore.itemsUpdated.collect {
-                Log.d(TAG, "Pending items updated, refreshing badge")
-                refreshRejectedPurchasesCount()
-                checkAndShowPopupsIfNeeded()
-            }
-        }
-
-        // Fallback polling loop: periodic checks if events are missed
-        // Reduced from 30s to 60s since we now have reactive updates
-        viewModelScope.launch {
-            while (true) {
-                delay(60_000)  // 1 minute fallback polling
-                tryTriggerSync() // Periodic sync, no specific purchase
-                refreshPendingCount()
-                refreshRejectedPurchasesCount()
-                checkAndShowPopupsIfNeeded()
-            }
-        }
-    }
-
-    private fun registerSyncObserverIfPossible() {
-        if (workObserverRegistered) return
-
-        val context = try {
-            se.iloppis.app.ILoppisAppHolder.appContext
-        } catch (t: Throwable) {
-            null
-        } ?: return
-
-        workObserverRegistered = true
-        val workManager = WorkManager.getInstance(context)
-
-        fun refreshIfNotRunning(infos: List<WorkInfo>?) {
-            val state = infos?.firstOrNull()?.state ?: return
-            if (state != WorkInfo.State.RUNNING) {
-                refreshPendingCount()
-            }
-        }
-
-        workManager.getWorkInfosForUniqueWorkLiveData(SyncScheduler.UNIQUE_IMMEDIATE)
-            .observeForever { infos -> refreshIfNotRunning(infos) }
-
-        workManager.getWorkInfosForUniqueWorkLiveData(SyncScheduler.UNIQUE_PERIODIC)
-            .observeForever { infos -> refreshIfNotRunning(infos) }
-    }
-
-    private fun refreshPendingCount() {
-        viewModelScope.launch {
-            val pending = withContext(Dispatchers.IO) {
-                SoldItemFileStore.getAllSoldItems()
-                    .asSequence()
-                    .filter { !it.uploaded }
-                    .map { it.purchaseId }
-                    .distinct()
-                    .count()
-            }
-            _uiState.value = _uiState.value.copy(pendingSoldItemsCount = pending)
-
-            // If we successfully refreshed and count is 0, we can consider ourselves online
-            if (pending == 0) {
-                toastGatekeeper.recordSuccessfulUpload()
-            }
-        }
-    }
-
-    private suspend fun tryTriggerSync(purchaseId: String? = null): Boolean {
-        // WorkManager handles network constraints.
-        val context = try {
-            se.iloppis.app.ILoppisAppHolder.appContext
-        } catch (t: Throwable) {
-            null
-        }
-        if (context == null) {
-            Log.w(TAG, "No appContext available; cannot enqueue sync yet")
-            if (purchaseId != null) {
-                // Record as missed upload
-                val shouldShowToast = toastGatekeeper.recordMissedUpload(purchaseId)
-                if (shouldShowToast) {
-                    withContext(Dispatchers.Main) {
-                        _uiState.value = _uiState.value.copy(
-                            warningMessage = UiText.StringResource(R.string.cashier_warning_saved_locally)
-                        )
+            var pendingJob: kotlinx.coroutines.Job? = null
+            BackgroundSyncManager.pendingPurchaseCount.collect { count ->
+                pendingJob?.cancel()
+                if (count == 0) {
+                    // Clear immediately — no reason to delay hiding it
+                    _uiState.value = _uiState.value.copy(pendingSoldItemsCount = 0)
+                } else {
+                    // Delay showing the badge; if sync succeeds within the
+                    // grace period the count drops to 0 and the badge never appears.
+                    pendingJob = launch {
+                        delay(2_000L)
+                        _uiState.value = _uiState.value.copy(pendingSoldItemsCount = count)
                     }
                 }
             }
-            return false
         }
 
-        Log.d(TAG, "Enqueueing background sync")
-        SyncScheduler.enqueueImmediate(context = context, apiKey = apiKey, eventId = eventId)
-        SyncScheduler.ensurePeriodic(context = context, apiKey = apiKey, eventId = eventId)
+        // Observe pending items changes for rejected count + popups
+        viewModelScope.launch {
+            PendingItemsStore.itemsUpdated.collect {
+                Log.d(TAG, "Pending items updated, refreshing rejected count")
+                refreshRejectedPurchasesCount()
+                checkAndShowPopupsIfNeeded()
+            }
+        }
 
-        // Successfully enqueued - will be attempted by WorkManager
-        return true
+        // Fallback: check rejected counts periodically
+        viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                refreshRejectedPurchasesCount()
+                checkAndShowPopupsIfNeeded()
+            }
+        }
     }
 
     /**
@@ -292,9 +224,7 @@ class CashierViewModel(
      * Used when user manually retries failed purchases.
      */
     fun triggerSync() {
-        viewModelScope.launch {
-            tryTriggerSync()
-        }
+        BackgroundSyncManager.triggerImmediateSync()
     }
 
     fun onAction(action: CashierAction) {
@@ -504,71 +434,14 @@ class CashierViewModel(
     /**
      * Process checkout and register purchase locally.
      *
-     * ## GUARANTEE: Purchase registration cannot be lost
+     * ## Local-first guarantee (aligned with LoppisKassan)
      *
-     * This method ensures that once user completes payment, the purchase data
-     * is ALWAYS registered locally before any UI feedback is shown.
-     *
-     * **Execution flow with guarantees**:
-     *
-     * 1. **Validate input** (line 407-411)
-     *    - Check transactions exist
-     *    - Return early if validation fails
-     *
-     * 2. **Generate stable IDs** (line 414)
-     *    - purchaseId: Random UUID (26 chars, uppercase)
-     *    - itemId: Already assigned in TransactionItem.id (UUID)
-     *    - These IDs are stable and never regenerated
-     *
-     * 3. **Create purchase record** (line 420-425)
-     *    - Snapshot current state for receipt display
-     *    - Includes all transaction items with their stable IDs
-     *
-     * 4. **Clear UI immediately** (line 427-437)
-     *    - UI cleared BEFORE persistence starts
-     *    - Allows cashier to start next transaction immediately
-     *    - Receipt shown in lastPurchase (not blocking)
-     *
-     * 5. **Persist purchase synchronously** (line 440-463)
-     *    - Runs on IO dispatcher (background thread)
-     *    - `appendSoldItems()` is SYNCHRONOUS and blocks until file write completes
-     *    - If write fails, exception is logged but caught (line 462)
-     *    - GUARANTEE: If no exception, data is on disk and survives app crash
-     *
-     * 6. **Trigger background upload** (line 465-466)
-     *    - Enqueue WorkManager job (best-effort, non-blocking)
-     *    - Upload happens asynchronously in background
-     *    - If upload fails, WorkManager will retry automatically
-     *
-     * **Data loss scenarios - answered**:
-     *
-     * Q: What if app crashes during checkout?
-     * A: Depends on exact timing:
-     *    - Before line 459 returns: Purchase not saved (but user hasn't seen receipt)
-     *    - After line 459 returns: Purchase saved to disk, will upload on app restart
-     *
-     * Q: What if device loses power during file write?
-     * A: OS-level atomic write guarantees:
-     *    - File.writeText() either completes fully or fails
-     *    - No partial writes that corrupt file
-     *    - If power lost mid-write, old file content remains intact
-     *
-     * Q: What if storage is full?
-     * A: IOException thrown from appendSoldItems():
-     *    - Exception logged (line 462)
-     *    - UI not updated with receipt (user can retry)
-     *    - No silent data loss
-     *
-     * **End-to-end guarantee**:
-     * ```
-     * User presses "Betala KONTANT"
-     *   → checkout() called
-     *   → UI cleared (cashier can continue)
-     *   → appendSoldItems() blocks until write completes
-     *   → If success: Data on disk, upload queued
-     *   → If failure: Exception logged, no receipt shown
-     * Result: Either purchase is saved OR user knows it failed
-     * ```
+     * 1. Generate stable IDs (purchaseId + itemIds)
+     * 2. Clear UI immediately (optimistic, cashier can continue)
+     * 3. Enqueue items via BackgroundSyncManager (in-memory queue, non-blocking)
+     * 4. Sync loop flushes to disk, then uploads to backend
+     * 5. On success: items deleted from PendingItemsStore
+     * 6. On failure: items remain on disk, retried every 30s
      *
      * @param method Payment method (CASH or SWISH)
      */
@@ -618,44 +491,33 @@ class CashierViewModel(
             _uiState.value = _uiState.value.copy(isProcessingPayment = true)
 
             // STEP 4a: Map UI items to pending items
-            // Each item gets stable itemId from TransactionItem.id
             val timestamp = java.time.Instant.now().toString()
             val pendingItems = transactionsSnapshot.map { tx ->
                 PendingItem(
-                    itemId = tx.id,              // Stable UUID from TransactionItem
-                    purchaseId = purchaseId,      // Groups items in this purchase
+                    itemId = tx.id,
+                    purchaseId = purchaseId,
                     sellerId = tx.sellerNumber,
                     price = tx.price,
-                    errorText = "",               // Empty = waiting for upload
+                    errorText = "",
                     timestamp = timestamp
                 )
             }
 
-            // STEP 4b: Write to JSONL file SYNCHRONOUSLY with mutex protection
-            // GUARANTEE: If this succeeds, data is on disk and survives crashes
+            // STEP 4b: Enqueue items via BackgroundSyncManager
+            // Items go to in-memory queue first (non-blocking), then flushed to disk
+            // and uploaded by the sync loop (like LoppisKassan)
             try {
-                Log.d(TAG, "Persisting ${pendingItems.size} pending items locally for purchaseId=$purchaseId")
-                PendingItemsStore.appendItems(pendingItems)  // BLOCKS until write completes
-                Log.d(TAG, "Persisted locally; triggering sync")
+                Log.d(TAG, "Enqueueing ${pendingItems.size} items for purchaseId=$purchaseId")
+                BackgroundSyncManager.enqueueItems(pendingItems)
+                Log.d(TAG, "Enqueued; sync will flush to disk and upload")
             } catch (t: Throwable) {
-                // File write failed (e.g., disk full)
-                // Log error - data not saved, user can retry checkout
-                Log.e(TAG, "Failed to persist pending items", t)
-                // TODO: Show error to user, allow retry
+                Log.e(TAG, "Failed to enqueue pending items", t)
             }
 
-            // STEP 5: Trigger background upload (best-effort)
-            // WorkManager will handle retries if this fails
-            val syncEnqueued = tryTriggerSync(purchaseId = purchaseId)
-
             viewModelScope.launch {
-                refreshPendingCount()
                 refreshRejectedPurchasesCount()
                 _uiState.value = _uiState.value.copy(isProcessingPayment = false)
             }
-
-            // Upload happens asynchronously via WorkManager
-            // SoldItemsSyncWorker will process items with errorText=""
         }
     }
 
@@ -672,8 +534,11 @@ class CashierViewModel(
      */
     internal fun refreshRejectedPurchasesCount() {
         viewModelScope.launch(Dispatchers.IO) {
-            val (infoCount, warningCount, criticalCount) = PendingItemsStore.getErrorCounts()
-            val count = infoCount + warningCount + criticalCount
+            val (_, warningCount, criticalCount) = PendingItemsStore.getErrorCounts()
+            // Only count purchases with actual errors (warning/critical).
+            // Items just waiting for upload (infoCount) are covered by
+            // BackgroundSyncManager.pendingPurchaseCount with its own debounce.
+            val count = warningCount + criticalCount
 
             // If there are any rejected items, refresh vendor list in case sellers changed
             if (count > 0) {

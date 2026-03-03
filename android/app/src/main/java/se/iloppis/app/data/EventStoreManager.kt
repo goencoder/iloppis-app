@@ -29,7 +29,6 @@ object EventStoreManager {
             if (eventId == currentEventId) return       // double-check
             Log.d(TAG, "Initialising stores for event $eventId")
             PendingItemsStore.initialize(context, eventId)
-            SoldItemFileStore.initialize(context, eventId)
             RejectedPurchaseStore.initialize(context, eventId)
             PendingScansStore.initialize(context, eventId)
             CommittedScansStore.initialize(context, eventId)

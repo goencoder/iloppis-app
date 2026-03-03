@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import se.iloppis.app.R
-import se.iloppis.app.data.PurchaseRecoveryManager
 import se.iloppis.app.data.RejectedPurchaseStore
-import se.iloppis.app.data.SoldItemFileStore
+import se.iloppis.app.data.BackgroundSyncManager
+import se.iloppis.app.data.PendingItemsStore
 import se.iloppis.app.data.VendorRepository
 import se.iloppis.app.data.models.RejectedItemWithDetails
 import se.iloppis.app.data.models.RejectedPurchase
@@ -185,17 +185,9 @@ class DetailedPurchaseReviewViewModel(
                 // Remove from rejected purchases store
                 RejectedPurchaseStore.removeRejectedPurchase(purchaseId)
 
-                // Also mark as handled in SoldItemFileStore
-                val allItems = SoldItemFileStore.getAllSoldItems()
-                val itemsInThisPurchase = allItems.filter { it.purchaseId == purchaseId }
-                val updatedItems = allItems.map { item ->
-                    if (item.purchaseId == purchaseId) {
-                        item.copy(uploaded = true)
-                    } else {
-                        item
-                    }
-                }
-                SoldItemFileStore.saveSoldItems(updatedItems)
+                // Remove from PendingItemsStore (row deletion = uploaded)
+                PendingItemsStore.deleteByPurchaseId(purchaseId)
+                BackgroundSyncManager.refreshPendingCount()
 
                 withContext(Dispatchers.Main) {
                     _uiState.value = _uiState.value.copy(
@@ -244,16 +236,9 @@ class DetailedPurchaseReviewViewModel(
                     // Success! Remove from rejected store
                     RejectedPurchaseStore.removeRejectedPurchase(purchaseId)
 
-                    // Mark original items as uploaded in SoldItemFileStore
-                    val allItems = SoldItemFileStore.getAllSoldItems()
-                    val updatedItems = allItems.map { item ->
-                        if (item.purchaseId == purchaseId) {
-                            item.copy(uploaded = true)
-                        } else {
-                            item
-                        }
-                    }
-                    SoldItemFileStore.saveSoldItems(updatedItems)
+                    // Remove from PendingItemsStore (row deletion = uploaded)
+                    PendingItemsStore.deleteByPurchaseId(purchaseId)
+                    BackgroundSyncManager.refreshPendingCount()
 
                     withContext(Dispatchers.Main) {
                         _uiState.value = _uiState.value.copy(
@@ -264,7 +249,6 @@ class DetailedPurchaseReviewViewModel(
                     }
                 } else if (response.rejectedItems?.isNotEmpty() == true) {
                     // Still rejected - update with new error details
-                    val recoveryManager = PurchaseRecoveryManager(eventId, apiKey)
                     val newRejectedItems = response.rejectedItems.map { rejectedItem ->
                         RejectedItemWithDetails(
                             item = StoredSoldItem(

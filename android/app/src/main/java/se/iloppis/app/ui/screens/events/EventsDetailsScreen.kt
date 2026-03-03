@@ -290,7 +290,7 @@ private fun EventToolButtons(event: Event) {
             text = stringResource(R.string.home_open_cashier),
             onClick = {
                 screen.onAction(
-                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.CASHIER))
+                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.CASHIER, event.id))
                 )
             },
             modifier = Modifier.weight(1f),
@@ -309,7 +309,7 @@ private fun EventToolButtons(event: Event) {
             text = stringResource(R.string.home_open_scanner),
             onClick = {
                 screen.onAction(
-                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.SCANNER))
+                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.SCANNER, event.id))
                 )
             },
             modifier = Modifier.weight(1f),

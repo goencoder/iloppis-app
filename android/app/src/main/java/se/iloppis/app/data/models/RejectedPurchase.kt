@@ -62,16 +62,3 @@ data class RejectedPurchase(
     val needsManualReview: Boolean = false
 )
 
-/**
- * Result of an auto-recovery attempt.
- */
-sealed class RecoveryResult {
-    /** Auto-recovery succeeded, purchase was uploaded */
-    data object Success : RecoveryResult()
-    
-    /** Auto-recovery failed with a specific reason */
-    data class Failed(val reason: String) : RecoveryResult()
-    
-    /** Auto-recovery failed, manual review needed */
-    data class NeedsManualReview(val invalidSellers: List<Int>) : RecoveryResult()
-}

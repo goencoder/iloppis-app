@@ -92,5 +92,4 @@ object AppColors {
 
     // Top-level text on surface
     val OnBackground = TextPrimary
-    val NavigatorOverlay = TextPrimary  // onSurface equivalent for scrim
 }

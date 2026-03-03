@@ -66,6 +66,7 @@
     <string name="code_entry_error_wrong_type_cashier">The code is not a cashier code</string>
     <string name="code_entry_error_wrong_type_scanner">The code is not a scanner code</string>
     <string name="code_entry_error_not_found">Code not found</string>
+    <string name="code_entry_error_server">Server error. Try again later.</string>
     <string name="code_entry_error_network">Network error. Check your connection.</string>
     <string name="verify_button">Verify</string>
 

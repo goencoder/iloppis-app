@@ -62,6 +62,7 @@
     <string name="code_entry_error_wrong_type_cashier">Koden är inte en kassakod</string>
     <string name="code_entry_error_wrong_type_scanner">Koden är inte en skannerkod</string>
     <string name="code_entry_error_not_found">Koden hittades inte</string>
+    <string name="code_entry_error_server">Serverfel. Försök igen senare.</string>
     <string name="code_entry_error_network">Nätverksfel. Kontrollera din anslutning.</string>
     <string name="verify_button">Verifiera</string>
 

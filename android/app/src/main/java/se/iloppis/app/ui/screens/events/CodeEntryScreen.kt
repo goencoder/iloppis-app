@@ -220,6 +220,7 @@ fun CodeEntryScreen(mode: CodeEntryMode, eventId: String? = null) {
                                 "wrong_type_cashier" -> stringResource(R.string.code_entry_error_wrong_type_cashier)
                                 "wrong_type_scanner" -> stringResource(R.string.code_entry_error_wrong_type_scanner)
                                 "not_found" -> stringResource(R.string.code_entry_error_not_found)
+                                "server" -> stringResource(R.string.code_entry_error_server)
                                 "network" -> stringResource(R.string.code_entry_error_network)
                                 else -> null
                             }

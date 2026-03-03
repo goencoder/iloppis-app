@@ -137,7 +137,13 @@ class CodeEntryViewModel(
             is CodeEntryAction.UpdateCode -> onCodeChange(action.input)
             is CodeEntryAction.VerifyCode -> verifyCode()
             is CodeEntryAction.NavigationConsumed -> {
-                _uiState.value = _uiState.value.copy(verifiedResult = null)
+                _uiState.value = _uiState.value.copy(
+                    verifiedResult = null,
+                    rawCode = "",
+                    errorKey = null
+                )
+                // Reload saved codes so the just-used code appears in the list
+                loadSavedCodes()
             }
             is CodeEntryAction.SelectSavedCode -> useSavedCode(action.savedCode)
             is CodeEntryAction.RemoveSavedCode -> removeSavedCode(action.alias)
@@ -324,7 +330,9 @@ class CodeEntryViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorKey = when (e.code()) {
-                        404 -> "not_found"
+                        400, 404, 422 -> "not_found"
+                        401, 403 -> "inactive"
+                        in 500..599 -> "server"
                         else -> "network"
                     }
                 )

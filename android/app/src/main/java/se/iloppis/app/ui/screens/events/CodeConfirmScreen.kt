@@ -143,7 +143,7 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: CodeEntryMode) {
                         CodeEntryMode.SCANNER -> ScreenPage.Scanner(event, apiKey)
                     }
                     screen.onAction(
-                        ScreenAction.NavigateToPage(toolPage, true)
+                        ScreenAction.NavigateToPage(toolPage)
                     )
                 },
                 modifier = Modifier

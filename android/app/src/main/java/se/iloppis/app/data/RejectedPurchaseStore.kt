@@ -18,77 +18,19 @@ import kotlin.concurrent.withLock
 
 /**
  * Thread-safe file-based storage for rejected purchases that need manual review.
- * 
- * File location: context.filesDir/pending_review.json
- * 
- * ## ARCHITECTURE: Two-List Approach
- * 
- * This store is SEPARATE from SoldItemFileStore, forming a two-list system:
- * 
- * ### List 1: SoldItemFileStore (sold_items.json)
- * - ALL sold items (pending and uploaded)
- * - Source of truth for what was sold
- * - Items marked with `uploaded=false` are pending upload
- * - Items marked with `uploaded=true` are confirmed in backend
- * - SoldItemsSyncWorker continuously processes this list
- * 
- * ### List 2: RejectedPurchaseStore (pending_review.json)
- * - ONLY purchases that need manual intervention
- * - Subset of items from sold_items.json
- * - Populated when auto-recovery fails
- * - User reviews and resolves these in PurchaseReviewScreen
- * - After resolution, items remain in sold_items.json but removed from here
- * 
- * ## WHY TWO LISTS?
- * 
- * **Separation of concerns**:
- * - sold_items.json: Transaction log (complete history)
- * - pending_review.json: User action queue (needs attention)
- * 
- * **No data loss**:
- * - Items are NEVER moved between lists
- * - Items are COPIED to pending_review if they need attention
- * - Original items stay in sold_items.json for audit trail
- * 
- * **Clean retry logic**:
- * - SyncWorker processes sold_items.json continuously
- * - If item succeeds: marked uploaded=true in sold_items.json
- * - If auto-recovery fails: COPY to pending_review.json
- * - User resolves in UI: removed from pending_review.json
- * - Next sync attempt uses data from sold_items.json (source of truth)
- * 
- * ## ALTERNATIVE CONSIDERED: Single List with Status Enum
- * 
- * ```kotlin
- * enum class ItemStatus { PENDING, UPLOADED, NEEDS_REVIEW }
- * data class StoredSoldItem(..., status: ItemStatus)
- * ```
- * 
- * **Rejected because**:
- * - Complicates sync worker (filter multiple statuses)
- * - UI must filter same list differently
- * - Harder to track \"user action needed\" subset
- * - Two-list approach is more explicit and type-safe
- * 
- * ## FLOW EXAMPLE
- * 
- * ```
- * User completes purchase
- *   → Saved to sold_items.json with uploaded=false
- *   → SyncWorker attempts upload
- *   → Backend rejects (INVALID_SELLER)
- *   → Auto-recovery attempts refresh
- *   → Still invalid → COPY to pending_review.json
- *   → Badge shows ⚠️ 1
- *   → User taps badge → PurchaseReviewScreen
- *   → User corrects seller → Retry
- *   → Success → Mark uploaded=true in sold_items.json
- *                Remove from pending_review.json
- *   → Badge disappears
- * ```
- * 
+ *
+ * File location: context.filesDir/events/{eventId}/pending_review.json
+ *
+ * Works alongside PendingItemsStore (pending_items.jsonl):
+ * - PendingItemsStore: items awaiting upload (row exists = pending, deleted = uploaded)
+ * - RejectedPurchaseStore: purchases that failed with errors needing user attention
+ *
+ * BackgroundSyncManager uploads from PendingItemsStore; if a purchase is rejected
+ * with a non-recoverable error, the items stay in PendingItemsStore with errorText set
+ * and may also be tracked here for detailed per-item review.
+ *
  * This store persists purchases that:
- * - Failed auto-recovery (e.g., INVALID_SELLER after refresh)
+ * - Failed with rejection errors (e.g., INVALID_SELLER)
  * - Need manual intervention to resolve
  * - Should be shown in the Purchase Review Screen
  */

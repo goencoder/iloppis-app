@@ -5,12 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import se.iloppis.app.data.CommittedScansStore
 import se.iloppis.app.data.MigrationManager
-import se.iloppis.app.data.PendingItemsStore
-import se.iloppis.app.data.PendingScansStore
-import se.iloppis.app.data.RejectedPurchaseStore
-import se.iloppis.app.data.SoldItemFileStore
 
 class ILoppisApp : Application() {
 	private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)

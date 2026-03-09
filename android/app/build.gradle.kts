@@ -131,8 +131,6 @@ dependencies {
     // Permissions
     implementation(libs.accompanist.permissions)
 
-    // Background work (offline sync)
-    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.navigation3.ui)
 
     // Testing

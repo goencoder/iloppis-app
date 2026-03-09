@@ -110,7 +110,8 @@ object PendingItemsStore {
 
         items.groupBy { it.purchaseId }.forEach { (_, purchaseItems) ->
             val hasServerError = purchaseItems.any {
-                it.errorText.contains("serverfel", ignoreCase = true)
+                it.errorText.contains("serverfel", ignoreCase = true) ||
+                    it.errorText.startsWith("HTTP 5", ignoreCase = true)
             }
             val hasOtherError = purchaseItems.any {
                 it.errorText.isNotBlank() && !it.errorText.contains("serverfel", ignoreCase = true)

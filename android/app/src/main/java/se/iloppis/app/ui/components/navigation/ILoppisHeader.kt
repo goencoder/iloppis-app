@@ -1,5 +1,6 @@
 package se.iloppis.app.ui.components.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -21,7 +22,7 @@ import se.iloppis.app.ui.theme.AppColors
  * iLoppis header component
  */
 @Composable
-fun ILoppisHeader(text: Int = R.string.app_title) {
+fun ILoppisHeader(@StringRes titleRes: Int = R.string.app_title) {
     Row(
         modifier = Modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -35,7 +36,7 @@ fun ILoppisHeader(text: Int = R.string.app_title) {
         }
 
         Text(
-            text = stringResource(text),
+            text = stringResource(titleRes),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = AppColors.TextPrimary,

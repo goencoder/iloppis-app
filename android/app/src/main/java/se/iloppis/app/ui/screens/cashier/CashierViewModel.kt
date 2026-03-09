@@ -204,6 +204,7 @@ class CashierViewModel(
             BackgroundSyncManager.lastSyncAuthErrorCode.collect { code ->
                 if (code == null) {
                     lastHandledAuthErrorCode = null
+                    _uiState.value = _uiState.value.copy(errorMessage = null)
                     return@collect
                 }
                 if (lastHandledAuthErrorCode == code) {
@@ -506,7 +507,6 @@ class CashierViewModel(
                 // Durability first: write pending items to disk before clearing cashier UI.
                 BackgroundSyncManager.enqueueItems(pendingItems)
                 BackgroundSyncManager.triggerImmediateSync()
-                BackgroundSyncManager.refreshPendingCount()
 
                 withContext(Dispatchers.Main) {
                     _uiState.value = _uiState.value.copy(
@@ -528,7 +528,7 @@ class CashierViewModel(
                         isProcessingPayment = false,
                         errorMessage = UiText.StringResource(
                             R.string.cashier_error_save_local,
-                            listOf(t.message ?: "Okänt fel")
+                            listOf(t.message ?: "")
                         )
                     )
                 }

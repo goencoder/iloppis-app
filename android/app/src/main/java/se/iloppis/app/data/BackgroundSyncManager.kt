@@ -37,6 +37,7 @@ import java.time.Instant
 object BackgroundSyncManager {
     private const val TAG = "BackgroundSyncManager"
     private const val SYNC_INTERVAL_MS = 30_000L
+    internal const val UNKNOWN_ERROR_FALLBACK = "Unknown error"
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var syncJob: Job? = null
@@ -179,7 +180,7 @@ object BackgroundSyncManager {
                 val uploadedIds = outcome.acceptedItemIds + outcome.duplicateItemIds
                 val rejectedById = outcome.rejectedItems.associateBy { it.itemId }
                 val rejectedReasonsById = rejectedById.mapValues { (_, rejected) ->
-                    rejected.reason.ifBlank { "Okänt fel" }
+                    rejected.reason.ifBlank { UNKNOWN_ERROR_FALLBACK }
                 }
 
                 if (uploadedIds.isNotEmpty() || rejectedReasonsById.isNotEmpty()) {
@@ -364,7 +365,7 @@ object BackgroundSyncManager {
                     soldTime = parseTimestampToEpochMillis(pending.timestamp),
                     uploaded = false
                 ),
-                reason = rejected.reason.ifBlank { "Okänt fel" },
+                reason = rejected.reason.ifBlank { UNKNOWN_ERROR_FALLBACK },
                 errorCode = SerializableSoldItemErrorCode.fromString(rejected.errorCode)
             )
         }
@@ -378,7 +379,7 @@ object BackgroundSyncManager {
             purchaseId = purchaseId,
             items = rejectedItems,
             errorCode = primaryError.errorCode,
-            errorMessage = primaryError.reason.ifBlank { "Okänt fel" },
+            errorMessage = primaryError.reason.ifBlank { UNKNOWN_ERROR_FALLBACK },
             timestamp = Instant.now().toString(),
             autoRecoveryAttempted = true,
             needsManualReview = true

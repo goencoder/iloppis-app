@@ -26,6 +26,9 @@ import se.iloppis.app.ui.states.ScreenAction
 fun PageManager() {
     val screen = screenContext()
 
+    /* Screen overlays */
+    if(screen.overlay != null) screen.overlay!!()
+
     NavDisplay(
         backStack = screen.pages,
         onBack = { screen.popPage() },

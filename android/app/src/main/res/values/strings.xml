@@ -3,8 +3,6 @@
     <!-- App -->
     <string name="app_name">iLoppis</string>
     <string name="app_title">iLoppis</string>
-    <string name="logo_prefix" translatable="false">i</string>
-    <string name="logo_suffix" translatable="false">Loppis</string>
 
     <!-- Navigation -->
     <string name="nav_home">Hem</string>
@@ -66,6 +64,7 @@
     <string name="code_entry_error_not_found">Koden hittades inte</string>
     <string name="code_entry_error_server">Serverfel. Försök igen senare.</string>
     <string name="code_entry_error_network">Nätverksfel. Kontrollera din anslutning.</string>
+    <string name="unknown_error">Okänt fel</string>
     <string name="verify_button">Verifiera</string>
 
     <!-- Saved Codes -->
@@ -292,6 +291,8 @@
     <!-- ViewModel error/warning messages (resolved in Screen via stringResource) -->
     <string name="cashier_warning_saved_locally">Sparade lokalt. Synkar i bakgrunden när nätet är tillbaka.</string>
     <string name="cashier_error_load_sellers">Kunde inte ladda säljare: %1$s</string>
+    <string name="cashier_error_save_local">Kunde inte spara köpet lokalt: %1$s</string>
+    <string name="cashier_error_auth_expired">Kassans behörighet har gått ut. Öppna kassan igen med en ny kod.</string>
     <string name="cashier_warning_invalid_seller">Ogiltigt säljarnummer</string>
     <string name="cashier_warning_enter_price">Ange minst ett pris</string>
     <string name="cashier_warning_invalid_price">Ogiltigt pris: %1$s</string>

@@ -212,10 +212,11 @@ class DetailedPurchaseReviewViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Convert RejectedItemWithDetails back to SoldItemRequest
+                val retryPurchaseId = se.iloppis.app.utils.Ulid.random()
                 val itemRequests = _uiState.value.items.map { rejectedItem ->
                     SoldItemObject(
                         itemId = rejectedItem.item.itemId,
-                        purchaseId = "", // Let backend generate new ID
+                        purchaseId = retryPurchaseId,
                         seller = rejectedItem.item.seller,
                         price = rejectedItem.item.price,
                         paymentMethod = rejectedItem.item.paymentMethod
@@ -266,11 +267,15 @@ class DetailedPurchaseReviewViewModel(
                         )
                     }
 
+                    // Clean up old pending items (they used the old purchaseId)
+                    PendingItemsStore.deleteByPurchaseId(purchaseId)
+                    BackgroundSyncManager.refreshPendingCount()
+
                     // Update the rejected purchase with new error info
                     val firstError = response.rejectedItems.firstOrNull()
                     if (firstError != null) {
                         val updatedPurchase = RejectedPurchase(
-                            purchaseId = firstError.item.purchaseId,
+                            purchaseId = firstError.item.purchaseId.ifBlank { retryPurchaseId },
                             items = newRejectedItems,
                             errorCode = SerializableSoldItemErrorCode.fromString(firstError.errorCode),
                             errorMessage = firstError.reason,

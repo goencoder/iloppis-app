@@ -93,7 +93,11 @@ private fun UnifiedEventListContent(
             .statusBarsPadding()
     ) {
         // ── Header: logo + search + filters ──
-        ILoppisHeader {
+        ILoppisHeader()
+
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
             // Functional Search bar
             SearchBar(
                 query = state.searchQuery,
@@ -106,6 +110,8 @@ private fun UnifiedEventListContent(
                 onSelect = onFilterSelect
             )
         }
+
+        HorizontalDivider(color = AppColors.Border)
 
         // ── Scrollable event list ──
         EventListBody(
@@ -141,7 +147,7 @@ private fun FooterToolButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AppButton(
                 text = stringResource(R.string.home_open_cashier),

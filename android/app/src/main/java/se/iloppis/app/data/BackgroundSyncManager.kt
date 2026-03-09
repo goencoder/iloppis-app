@@ -12,96 +12,93 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import se.iloppis.app.data.models.PendingItem
+import se.iloppis.app.data.models.RejectedItemWithDetails
+import se.iloppis.app.data.models.RejectedPurchase
+import se.iloppis.app.data.models.SerializableSoldItemErrorCode
+import se.iloppis.app.data.models.StoredSoldItem
 import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.cashier.CashierAPI
-import se.iloppis.app.network.cashier.PaymentMethod
+import se.iloppis.app.network.cashier.CashierApiResponse
 import se.iloppis.app.network.cashier.SoldItemObject
 import se.iloppis.app.network.cashier.SoldItemsRequest
 import se.iloppis.app.network.config.clientConfig
-import java.util.concurrent.ConcurrentLinkedQueue
+import retrofit2.HttpException
+import java.time.Instant
 
 /**
- * Single-threaded background sync manager for sold items.
+ * Background sync manager for sold items.
  *
- * Aligned with LoppisKassan's BackgroundSyncManager pattern:
- * - In-memory queue for immediate enqueue (non-blocking checkout)
- * - Single coroutine sync loop (30s interval)
- * - Local-first: items always flushed to disk before upload attempt
+ * Key guarantees:
+ * - Local-first durability: checkout writes to disk before UI clears.
+ * - Single upload pipeline: same classification/retry behavior every cycle.
  * - Automatic retry on network errors
  * - Exposes pending count via StateFlow for reactive UI
- *
- * ## Data flow
- * ```
- * checkout() → enqueueItems() → ConcurrentLinkedQueue (non-blocking)
- *                                    ↓ (trigger immediate sync)
- *                              syncOnce():
- *                                1. flushQueueToDisk()
- *                                2. readAll pending
- *                                3. group by purchaseId
- *                                4. upload each group
- *                                5. delete accepted / update rejected
- *                                6. update pending count
- *                              (repeats every 30s)
- * ```
  */
 object BackgroundSyncManager {
     private const val TAG = "BackgroundSyncManager"
     private const val SYNC_INTERVAL_MS = 30_000L
+    internal const val UNKNOWN_ERROR_FALLBACK = "Unknown error"
 
-    // Coroutine scope for the sync loop — survives ViewModel lifecycle
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    // In-memory queue: items enqueued here are flushed to disk before upload
-    private val pendingQueue = ConcurrentLinkedQueue<PendingItem>()
-
-    // Sync loop job
     private var syncJob: Job? = null
     private var triggerJob: Job? = null
 
-    // Config
     private var eventId: String? = null
     private var apiKey: String? = null
     private var initialized = false
+    private val api: CashierAPI by lazy { ILoppisClient(clientConfig()).create<CashierAPI>() }
 
-    // Reactive state for UI
     private val _pendingPurchaseCount = MutableStateFlow(0)
     val pendingPurchaseCount: StateFlow<Int> = _pendingPurchaseCount.asStateFlow()
 
     private val _lastSyncHadNetworkError = MutableStateFlow(false)
     val lastSyncHadNetworkError: StateFlow<Boolean> = _lastSyncHadNetworkError.asStateFlow()
 
+    private val _lastSyncAuthErrorCode = MutableStateFlow<Int?>(null)
+    val lastSyncAuthErrorCode: StateFlow<Int?> = _lastSyncAuthErrorCode.asStateFlow()
+
+    private data class RejectedEntry(
+        val itemId: String,
+        val reason: String,
+        val errorCode: String?
+    )
+
+    private data class UploadOutcome(
+        val acceptedItemIds: Set<String>,
+        val duplicateItemIds: Set<String>,
+        val rejectedItems: List<RejectedEntry>
+    )
+
     /**
-     * Start the sync manager for an event.
-     * Must be called once when entering cashier mode.
+     * Start or update sync manager configuration for an event.
      */
     fun start(context: Context, eventId: String, apiKey: String) {
-        if (initialized && this.eventId == eventId) return
+        val sameEvent = initialized && this.eventId == eventId
 
         this.eventId = eventId
         this.apiKey = apiKey
         this.initialized = true
 
-        // Initialize the store
-        EventStoreManager.initializeForEvent(context, eventId)
-
-        // Refresh count immediately from disk
+        if (!sameEvent) {
+            EventStoreManager.initializeForEvent(context, eventId)
+        }
         scope.launch { refreshPendingCount() }
 
-        // Start periodic sync loop
-        syncJob?.cancel()
-        syncJob = scope.launch {
-            while (true) {
-                syncOnceSafely()
-                delay(SYNC_INTERVAL_MS)
+        if (!sameEvent || syncJob?.isActive != true) {
+            syncJob?.cancel()
+            syncJob = scope.launch {
+                while (true) {
+                    syncOnceSafely()
+                    delay(SYNC_INTERVAL_MS)
+                }
             }
+            Log.d(TAG, "Started for event $eventId (30s sync interval)")
+        } else {
+            triggerImmediateSync()
+            Log.d(TAG, "Updated API key for event $eventId")
         }
-
-        Log.d(TAG, "Started for event $eventId (30s sync interval)")
     }
 
-    /**
-     * Stop the sync manager. Call when leaving cashier mode.
-     */
     fun stop() {
         syncJob?.cancel()
         syncJob = null
@@ -114,19 +111,14 @@ object BackgroundSyncManager {
     }
 
     /**
-     * Enqueue items for upload. Non-blocking — items are added to in-memory queue
-     * and will be flushed to disk + uploaded on next sync cycle.
-     *
-     * Also triggers an immediate sync.
+     * Append items to pending store. This is the durability point for checkout.
      */
-    fun enqueueItems(items: List<PendingItem>) {
-        pendingQueue.addAll(items)
-        triggerImmediateSync()
+    suspend fun enqueueItems(items: List<PendingItem>) {
+        if (items.isEmpty()) return
+        PendingItemsStore.appendItems(items)
+        refreshPendingCount()
     }
 
-    /**
-     * Trigger an immediate sync cycle (e.g., after user retries).
-     */
     fun triggerImmediateSync() {
         triggerJob?.cancel()
         triggerJob = scope.launch {
@@ -148,28 +140,23 @@ object BackgroundSyncManager {
     /**
      * Single sync cycle — aligned with LoppisKassan's syncOnceInternal().
      *
-     * 1. Flush in-memory queue to disk (local-first guarantee)
-     * 2. Read all pending items
-     * 3. Group by purchaseId, upload each
-     * 4. Handle responses: delete accepted, update rejected errorText
-     * 5. Refresh pending count
+     * 1. Read all pending items from disk
+     * 2. Group by purchaseId, upload each
+     * 3. Handle responses: delete accepted, update rejected errorText
+     * 4. Refresh pending count
      */
     private suspend fun syncOnce() {
         val currentApiKey = apiKey ?: return
         val currentEventId = eventId ?: return
 
-        // STEP 1: Flush queue to disk (local-first)
-        flushQueueToDisk()
-
-        // STEP 2: Read all pending items
         val allItems = PendingItemsStore.readAll()
         if (allItems.isEmpty()) {
             _pendingPurchaseCount.value = 0
             _lastSyncHadNetworkError.value = false
+            _lastSyncAuthErrorCode.value = null
             return
         }
 
-        // STEP 3: Group by purchaseId, process oldest first
         val byPurchase = allItems
             .groupBy { it.purchaseId }
             .toList()
@@ -177,79 +164,67 @@ object BackgroundSyncManager {
 
         Log.d(TAG, "Syncing ${byPurchase.size} purchases (${allItems.size} items)")
 
-        val api = ILoppisClient(clientConfig()).create<CashierAPI>()
         var networkError = false
+        var authErrorCode: Int? = null
 
         for ((purchaseId, items) in byPurchase) {
-            // Skip items that already have non-empty errorText (need manual intervention)
             val uploadable = items.filter { it.errorText.isEmpty() }
             if (uploadable.isEmpty()) continue
 
             try {
-                val response = api.createSoldItems(
-                    authorization = "Bearer $currentApiKey",
-                    eventId = currentEventId,
-                    request = SoldItemsRequest(
-                        uploadable.map {
-                            SoldItemObject(
-                                itemId = it.itemId,
-                                purchaseId = it.purchaseId,
-                                seller = it.sellerId,
-                                price = it.price,
-                                paymentMethod = PaymentMethod.KONTANT
-                            )
-                        }
-                    )
+                val outcome = uploadPurchaseGroupWithRetry(
+                    currentApiKey = currentApiKey,
+                    currentEventId = currentEventId,
+                    purchaseItems = uploadable
                 )
-
-                // Delete accepted items (row deletion = uploaded)
-                val acceptedIds = response.acceptedItems
-                    ?.mapNotNull { it.itemId }?.toSet() ?: emptySet()
-
-                if (acceptedIds.isNotEmpty()) {
-                    Log.d(TAG, "Purchase $purchaseId: ${acceptedIds.size} accepted")
-                    PendingItemsStore.updateItems(purchaseId) { item ->
-                        if (item.itemId in acceptedIds) null else item
-                    }
+                val uploadedIds = outcome.acceptedItemIds + outcome.duplicateItemIds
+                val rejectedById = outcome.rejectedItems.associateBy { it.itemId }
+                val rejectedReasonsById = rejectedById.mapValues { (_, rejected) ->
+                    rejected.reason.ifBlank { UNKNOWN_ERROR_FALLBACK }
                 }
 
-                // Handle rejected items: check for duplicates (idempotent success)
-                response.rejectedItems?.forEach { rejected ->
-                    val isDuplicate = rejected.errorCode?.let {
-                        it.contains("DUPLICATE", ignoreCase = true)
-                    } ?: false
-
-                    if (isDuplicate) {
-                        // Duplicate = already uploaded, safe to remove
-                        Log.d(TAG, "Item ${rejected.item.itemId}: duplicate (removing)")
-                        PendingItemsStore.updateItems(purchaseId) { item ->
-                            if (item.itemId == rejected.item.itemId) null else item
-                        }
-                    } else {
-                        // Real rejection — update errorText for manual review
-                        val reason = rejected.reason.ifBlank { "Okänt fel" }
-                        Log.w(TAG, "Item ${rejected.item.itemId}: $reason")
-                        PendingItemsStore.updateItems(purchaseId) { item ->
-                            if (item.itemId == rejected.item.itemId) {
-                                item.copy(errorText = reason)
-                            } else item
+                if (uploadedIds.isNotEmpty() || rejectedReasonsById.isNotEmpty()) {
+                    PendingItemsStore.updateItems(purchaseId) { item ->
+                        when {
+                            item.itemId in uploadedIds -> null
+                            item.itemId in rejectedReasonsById -> {
+                                item.copy(errorText = rejectedReasonsById.getValue(item.itemId))
+                            }
+                            else -> item
                         }
                     }
                 }
 
-            } catch (e: retrofit2.HttpException) {
-                if (e.code() >= 500) {
-                    // Server error — mark items, continue to next purchase
-                    Log.e(TAG, "Server error for purchase $purchaseId: ${e.code()}")
-                    PendingItemsStore.updateItems(purchaseId) { item ->
-                        if (item.errorText.isEmpty()) item.copy(errorText = "serverfel") else item
+                updateRejectedPurchaseStore(
+                    purchaseId = purchaseId,
+                    currentEventId = currentEventId,
+                    purchaseItems = items,
+                    rejectedById = rejectedById
+                )
+            } catch (e: HttpException) {
+                when (val code = e.code()) {
+                    401, 403 -> {
+                        authErrorCode = code
+                        Log.w(TAG, "Auth error for purchase $purchaseId: HTTP $code")
+                        break
                     }
-                } else {
-                    // Client error (4xx) — keep for retry
-                    Log.w(TAG, "HTTP ${e.code()} for purchase $purchaseId")
+                    in 500..599 -> {
+                        networkError = true
+                        Log.w(TAG, "Server unavailable for purchase $purchaseId: HTTP $code")
+                        break
+                    }
+                    else -> {
+                        Log.w(TAG, "HTTP $code for purchase $purchaseId")
+                        PendingItemsStore.updateItems(purchaseId) { item ->
+                            if (item.errorText.isEmpty()) {
+                                item.copy(errorText = "HTTP $code")
+                            } else {
+                                item
+                            }
+                        }
+                    }
                 }
             } catch (e: Exception) {
-                // Network error — stop trying further purchases (like LoppisKassan)
                 Log.w(TAG, "Network error for purchase $purchaseId: ${e.message}")
                 networkError = true
                 break
@@ -257,24 +232,166 @@ object BackgroundSyncManager {
         }
 
         _lastSyncHadNetworkError.value = networkError
+        _lastSyncAuthErrorCode.value = authErrorCode
 
-        // STEP 5: Refresh pending count from disk (single source of truth)
         refreshPendingCount()
     }
 
-    /**
-     * Flush in-memory queue to disk via PendingItemsStore.
-     * This is the local-first guarantee: items hit disk before any network attempt.
-     */
-    private suspend fun flushQueueToDisk() {
-        val batch = mutableListOf<PendingItem>()
-        while (true) {
-            val item = pendingQueue.poll() ?: break
-            batch.add(item)
+    private suspend fun uploadPurchaseGroupWithRetry(
+        currentApiKey: String,
+        currentEventId: String,
+        purchaseItems: List<PendingItem>
+    ): UploadOutcome {
+        val initialOutcome = classifyResponse(
+            uploadItems(
+                currentApiKey = currentApiKey,
+                currentEventId = currentEventId,
+                items = purchaseItems
+            )
+        )
+
+        val hasInvalidSeller = initialOutcome.rejectedItems.any { rejected ->
+            rejected.errorCode?.contains("INVALID_SELLER", ignoreCase = true) == true
         }
-        if (batch.isNotEmpty()) {
-            Log.d(TAG, "Flushing ${batch.size} items to disk")
-            PendingItemsStore.appendItems(batch)
+        if (!hasInvalidSeller) {
+            return initialOutcome
+        }
+
+        val collateralIds = initialOutcome.rejectedItems
+            .filter { rejected ->
+                rejected.reason.isBlank() &&
+                    (rejected.errorCode == null ||
+                        rejected.errorCode.contains("UNSPECIFIED", ignoreCase = true))
+            }
+            .map { it.itemId }
+            .toSet()
+
+        if (collateralIds.isEmpty()) {
+            return initialOutcome
+        }
+
+        val retryItems = purchaseItems.filter { it.itemId in collateralIds }
+        if (retryItems.isEmpty()) {
+            return initialOutcome
+        }
+
+        val retryOutcome = classifyResponse(
+            uploadItems(
+                currentApiKey = currentApiKey,
+                currentEventId = currentEventId,
+                items = retryItems
+            )
+        )
+
+        return UploadOutcome(
+            acceptedItemIds = initialOutcome.acceptedItemIds + retryOutcome.acceptedItemIds,
+            duplicateItemIds = initialOutcome.duplicateItemIds + retryOutcome.duplicateItemIds,
+            rejectedItems = initialOutcome.rejectedItems
+                .filterNot { it.itemId in collateralIds } + retryOutcome.rejectedItems
+        )
+    }
+
+    private suspend fun uploadItems(
+        currentApiKey: String,
+        currentEventId: String,
+        items: List<PendingItem>
+    ): CashierApiResponse {
+        return api.createSoldItems(
+            authorization = "Bearer $currentApiKey",
+            eventId = currentEventId,
+            request = SoldItemsRequest(
+                items = items.map { pending ->
+                    SoldItemObject(
+                        itemId = pending.itemId,
+                        purchaseId = pending.purchaseId,
+                        seller = pending.sellerId,
+                        price = pending.price,
+                        paymentMethod = pending.paymentMethod
+                    )
+                }
+            )
+        )
+    }
+
+    private fun classifyResponse(response: CashierApiResponse): UploadOutcome {
+        val accepted = response.acceptedItems?.mapNotNull { it.itemId }?.toSet() ?: emptySet()
+        val duplicate = mutableSetOf<String>()
+        val rejected = mutableListOf<RejectedEntry>()
+
+        response.rejectedItems.orEmpty().forEach { rejectedItem ->
+            val itemId = rejectedItem.item.itemId ?: return@forEach
+            if (rejectedItem.errorCode?.contains("DUPLICATE", ignoreCase = true) == true) {
+                duplicate.add(itemId)
+            } else {
+                rejected.add(
+                    RejectedEntry(
+                        itemId = itemId,
+                        reason = rejectedItem.reason,
+                        errorCode = rejectedItem.errorCode
+                    )
+                )
+            }
+        }
+
+        return UploadOutcome(
+            acceptedItemIds = accepted,
+            duplicateItemIds = duplicate,
+            rejectedItems = rejected
+        )
+    }
+
+    private fun updateRejectedPurchaseStore(
+        purchaseId: String,
+        currentEventId: String,
+        purchaseItems: List<PendingItem>,
+        rejectedById: Map<String, RejectedEntry>
+    ) {
+        if (rejectedById.isEmpty()) {
+            RejectedPurchaseStore.removeRejectedPurchase(purchaseId)
+            return
+        }
+
+        val pendingByItemId = purchaseItems.associateBy { it.itemId }
+        val rejectedItems = rejectedById.mapNotNull { (itemId, rejected) ->
+            val pending = pendingByItemId[itemId] ?: return@mapNotNull null
+            RejectedItemWithDetails(
+                item = StoredSoldItem(
+                    itemId = pending.itemId,
+                    eventId = currentEventId,
+                    purchaseId = pending.purchaseId,
+                    seller = pending.sellerId,
+                    price = pending.price,
+                    paymentMethod = pending.paymentMethod,
+                    soldTime = parseTimestampToEpochMillis(pending.timestamp),
+                    uploaded = false
+                ),
+                reason = rejected.reason.ifBlank { UNKNOWN_ERROR_FALLBACK },
+                errorCode = SerializableSoldItemErrorCode.fromString(rejected.errorCode)
+            )
+        }
+
+        if (rejectedItems.isEmpty()) {
+            return
+        }
+
+        val primaryError = rejectedItems.firstOrNull { !it.isCollateralDamage } ?: rejectedItems.first()
+        val rejectedPurchase = RejectedPurchase(
+            purchaseId = purchaseId,
+            items = rejectedItems,
+            errorCode = primaryError.errorCode,
+            errorMessage = primaryError.reason.ifBlank { UNKNOWN_ERROR_FALLBACK },
+            timestamp = Instant.now().toString(),
+            autoRecoveryAttempted = true,
+            needsManualReview = true
+        )
+        RejectedPurchaseStore.updateRejectedPurchase(rejectedPurchase)
+    }
+
+    private fun parseTimestampToEpochMillis(timestamp: String): Long {
+        return try {
+            Instant.parse(timestamp).toEpochMilli()
+        } catch (_: Exception) {
+            System.currentTimeMillis()
         }
     }
 

@@ -53,6 +53,7 @@ ios/.swiftpm/
 .LSOverride
 
 # IDE
+.idea/
 *.swp
 *.swo
 *~

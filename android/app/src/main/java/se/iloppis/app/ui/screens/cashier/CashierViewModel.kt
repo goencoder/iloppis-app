@@ -202,9 +202,12 @@ class CashierViewModel(
 
         viewModelScope.launch {
             BackgroundSyncManager.lastSyncAuthErrorCode.collect { code ->
+                val authExpiredMessage = UiText.StringResource(R.string.cashier_error_auth_expired)
                 if (code == null) {
                     lastHandledAuthErrorCode = null
-                    _uiState.value = _uiState.value.copy(errorMessage = null)
+                    if (_uiState.value.errorMessage == authExpiredMessage) {
+                        _uiState.value = _uiState.value.copy(errorMessage = null)
+                    }
                     return@collect
                 }
                 if (lastHandledAuthErrorCode == code) {
@@ -212,7 +215,7 @@ class CashierViewModel(
                 }
                 lastHandledAuthErrorCode = code
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = UiText.StringResource(R.string.cashier_error_auth_expired)
+                    errorMessage = authExpiredMessage
                 )
             }
         }

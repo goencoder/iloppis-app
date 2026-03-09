@@ -19,6 +19,7 @@ import se.iloppis.app.data.VendorRepository
 import se.iloppis.app.data.models.PendingItem
 import se.iloppis.app.data.models.SerializableSoldItemErrorCode
 import se.iloppis.app.ui.util.UiText
+import se.iloppis.app.network.cashier.PaymentMethod
 import kotlin.math.ceil
 
 private const val TAG = "CashierViewModel"
@@ -167,16 +168,15 @@ class CashierViewModel(
     private var lastPopupShown: Long = 0
     private var serverErrorShownThisSession = false
     private val MIN_POPUP_INTERVAL_MS = 5 * 60 * 1000L  // 5 minutes
+    private var lastHandledAuthErrorCode: Int? = null
 
     init {
         // Start BackgroundSyncManager (single sync loop, like LoppisKassan)
         val context = ILoppisAppHolder.appContext
         BackgroundSyncManager.start(context, eventId, apiKey)
 
-        // Initialize global VendorRepository singleton
-        if (!VendorRepository.isInitialized()) {
-            VendorRepository.initialize(eventId, apiKey)
-        }
+        // Always initialize with current event/api key (event can change during app session)
+        VendorRepository.initialize(eventId, apiKey)
         loadVendors()
 
         // Observe pending count from BackgroundSyncManager (single source of truth).
@@ -197,6 +197,22 @@ class CashierViewModel(
                         _uiState.value = _uiState.value.copy(pendingSoldItemsCount = count)
                     }
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            BackgroundSyncManager.lastSyncAuthErrorCode.collect { code ->
+                if (code == null) {
+                    lastHandledAuthErrorCode = null
+                    return@collect
+                }
+                if (lastHandledAuthErrorCode == code) {
+                    return@collect
+                }
+                lastHandledAuthErrorCode = code
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = UiText.StringResource(R.string.cashier_error_auth_expired)
+                )
             }
         }
 
@@ -437,9 +453,9 @@ class CashierViewModel(
      * ## Local-first guarantee (aligned with LoppisKassan)
      *
      * 1. Generate stable IDs (purchaseId + itemIds)
-     * 2. Clear UI immediately (optimistic, cashier can continue)
-     * 3. Enqueue items via BackgroundSyncManager (in-memory queue, non-blocking)
-     * 4. Sync loop flushes to disk, then uploads to backend
+     * 2. Persist pending items to local disk
+     * 3. Clear UI and show receipt only after local persistence succeeds
+     * 4. Trigger background sync to upload pending purchases
      * 5. On success: items deleted from PendingItemsStore
      * 6. On failure: items remain on disk, retried every 30s
      *
@@ -452,18 +468,26 @@ class CashierViewModel(
             return
         }
 
-        // STEP 1: Generate stable unique IDs
-        // purchaseId: ULID groups all items in this purchase (26-char time-ordered ID)
-        // itemId: Already in TransactionItem.id (ULID from creation)
         val purchaseTotal = _uiState.value.total
         val purchaseId = se.iloppis.app.utils.Ulid.random()
-        val paymentMethodStr = when (method) {
-            PaymentMethodType.CASH -> "KONTANT"
-            PaymentMethodType.SWISH -> "SWISH"
+        val paymentMethod = when (method) {
+            PaymentMethodType.CASH -> PaymentMethod.KONTANT
+            PaymentMethodType.SWISH -> PaymentMethod.SWISH
+        }
+        val timestamp = java.time.Instant.now().toString()
+
+        val pendingItems = transactionsSnapshot.map { tx ->
+            PendingItem(
+                itemId = tx.id,
+                purchaseId = purchaseId,
+                sellerId = tx.sellerNumber,
+                price = tx.price,
+                paymentMethod = paymentMethod,
+                errorText = "",
+                timestamp = timestamp
+            )
         }
 
-        // STEP 2: Create receipt record
-        // Snapshot current state before clearing UI
         val completedPurchase = CompletedPurchase(
             purchaseId = purchaseId,
             items = transactionsSnapshot,
@@ -471,53 +495,46 @@ class CashierViewModel(
             paymentMethod = method
         )
 
-        // STEP 3: Clear UI immediately
-        // User sees cleared screen + receipt, can start next purchase
-        // This happens BEFORE persistence starts (optimistic UI)
         _uiState.value = _uiState.value.copy(
-            transactions = emptyList(),
-            sellerNumber = "",
-            priceString = "",
-            activeField = ActiveField.SELLER,
-            paidAmount = "0",
-            lastPurchase = completedPurchase,
-            lastCheckoutQueuedOffline = false,
-            warningMessage = null
+            isProcessingPayment = true,
+            warningMessage = null,
+            errorMessage = null
         )
 
-        // STEP 4: Persist purchase data (background thread)
-        // CRITICAL: This is SYNCHRONOUS - blocks until file write completes
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = _uiState.value.copy(isProcessingPayment = true)
-
-            // STEP 4a: Map UI items to pending items
-            val timestamp = java.time.Instant.now().toString()
-            val pendingItems = transactionsSnapshot.map { tx ->
-                PendingItem(
-                    itemId = tx.id,
-                    purchaseId = purchaseId,
-                    sellerId = tx.sellerNumber,
-                    price = tx.price,
-                    errorText = "",
-                    timestamp = timestamp
-                )
-            }
-
-            // STEP 4b: Enqueue items via BackgroundSyncManager
-            // Items go to in-memory queue first (non-blocking), then flushed to disk
-            // and uploaded by the sync loop (like LoppisKassan)
             try {
-                Log.d(TAG, "Enqueueing ${pendingItems.size} items for purchaseId=$purchaseId")
+                // Durability first: write pending items to disk before clearing cashier UI.
                 BackgroundSyncManager.enqueueItems(pendingItems)
-                Log.d(TAG, "Enqueued; sync will flush to disk and upload")
+                BackgroundSyncManager.triggerImmediateSync()
+                BackgroundSyncManager.refreshPendingCount()
+
+                withContext(Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(
+                        transactions = emptyList(),
+                        sellerNumber = "",
+                        priceString = "",
+                        activeField = ActiveField.SELLER,
+                        paidAmount = "0",
+                        lastPurchase = completedPurchase,
+                        lastCheckoutQueuedOffline = false,
+                        warningMessage = null,
+                        isProcessingPayment = false
+                    )
+                }
             } catch (t: Throwable) {
-                Log.e(TAG, "Failed to enqueue pending items", t)
+                Log.e(TAG, "Failed to persist pending items", t)
+                withContext(Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(
+                        isProcessingPayment = false,
+                        errorMessage = UiText.StringResource(
+                            R.string.cashier_error_save_local,
+                            listOf(t.message ?: "Okänt fel")
+                        )
+                    )
+                }
             }
 
-            viewModelScope.launch {
-                refreshRejectedPurchasesCount()
-                _uiState.value = _uiState.value.copy(isProcessingPayment = false)
-            }
+            refreshRejectedPurchasesCount()
         }
     }
 

@@ -275,6 +275,8 @@
     <!-- ViewModel error/warning messages -->
     <string name="cashier_warning_saved_locally">Saved locally. Will sync in background when network returns.</string>
     <string name="cashier_error_load_sellers">Could not load sellers: %1$s</string>
+    <string name="cashier_error_save_local">Could not save purchase locally: %1$s</string>
+    <string name="cashier_error_auth_expired">Cashier authorization has expired. Re-open the cashier with a new code.</string>
     <string name="cashier_warning_invalid_seller">Invalid seller number</string>
     <string name="cashier_warning_enter_price">Enter at least one price</string>
     <string name="cashier_warning_invalid_price">Invalid price: %1$s</string>

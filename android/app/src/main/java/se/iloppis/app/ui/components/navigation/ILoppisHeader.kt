@@ -1,199 +1,45 @@
 package se.iloppis.app.ui.components.navigation
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.R
 import se.iloppis.app.ui.theme.AppColors
 
 /**
- * Unified app header — logo centered at the top.
- *
- * Matches the web frontend: shop icon + "iLoppis" text (no pill background).
- * Accepts an optional [content] slot for toolbar elements (buttons, search,
- * filter chips) that should visually belong to the header zone.
- * A single 1dp divider separates the header from scrollable content.
- *
- * @param content Optional composable slot for toolbar items (buttons, search, filters).
+ * iLoppis header component
  */
 @Composable
-fun ILoppisHeader(
-    content: (@Composable ColumnScope.() -> Unit)? = null
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(AppColors.Background)
-            .padding(top = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        ILoppisLogo()
-
-        if (content != null) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                content()
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        HorizontalDivider(
-            color = AppColors.Border,
-            thickness = 1.dp,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-// ── Logo ─────────────────────────────────────
-
-/**
- * iLoppis logo matching the web frontend (noBg variant).
- *
- * Shop icon in [AppColors.Primary] + "i" in [AppColors.Success] +
- * "Loppis" in [AppColors.Primary]. No pill background.
- */
-@Composable
-private fun ILoppisLogo(
-    modifier: Modifier = Modifier,
-    iconSize: Dp = 36.dp,
-) {
+fun ILoppisHeader(text: Int = R.string.app_title) {
     Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        ShopIcon(size = iconSize, color = AppColors.Primary)
-        Spacer(modifier = Modifier.width(8.dp))
-        val prefix = stringResource(R.string.logo_prefix)
-        val suffix = stringResource(R.string.logo_suffix)
+        Box(modifier = Modifier.padding(start = 5.dp, end = 15.dp)) {
+            Icon(
+                painterResource(R.drawable.icon_192),
+                stringResource(R.string.app_title),
+                modifier = Modifier.size(50.dp)
+            )
+        }
+
         Text(
-            text = buildAnnotatedString {
-                withStyle(SpanStyle(color = AppColors.Success)) {
-                    append(prefix)
-                }
-                withStyle(SpanStyle(color = AppColors.Primary)) {
-                    append(suffix)
-                }
-            },
-            fontSize = 30.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = (-0.02).sp
+            text = stringResource(text),
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = AppColors.TextPrimary,
+            modifier = Modifier.padding(vertical = 16.dp)
         )
-    }
-}
-
-/**
- * Shop/storefront icon matching the frontend SVG (viewBox 0 0 24 24, stroke-only).
- */
-@Composable
-private fun ShopIcon(
-    size: Dp,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val w = this.size.width
-        val h = this.size.height
-        fun sx(x: Float) = x / 24f * w
-        fun sy(y: Float) = y / 24f * h
-
-        val stroke = Stroke(
-            width = 1.5f / 24f * w,
-            cap = StrokeCap.Round,
-            join = StrokeJoin.Round
-        )
-
-        // Shop body (walls)
-        val body = Path().apply {
-            moveTo(sx(3.01f), sy(11.22f))
-            lineTo(sx(3.01f), sy(15.71f))
-            cubicTo(sx(3.01f), sy(20.2f), sx(4.81f), sy(22f), sx(9.3f), sy(22f))
-            lineTo(sx(14.69f), sy(22f))
-            cubicTo(sx(19.18f), sy(22f), sx(20.98f), sy(20.2f), sx(20.98f), sy(15.71f))
-            lineTo(sx(20.98f), sy(11.22f))
-        }
-        drawPath(body, color, style = stroke)
-
-        // Center awning
-        val center = Path().apply {
-            moveTo(sx(12f), sy(12f))
-            cubicTo(sx(13.83f), sy(12f), sx(15.18f), sy(10.51f), sx(15f), sy(8.68f))
-            lineTo(sx(14.34f), sy(2f))
-            lineTo(sx(9.67f), sy(2f))
-            lineTo(sx(9f), sy(8.68f))
-            cubicTo(sx(8.82f), sy(10.51f), sx(10.17f), sy(12f), sx(12f), sy(12f))
-            close()
-        }
-        drawPath(center, color, style = stroke)
-
-        // Right awning
-        val right = Path().apply {
-            moveTo(sx(18.31f), sy(12f))
-            cubicTo(sx(20.33f), sy(12f), sx(21.81f), sy(10.36f), sx(21.61f), sy(8.35f))
-            lineTo(sx(21.33f), sy(5.6f))
-            cubicTo(sx(20.97f), sy(3f), sx(19.97f), sy(2f), sx(17.35f), sy(2f))
-            lineTo(sx(14.3f), sy(2f))
-            lineTo(sx(15f), sy(9.01f))
-            cubicTo(sx(15.17f), sy(10.66f), sx(16.66f), sy(12f), sx(18.31f), sy(12f))
-            close()
-        }
-        drawPath(right, color, style = stroke)
-
-        // Left awning
-        val left = Path().apply {
-            moveTo(sx(5.64f), sy(12f))
-            cubicTo(sx(7.29f), sy(12f), sx(8.78f), sy(10.66f), sx(8.94f), sy(9.01f))
-            lineTo(sx(9.16f), sy(6.8f))
-            lineTo(sx(9.64f), sy(2f))
-            lineTo(sx(6.59f), sy(2f))
-            cubicTo(sx(3.97f), sy(2f), sx(2.97f), sy(3f), sx(2.61f), sy(5.6f))
-            lineTo(sx(2.34f), sy(8.35f))
-            cubicTo(sx(2.14f), sy(10.36f), sx(3.62f), sy(12f), sx(5.64f), sy(12f))
-            close()
-        }
-        drawPath(left, color, style = stroke)
-
-        // Door
-        val door = Path().apply {
-            moveTo(sx(12f), sy(17f))
-            cubicTo(sx(10.33f), sy(17f), sx(9.5f), sy(17.83f), sx(9.5f), sy(19.5f))
-            lineTo(sx(9.5f), sy(22f))
-            lineTo(sx(14.5f), sy(22f))
-            lineTo(sx(14.5f), sy(19.5f))
-            cubicTo(sx(14.5f), sy(17.83f), sx(13.67f), sy(17f), sx(12f), sy(17f))
-            close()
-        }
-        drawPath(door, color, style = stroke)
     }
 }

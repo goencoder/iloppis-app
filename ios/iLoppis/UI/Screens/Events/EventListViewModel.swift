@@ -48,7 +48,7 @@ private func validationErrorKey(for error: Error) -> String {
     }
 
     switch apiError {
-    case .http(let statusCode, _):
+    case .http(let statusCode, _, _):
         switch statusCode {
         case 429:
             return "code_entry_error_rate_limited"
@@ -241,9 +241,10 @@ final class EventListViewModel: ObservableObject {
                 return
             }
 
-            // Resolve event: use the known event, or fetch it via the returned eventId.
-            let resolvedEventId = response.eventId?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-                ? response.eventId
+            let responseEventId = response.eventId?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let resolvedEventId = responseEventId?.isEmpty == false
+                ? responseEventId
                 : entry.event?.id
 
             let resolvedEvent: Event

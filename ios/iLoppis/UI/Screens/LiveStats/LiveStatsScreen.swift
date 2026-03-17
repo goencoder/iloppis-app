@@ -1,6 +1,7 @@
 import SwiftUI
 
 private let liveStatsPollIntervalNs: UInt64 = 10_000_000_000
+private let liveStatsMaxPollIntervalNs: UInt64 = 60_000_000_000
 
 struct LiveStatsScreen: View {
     let event: Event
@@ -60,8 +61,8 @@ struct LiveStatsScreen: View {
                             if snapshot.cashierStatuses.isEmpty {
                                 infoCard(text: NSLocalizedString("live_stats_empty_cashiers", comment: ""))
                             } else {
-                                ForEach(Array(snapshot.cashierStatuses.enumerated()), id: \.offset) { _, cashier in
-                                    cashierCard(cashier)
+                                ForEach(cashierRows(snapshot.cashierStatuses)) { cashierRow in
+                                    cashierCard(cashierRow.cashier)
                                 }
                             }
                         }
@@ -71,7 +72,7 @@ struct LiveStatsScreen: View {
                     }
                 } else {
                     VStack(spacing: 12) {
-                        Text(LocalizedStringKey(viewModel.state.errorKey == "server" ? "live_stats_error_server" : "live_stats_error_network"))
+                        Text(LocalizedStringKey(liveStatsErrorKey(for: viewModel.state.errorKey)))
                             .foregroundColor(AppColors.textPrimary)
                             .multilineTextAlignment(.center)
 
@@ -138,7 +139,7 @@ struct LiveStatsScreen: View {
     }
 
     private func connectionBadge(isStale: Bool) -> some View {
-        Text(LocalizedStringKey(isStale ? "live_stats_connection_polling" : "live_stats_connection_live"))
+        Text(LocalizedStringKey(connectionBadgeKey(isStale: isStale, errorKey: viewModel.state.errorKey)))
             .font(.footnote.weight(.semibold))
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
@@ -240,11 +241,14 @@ struct LiveStatsScreen: View {
     }
 
     private func clientTypeLabel(_ raw: String?) -> String {
-        switch raw {
-        case "CASHIER_CLIENT_TYPE_ANDROID":
+        let normalized = raw?.uppercased() ?? ""
+        switch normalized {
+        case let value where value.contains("ANDROID"):
             return NSLocalizedString("live_stats_client_type_android", comment: "")
-        case "CASHIER_CLIENT_TYPE_IOS":
+        case let value where value.contains("IOS"):
             return NSLocalizedString("live_stats_client_type_ios", comment: "")
+        case let value where value.contains("WEB"):
+            return NSLocalizedString("live_stats_client_type_web", comment: "")
         default:
             return NSLocalizedString("live_stats_client_type_unknown", comment: "")
         }
@@ -252,12 +256,40 @@ struct LiveStatsScreen: View {
 
     private func timeLabel(from raw: String) -> String? {
         guard let date = parseISODate(raw) else { return nil }
-        return timeFormatter.string(from: date)
+        return makeTimeFormatter().string(from: date)
     }
 
     private func dateLabel(from raw: String) -> String? {
         guard let date = parseISODate(raw) else { return nil }
-        return dateFormatter.string(from: date)
+        return makeDateFormatter().string(from: date)
+    }
+
+    private func cashierRows(_ cashiers: [LiveCashierStatus]) -> [LiveCashierRow] {
+        var occurrences: [String: Int] = [:]
+        return cashiers.map { cashier in
+            let baseId = cashier.id
+            let occurrence = occurrences[baseId, default: 0] + 1
+            occurrences[baseId] = occurrence
+            return LiveCashierRow(id: "\(baseId)#\(occurrence)", cashier: cashier)
+        }
+    }
+
+    private func connectionBadgeKey(isStale: Bool, errorKey: String?) -> String {
+        if isStale && errorKey == "rate_limited" {
+            return "live_stats_connection_rate_limited"
+        }
+        return isStale ? "live_stats_connection_polling" : "live_stats_connection_live"
+    }
+
+    private func liveStatsErrorKey(for errorKey: String?) -> String {
+        switch errorKey {
+        case "server":
+            return "live_stats_error_server"
+        case "rate_limited":
+            return "live_stats_error_rate_limited"
+        default:
+            return "live_stats_error_network"
+        }
     }
 }
 
@@ -269,6 +301,8 @@ private final class LiveStatsViewModel: ObservableObject {
     private let apiKey: String
     private let apiClient: ApiClient
     private var pollTask: Task<Void, Never>?
+    private var consecutiveFailures = 0
+    private var nextPollDelayNs = liveStatsPollIntervalNs
 
     init(event: Event, apiKey: String, apiClient: ApiClient = ApiClient()) {
         self.event = event
@@ -282,6 +316,8 @@ private final class LiveStatsViewModel: ObservableObject {
     }
 
     func retry() {
+        consecutiveFailures = 0
+        nextPollDelayNs = liveStatsPollIntervalNs
         Task { await fetch(forceLoading: state.snapshot == nil) }
     }
 
@@ -290,7 +326,7 @@ private final class LiveStatsViewModel: ObservableObject {
         pollTask = Task {
             while !Task.isCancelled {
                 await fetch(forceLoading: state.snapshot == nil)
-                try? await Task.sleep(nanoseconds: liveStatsPollIntervalNs)
+                try? await Task.sleep(nanoseconds: nextPollDelayNs)
             }
         }
     }
@@ -306,6 +342,8 @@ private final class LiveStatsViewModel: ObservableObject {
                 eventId: event.id,
                 apiKey: apiKey
             )
+            consecutiveFailures = 0
+            nextPollDelayNs = liveStatsPollIntervalNs
             state.snapshot = snapshot
             state.isLoading = false
             state.errorKey = nil
@@ -313,16 +351,38 @@ private final class LiveStatsViewModel: ObservableObject {
             DebugLogStore.shared.append("[LiveStats] request failed: \(error.localizedDescription)")
             state.isLoading = false
             switch error {
-            case .http(let statusCode, _):
-                state.errorKey = (500...599).contains(statusCode) ? "server" : "network"
+            case .http(let statusCode, _, let retryAfter):
+                consecutiveFailures += 1
+                if statusCode == 429 {
+                    state.errorKey = "rate_limited"
+                    nextPollDelayNs = pollDelayNs(retryAfter: retryAfter, failureCount: consecutiveFailures)
+                } else {
+                    state.errorKey = (500...599).contains(statusCode) ? "server" : "network"
+                    nextPollDelayNs = pollDelayNs(retryAfter: nil, failureCount: consecutiveFailures)
+                }
             default:
+                consecutiveFailures += 1
                 state.errorKey = "network"
+                nextPollDelayNs = pollDelayNs(retryAfter: nil, failureCount: consecutiveFailures)
             }
         } catch {
             DebugLogStore.shared.append("[LiveStats] request failed: \(error.localizedDescription)")
             state.isLoading = false
+            consecutiveFailures += 1
             state.errorKey = "network"
+            nextPollDelayNs = pollDelayNs(retryAfter: nil, failureCount: consecutiveFailures)
         }
+    }
+
+    private func pollDelayNs(retryAfter: TimeInterval?, failureCount: Int) -> UInt64 {
+        if let retryAfter, retryAfter > 0 {
+            let retryDelayNs = UInt64(retryAfter * 1_000_000_000)
+            return max(liveStatsPollIntervalNs, retryDelayNs)
+        }
+
+        let cappedFailures = min(max(failureCount, 1), 3)
+        let multiplier = UInt64(1 << cappedFailures)
+        return min(liveStatsPollIntervalNs * multiplier, liveStatsMaxPollIntervalNs)
     }
 }
 
@@ -330,6 +390,11 @@ private struct LiveStatsViewState {
     var snapshot: LiveStatsResponse?
     var isLoading: Bool = true
     var errorKey: String?
+}
+
+private struct LiveCashierRow: Identifiable {
+    let id: String
+    let cashier: LiveCashierStatus
 }
 
 private let isoFormatter: ISO8601DateFormatter = {
@@ -344,28 +409,28 @@ private let isoFormatterNoFractionalSeconds: ISO8601DateFormatter = {
     return formatter
 }()
 
-private let timeFormatter: DateFormatter = {
+private func makeTimeFormatter() -> DateFormatter {
     let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "sv_SE")
+    formatter.locale = .autoupdatingCurrent
     formatter.dateFormat = "HH:mm"
     return formatter
-}()
+}
 
-private let dateFormatter: DateFormatter = {
+private func makeDateFormatter() -> DateFormatter {
     let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "sv_SE")
+    formatter.locale = .autoupdatingCurrent
     formatter.dateFormat = "d MMM"
     return formatter
-}()
+}
 
-private let sekFormatter: NumberFormatter = {
+private var sekFormatter: NumberFormatter {
     let formatter = NumberFormatter()
-    formatter.locale = Locale(identifier: "sv_SE")
+    formatter.locale = .autoupdatingCurrent
     formatter.numberStyle = .currency
     formatter.currencyCode = "SEK"
     formatter.maximumFractionDigits = 0
     return formatter
-}()
+}
 
 private extension String {
     var nilIfBlank: String? {

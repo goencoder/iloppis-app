@@ -29,6 +29,7 @@ import se.iloppis.app.ui.theme.AppColors
  * User confirms before entering the selected tool.
  */
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun CodeConfirmScreen(
     event: Event,

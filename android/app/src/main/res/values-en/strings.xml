@@ -89,6 +89,7 @@
     <string name="open_cashier_button">Open cashier</string>
     <string name="open_scanner_button">Open scanner</string>
     <string name="open_live_stats_button">Open live stats</string>
+    <string name="live_stats_retry">Try again</string>
     <string name="tool_type_cashier">Cashier</string>
     <string name="tool_type_scanner">Scanner</string>
     <string name="tool_type_live_stats">Live stats</string>
@@ -103,6 +104,19 @@
     <string name="live_stats_qr_card_title">iLoppis QR</string>
     <string name="live_stats_qr_card_subtitle">Scan the QR code to open tools quickly.</string>
     <string name="live_stats_qr_card_content_description">QR card</string>
+    <string name="live_stats_updated_at">Updated %1$s</string>
+    <string name="live_stats_purchases_label">Purchases</string>
+    <string name="live_stats_items_label">Sold items</string>
+    <string name="live_stats_total_label">Total (SEK)</string>
+    <string name="live_stats_cashiers_label">Cashiers</string>
+    <string name="live_stats_cashier_list_title">Cashiers</string>
+    <string name="live_stats_empty_cashiers">No cashiers are visible yet.</string>
+    <string name="live_stats_unknown_cashier">Unknown cashier</string>
+    <string name="live_stats_pending_count">%1$d pending</string>
+    <string name="live_stats_state_open">Open</string>
+    <string name="live_stats_state_processing">Processing purchases</string>
+    <string name="live_stats_state_stalled">Needs attention</string>
+    <string name="live_stats_state_offline">Offline</string>
     <string name="live_stats_client_type_android">Android</string>
     <string name="live_stats_client_type_ios">iOS</string>
     <string name="live_stats_client_type_web">Web</string>

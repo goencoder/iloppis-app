@@ -49,8 +49,10 @@
 "live_stats_retry" = "Try again";
 "live_stats_error_network" = "Could not load live stats right now.";
 "live_stats_error_server" = "The server is not responding for live stats right now.";
+"live_stats_error_rate_limited" = "Live stats is temporarily rate limited. Please wait before the next update.";
 "live_stats_connection_live" = "Live";
 "live_stats_connection_polling" = "Waiting for update";
+"live_stats_connection_rate_limited" = "Paused due to rate limit";
 "live_stats_updated_at" = "Updated %@";
 "live_stats_purchases_label" = "Purchases";
 "live_stats_items_label" = "Sold items";
@@ -66,6 +68,7 @@
 "live_stats_state_offline" = "Offline";
 "live_stats_client_type_android" = "Android";
 "live_stats_client_type_ios" = "iOS";
+"live_stats_client_type_web" = "Web";
 "live_stats_client_type_unknown" = "Unknown device";
 "code_separator" = "-";
 "code_entry_placeholder" = "XXX-XXX";

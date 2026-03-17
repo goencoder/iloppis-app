@@ -1,6 +1,5 @@
 package se.iloppis.app.ui.screens.events
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,18 +35,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import se.iloppis.app.R
@@ -71,6 +71,12 @@ fun CodeEntryScreen(mode: CodeEntryMode, eventId: String? = null) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val codeAccessibilityLabel = stringResource(R.string.code_entry_label)
+    val codeAccessibilityValue = if (state.rawCode.isBlank()) {
+        stringResource(R.string.code_entry_placeholder)
+    } else {
+        accessibleCodeValue(state.rawCode)
+    }
 
     LaunchedEffect(state.verifiedResult) {
         val result = state.verifiedResult ?: return@LaunchedEffect
@@ -133,6 +139,10 @@ fun CodeEntryScreen(mode: CodeEntryMode, eventId: String? = null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = codeAccessibilityLabel
+                            stateDescription = codeAccessibilityValue
+                        }
                         .clickable {
                             focusRequester.requestFocus()
                             keyboardController?.show()
@@ -151,7 +161,8 @@ fun CodeEntryScreen(mode: CodeEntryMode, eventId: String? = null) {
                         modifier = Modifier
                             .size(1.dp)
                             .align(Alignment.TopStart)
-                            .focusRequester(focusRequester),
+                            .focusRequester(focusRequester)
+                            .clearAndSetSemantics { },
                         singleLine = true,
                         textStyle = MaterialTheme.typography.bodyLarge.copy(color = AppColors.TextPrimary),
                         keyboardOptions = KeyboardOptions(
@@ -359,3 +370,6 @@ private fun toolTypeLabel(codeType: String): String = stringResource(
         else -> R.string.home_open_tool
     }
 )
+
+private fun accessibleCodeValue(code: String): String =
+    code.chunked(3).joinToString(separator = "-")

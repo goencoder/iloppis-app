@@ -105,11 +105,17 @@ struct CodeEntryDialog: View {
             .opacity(0.01)
             .accessibilityLabel(LocalizedStringKey("code_entry_input_accessibility_label"))
             .accessibilityHint(LocalizedStringKey(subtitleKey))
+            .accessibilityHidden(true)
         }
         .contentShape(Rectangle())
         .onTapGesture {
             isInputFocused = true
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(LocalizedStringKey("code_entry_input_accessibility_label")))
+        .accessibilityValue(Text(accessibilityCodeValue))
+        .accessibilityHint(Text(LocalizedStringKey(subtitleKey)))
+        .accessibilityAddTraits(.isButton)
     }
 
     private var codeBoxes: some View {
@@ -129,6 +135,13 @@ struct CodeEntryDialog: View {
             }
         }
         .accessibilityHidden(true)
+    }
+
+    private var accessibilityCodeValue: String {
+        if state.code.isEmpty {
+            return NSLocalizedString("code_entry_placeholder", comment: "")
+        }
+        return state.code.chunked(into: 3).joined(separator: "-")
     }
 }
 
@@ -161,5 +174,17 @@ private extension String {
     func character(at index: Int) -> Character? {
         guard index >= 0 && index < count else { return nil }
         return self[self.index(startIndex, offsetBy: index)]
+    }
+
+    func chunked(into size: Int) -> [String] {
+        guard size > 0 else { return [self] }
+        var chunks: [String] = []
+        var currentIndex = startIndex
+        while currentIndex < endIndex {
+            let nextIndex = index(currentIndex, offsetBy: size, limitedBy: endIndex) ?? endIndex
+            chunks.append(String(self[currentIndex..<nextIndex]))
+            currentIndex = nextIndex
+        }
+        return chunks
     }
 }

@@ -249,7 +249,11 @@ struct ApiClient {
         }
 
         let message = ApiClient.extractErrorMessage(from: data)
-        throw ApiError.http(statusCode: http.statusCode, message: message)
+        throw ApiError.http(
+            statusCode: http.statusCode,
+            message: message,
+            retryAfter: Self.extractRetryAfter(from: http)
+        )
     }
 
     private static func extractErrorMessage(from data: Data) -> String? {
@@ -258,6 +262,27 @@ struct ApiClient {
             if let message = json["message"] as? String, !message.isEmpty { return message }
         }
         return String(data: data, encoding: .utf8)
+    }
+
+    private static func extractRetryAfter(from response: HTTPURLResponse) -> TimeInterval? {
+        guard let rawValue = response.value(forHTTPHeaderField: "Retry-After")?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            !rawValue.isEmpty else {
+            return nil
+        }
+
+        if let seconds = TimeInterval(rawValue), seconds > 0 {
+            return seconds
+        }
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "EEE',' dd MMM yyyy HH':'mm':'ss z"
+        guard let retryDate = formatter.date(from: rawValue) else {
+            return nil
+        }
+        return max(0, retryDate.timeIntervalSinceNow)
     }
 
     private static func encodePathSegment(_ value: String) -> String {
@@ -398,7 +423,7 @@ enum ApiError: Error, LocalizedError {
     case invalidUrl
     case invalidResponse
     case decoding(Error, data: Data, responseType: String)
-    case http(statusCode: Int, message: String?)
+    case http(statusCode: Int, message: String?, retryAfter: TimeInterval?)
 
     var errorDescription: String? {
         switch self {
@@ -416,9 +441,15 @@ enum ApiError: Error, LocalizedError {
                 description += "\n\nJSON preview: \(preview)\(jsonString.count > 500 ? "..." : "")"
             }
             return description
-        case .http(let statusCode, let message):
+        case .http(let statusCode, let message, let retryAfter):
             if let message, !message.isEmpty {
+                if let retryAfter, retryAfter > 0 {
+                    return "HTTP \(statusCode): \(message) (Retry-After: \(Int(retryAfter))s)"
+                }
                 return "HTTP \(statusCode): \(message)"
+            }
+            if let retryAfter, retryAfter > 0 {
+                return "HTTP \(statusCode) (Retry-After: \(Int(retryAfter))s)"
             }
             return "HTTP \(statusCode)"
         }
@@ -674,7 +705,7 @@ struct LiveSalesTotals: Codable {
     }
 }
 
-struct LiveCashierStatus: Codable {
+struct LiveCashierStatus: Codable, Identifiable {
     let displayName: String?
     let state: String?
     let lastHeartbeatAt: String?
@@ -689,6 +720,18 @@ struct LiveCashierStatus: Codable {
         case lastPurchaseAt = "last_purchase_at"
         case pendingPurchasesCount = "pending_purchases_count"
         case clientType = "client_type"
+    }
+
+    var id: String {
+        let trimmedName = displayName?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        let normalizedName = (trimmedName?.isEmpty == false ? trimmedName : nil) ?? "unknown"
+        let trimmedClientType = clientType?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+        let normalizedClientType = (trimmedClientType?.isEmpty == false ? trimmedClientType : nil) ?? "unknown"
+        return "cashier:\(normalizedName)|\(normalizedClientType)"
     }
 }
 

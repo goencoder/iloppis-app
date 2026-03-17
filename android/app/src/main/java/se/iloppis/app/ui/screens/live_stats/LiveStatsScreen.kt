@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -61,7 +61,6 @@ import kotlinx.coroutines.isActive
 import coil.compose.AsyncImage
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.stats.LiveCashierStatus
 import se.iloppis.app.network.stats.LiveStatsApiResponse
 import se.iloppis.app.ui.components.buttons.AppButton
@@ -87,7 +86,7 @@ fun LiveStatsScreen(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel: LiveStatsViewModel = viewModel(
-        key = "live-stats-${event.id}",
+        key = liveStatsViewModelKey(event.id, apiKey),
         factory = LiveStatsViewModel.factory(event.id, apiKey)
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -173,6 +172,7 @@ private fun LiveStatsContent(
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val compactLandscape = isLandscape && configuration.screenHeightDp <= 500
     val cashiers = snapshot.cashierStatuses.orEmpty()
+    val cashierRows = remember(cashiers) { buildCashierRows(cashiers) }
     val cashierCount = if (cashiers.isNotEmpty()) {
         cashiers.size
     } else {
@@ -258,8 +258,8 @@ private fun LiveStatsContent(
                 }
             }
         } else {
-            itemsIndexed(cashiers, key = { index, cashier -> cashierKey(cashier, index) }) { _, cashier ->
-                CashierRow(cashier = cashier)
+            items(items = cashierRows, key = { it.key }) { cashierRow ->
+                CashierRow(cashier = cashierRow.cashier)
             }
         }
     }
@@ -773,14 +773,40 @@ private fun EmptyState(
     }
 }
 
-private fun cashierKey(cashier: LiveCashierStatus, index: Int): String =
-    listOfNotNull(
-        index.toString(),
-        cashier.displayName,
-        cashier.state,
-        cashier.lastHeartbeatAt,
-        cashier.clientType
-    ).joinToString("-")
+private data class CashierRowItem(
+    val key: String,
+    val cashier: LiveCashierStatus
+)
+
+private fun liveStatsViewModelKey(eventId: String, apiKey: String): String =
+    "live-stats-$eventId-${apiKey.hashCode()}"
+
+private fun buildCashierRows(cashiers: List<LiveCashierStatus>): List<CashierRowItem> {
+    val occurrences = mutableMapOf<String, Int>()
+    return cashiers.map { cashier ->
+        val baseKey = cashierIdentityBase(cashier)
+        val occurrence = occurrences.getOrDefault(baseKey, 0) + 1
+        occurrences[baseKey] = occurrence
+        CashierRowItem(
+            key = "$baseKey#$occurrence",
+            cashier = cashier
+        )
+    }
+}
+
+private fun cashierIdentityBase(cashier: LiveCashierStatus): String {
+    val displayName = cashier.displayName
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.lowercase()
+        ?: "unknown"
+    val clientType = cashier.clientType
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.lowercase()
+        ?: "unknown"
+    return "cashier-$displayName-$clientType"
+}
 
 private fun eventHoursLabel(event: Event): String {
     val datePart = event.dates.takeIf { it.isNotBlank() }

@@ -61,7 +61,7 @@
     <string name="code_entry_cashier_hint">Ange kassans kod</string>
     <string name="code_entry_scanner_hint">Ange skannerns kod</string>
     <string name="code_entry_live_stats_hint">Ange live-statistikens kod</string>
-    <string name="code_entry_placeholder">XXX-YYY</string>
+    <string name="code_entry_placeholder">XXX-XXX</string>
     <string name="code_entry_error_inactive">Koden är inte aktiv</string>
     <string name="code_entry_error_wrong_type_tool">Koden är inte en giltig verktygskod</string>
     <string name="code_entry_error_wrong_type_cashier">Koden är inte en kassakod</string>

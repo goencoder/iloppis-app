@@ -69,7 +69,18 @@
 "live_stats_client_type_unknown" = "Unknown device";
 "code_separator" = "-";
 "code_entry_placeholder" = "XXX-XXX";
+"code_entry_input_accessibility_label" = "Code entry";
 "code_invalid" = "Invalid code. Please try again.";
+"code_entry_error_inactive" = "The code is not active.";
+"code_entry_error_wrong_type_tool" = "The code is not a valid tool code.";
+"code_entry_error_wrong_type_cashier" = "The code is not a cashier code.";
+"code_entry_error_wrong_type_scanner" = "The code is not a scanner code.";
+"code_entry_error_wrong_type_live_stats" = "The code is not a live stats code.";
+"code_entry_error_not_found" = "Code not found.";
+"code_entry_error_event_not_found" = "Event not found.";
+"code_entry_error_server" = "Server error. Try again later.";
+"code_entry_error_network" = "Network error. Check your connection.";
+"code_entry_error_rate_limited" = "Too many attempts. Please wait and try again.";
 "code_validating" = "Validating…";
 
 "cashier_title" = "Cashier";

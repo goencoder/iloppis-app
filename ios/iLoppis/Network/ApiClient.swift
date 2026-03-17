@@ -621,6 +621,21 @@ struct LiveStatsResponse: Codable {
         case eventEndTime = "event_end_time"
         case sales
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        eventId = try container.decode(String.self, forKey: .eventId)
+        eventName = try container.decodeIfPresent(String.self, forKey: .eventName)
+        cashiers = try container.decodeIfPresent(LiveCashierTotals.self, forKey: .cashiers)
+        tickets = try container.decodeIfPresent(LiveTicketTotals.self, forKey: .tickets)
+        cashierStatuses = try container.decodeIfPresent([LiveCashierStatus].self, forKey: .cashierStatuses) ?? []
+        generatedAt = try container.decodeIfPresent(String.self, forKey: .generatedAt)
+        eventImageUrl = try container.decodeIfPresent(String.self, forKey: .eventImageUrl)
+        eventCity = try container.decodeIfPresent(String.self, forKey: .eventCity)
+        eventStartTime = try container.decodeIfPresent(String.self, forKey: .eventStartTime)
+        eventEndTime = try container.decodeIfPresent(String.self, forKey: .eventEndTime)
+        sales = try container.decodeIfPresent(LiveSalesTotals.self, forKey: .sales)
+    }
 }
 
 struct LiveCashierTotals: Codable {
@@ -659,22 +674,13 @@ struct LiveSalesTotals: Codable {
     }
 }
 
-struct LiveCashierStatus: Codable, Identifiable {
+struct LiveCashierStatus: Codable {
     let displayName: String?
     let state: String?
     let lastHeartbeatAt: String?
     let lastPurchaseAt: String?
     let pendingPurchasesCount: Int
     let clientType: String?
-
-    var id: String {
-        [
-            displayName ?? "",
-            state ?? "",
-            lastHeartbeatAt ?? "",
-            clientType ?? ""
-        ].joined(separator: "-")
-    }
 
     enum CodingKeys: String, CodingKey {
         case displayName = "display_name"

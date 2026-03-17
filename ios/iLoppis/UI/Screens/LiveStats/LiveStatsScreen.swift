@@ -60,7 +60,7 @@ struct LiveStatsScreen: View {
                             if snapshot.cashierStatuses.isEmpty {
                                 infoCard(text: NSLocalizedString("live_stats_empty_cashiers", comment: ""))
                             } else {
-                                ForEach(snapshot.cashierStatuses) { cashier in
+                                ForEach(Array(snapshot.cashierStatuses.enumerated()), id: \.offset) { _, cashier in
                                     cashierCard(cashier)
                                 }
                             }

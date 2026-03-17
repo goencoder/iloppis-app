@@ -65,7 +65,7 @@
     <string name="code_entry_cashier_hint">Enter the cashier code</string>
     <string name="code_entry_scanner_hint">Enter the scanner code</string>
     <string name="code_entry_live_stats_hint">Enter the live stats code</string>
-    <string name="code_entry_placeholder">XXX-YYY</string>
+    <string name="code_entry_placeholder">XXX-XXX</string>
     <string name="code_entry_error_inactive">The code is not active</string>
     <string name="code_entry_error_wrong_type_tool">The code is not a valid tool code</string>
     <string name="code_entry_error_wrong_type_cashier">The code is not a cashier code</string>

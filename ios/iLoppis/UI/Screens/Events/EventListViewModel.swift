@@ -29,6 +29,45 @@ private func isToolModeAllowed(entryMode: CodeEntryMode, resolvedMode: CodeEntry
     }
 }
 
+private func wrongTypeErrorKey(entryMode: CodeEntryMode) -> String {
+    switch entryMode {
+    case .tool:
+        return "code_entry_error_wrong_type_tool"
+    case .cashier:
+        return "code_entry_error_wrong_type_cashier"
+    case .scanner:
+        return "code_entry_error_wrong_type_scanner"
+    case .liveStats:
+        return "code_entry_error_wrong_type_live_stats"
+    }
+}
+
+private func validationErrorKey(for error: Error) -> String {
+    guard let apiError = error as? ApiError else {
+        return "code_entry_error_network"
+    }
+
+    switch apiError {
+    case .http(let statusCode, _):
+        switch statusCode {
+        case 429:
+            return "code_entry_error_rate_limited"
+        case 400, 404, 422:
+            return "code_entry_error_not_found"
+        case 401, 403:
+            return "code_entry_error_inactive"
+        case 500...599:
+            return "code_entry_error_server"
+        default:
+            return "code_entry_error_network"
+        }
+    case .invalidUrl, .invalidResponse:
+        return "code_entry_error_network"
+    case .decoding:
+        return "code_entry_error_server"
+    }
+}
+
 @MainActor
 final class EventListViewModel: ObservableObject {
     @Published private(set) var state = EventListState()
@@ -176,26 +215,29 @@ final class EventListViewModel: ObservableObject {
         do {
             let normalized = Self.normalizeAlias(code)
             guard normalized.count == 7 else {
-                onAction(.validationFailed("Invalid code format"))
+                onAction(.validationFailed("code_invalid"))
                 return
             }
 
-            // Use flat endpoint when event is nil (quick-access flow),
-            // event-scoped endpoint when event is known (detail dialog flow).
-            let response = try await apiClient.getApiKeyByAlias(alias: normalized)
+            let response: ApiKeyResponse
+            if let eventId = entry.event?.id {
+                response = try await apiClient.getApiKeyByAlias(eventId: eventId, alias: normalized)
+            } else {
+                response = try await apiClient.getApiKeyByAlias(alias: normalized)
+            }
             DebugLogStore.shared.append("[CodeExchange] alias=\(normalized) type=\(response.type ?? "(nil)") isActive=\(response.isActive)")
             guard response.isActive else {
-                onAction(.validationFailed("Code is inactive"))
+                onAction(.validationFailed("code_entry_error_inactive"))
                 return
             }
 
             let resolvedMode = resolveToolMode(response.type)
             guard isToolModeAllowed(entryMode: entry.mode, resolvedMode: resolvedMode) else {
-                onAction(.validationFailed("Wrong code type"))
+                onAction(.validationFailed(wrongTypeErrorKey(entryMode: entry.mode)))
                 return
             }
             guard let actualMode = resolvedMode else {
-                onAction(.validationFailed("Wrong code type"))
+                onAction(.validationFailed(wrongTypeErrorKey(entryMode: entry.mode)))
                 return
             }
 
@@ -220,11 +262,11 @@ final class EventListViewModel: ObservableObject {
                         lifecycleState: dto.lifecycleState
                     )
                 } else {
-                    onAction(.validationFailed("Event not found"))
+                    onAction(.validationFailed("code_entry_error_event_not_found"))
                     return
                 }
             } else {
-                onAction(.validationFailed("Event not found"))
+                onAction(.validationFailed("code_entry_error_event_not_found"))
                 return
             }
 
@@ -238,8 +280,7 @@ final class EventListViewModel: ObservableObject {
                 )
             )
         } catch {
-            let message = error.localizedDescription
-            onAction(.validationFailed(message))
+            onAction(.validationFailed(validationErrorKey(for: error)))
         }
     }
 

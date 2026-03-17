@@ -69,7 +69,18 @@
 "live_stats_client_type_unknown" = "Okänd enhet";
 "code_separator" = "-";
 "code_entry_placeholder" = "XXX-XXX";
+"code_entry_input_accessibility_label" = "Kodinmatning";
 "code_invalid" = "Ogiltig kod. Kontrollera och försök igen.";
+"code_entry_error_inactive" = "Koden är inte aktiv.";
+"code_entry_error_wrong_type_tool" = "Koden är inte en giltig verktygskod.";
+"code_entry_error_wrong_type_cashier" = "Koden är inte en kassakod.";
+"code_entry_error_wrong_type_scanner" = "Koden är inte en skannerkod.";
+"code_entry_error_wrong_type_live_stats" = "Koden är inte en live-statistik-kod.";
+"code_entry_error_not_found" = "Koden hittades inte.";
+"code_entry_error_event_not_found" = "Eventet hittades inte.";
+"code_entry_error_server" = "Serverfel. Försök igen senare.";
+"code_entry_error_network" = "Nätverksfel. Kontrollera din anslutning.";
+"code_entry_error_rate_limited" = "För många försök. Vänta en stund och försök igen.";
 "code_validating" = "Verifierar…";
 
 "cashier_title" = "Kassa";

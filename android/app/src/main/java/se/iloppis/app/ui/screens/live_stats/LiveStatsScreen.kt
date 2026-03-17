@@ -1,8 +1,6 @@
 package se.iloppis.app.ui.screens.live_stats
 
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -20,7 +18,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -55,31 +53,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import coil.compose.AsyncImage
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.MultiFormatWriter
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
-import retrofit2.HttpException
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
-import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.stats.LiveCashierStatus
 import se.iloppis.app.network.stats.LiveStatsApiResponse
-import se.iloppis.app.network.stats.StatsAPI
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
@@ -87,145 +71,12 @@ import java.text.NumberFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import java.util.Currency
 import java.util.Locale
-import kotlin.math.min
-
-private const val TAG = "LiveStatsScreen"
-private const val POLL_INTERVAL_MS = 10_000L
-private const val MAX_BACKOFF_MS = 60_000L
-private const val META_ROTATE_MS = 12_000L
-private const val META_FLIP_ANIM_MS = 700
 
 private val svLocale = Locale.Builder().setLanguage("sv").setRegion("SE").build()
 private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", svLocale)
     .withZone(ZoneId.systemDefault())
-
-data class LiveStatsUiState(
-    val snapshot: LiveStatsApiResponse? = null,
-    val isLoading: Boolean = true,
-    val errorKey: String? = null
-)
-
-class LiveStatsViewModel(
-    private val eventId: String,
-    private val apiKey: String
-) : ViewModel() {
-    companion object {
-        fun factory(eventId: String, apiKey: String) =
-            object : androidx.lifecycle.ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    LiveStatsViewModel(eventId, apiKey) as T
-            }
-    }
-
-    private val statsApi: StatsAPI = ILoppisClient(clientConfig()).create()
-    private val _uiState = MutableStateFlow(LiveStatsUiState())
-    val uiState: StateFlow<LiveStatsUiState> = _uiState.asStateFlow()
-
-    private var pollingJob: Job? = null
-    private var currentPollDelayMs: Long = POLL_INTERVAL_MS
-    private var consecutiveFailures: Int = 0
-
-    init {
-        startPolling()
-    }
-    fun onScreenStarted() {
-        if (pollingJob?.isActive != true) {
-            startPolling()
-        }
-    }
-
-    fun onScreenStopped() {
-        pollingJob?.cancel()
-        pollingJob = null
-    }
-
-    fun retry() {
-        viewModelScope.launch { fetchSnapshot(forceLoading = _uiState.value.snapshot == null) }
-    }
-
-    override fun onCleared() {
-        onScreenStopped()
-        super.onCleared()
-    }
-
-    private fun startPolling() {
-        pollingJob?.cancel()
-        currentPollDelayMs = POLL_INTERVAL_MS
-        consecutiveFailures = 0
-        pollingJob = viewModelScope.launch {
-            while (isActive) {
-                fetchSnapshot(forceLoading = _uiState.value.snapshot == null)
-                delay(currentPollDelayMs)
-            }
-        }
-    }
-
-    private suspend fun fetchSnapshot(forceLoading: Boolean) {
-        if (forceLoading) {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorKey = null)
-        }
-
-        try {
-            val response = statsApi.getEventLiveStats(
-                eventId = eventId,
-                authorization = "Bearer $apiKey"
-            )
-            _uiState.value = LiveStatsUiState(
-                snapshot = response,
-                isLoading = false,
-                errorKey = null
-            )
-            consecutiveFailures = 0
-            currentPollDelayMs = POLL_INTERVAL_MS
-            Log.i(
-                TAG,
-                "Parsed live stats: event=${response.eventId} purchases=${response.sales?.purchasesTotal} items=${response.sales?.itemsTotal} revenue=${response.sales?.revenueTotalSek}"
-            )
-        } catch (error: HttpException) {
-            consecutiveFailures += 1
-            val retryAfterMs = parseRetryAfterMs(error)
-            currentPollDelayMs = retryAfterMs ?: nextBackoffMs(consecutiveFailures)
-            Log.w(
-                TAG,
-                "Live stats request failed with HTTP ${error.code()}, next poll in ${currentPollDelayMs}ms",
-                error
-            )
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                errorKey = when {
-                    error.code() == 429 -> "rate_limited"
-                    error.code() in 500..599 -> "server"
-                    else -> "network"
-                }
-            )
-        } catch (error: Exception) {
-            consecutiveFailures += 1
-            currentPollDelayMs = nextBackoffMs(consecutiveFailures)
-            Log.w(TAG, "Live stats request failed, next poll in ${currentPollDelayMs}ms", error)
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                errorKey = "network"
-            )
-        }
-    }
-
-    private fun nextBackoffMs(failureCount: Int): Long {
-        val step = min(failureCount, 3)
-        val multiplier = 1L shl step
-        return min(MAX_BACKOFF_MS, POLL_INTERVAL_MS * multiplier)
-    }
-
-    private fun parseRetryAfterMs(error: HttpException): Long? {
-        val retryAfterHeader = error.response()?.headers()?.get("Retry-After") ?: return null
-        val seconds = retryAfterHeader.toLongOrNull() ?: return null
-        return if (seconds > 0) seconds * 1000L else null
-    }
-}
 
 @Composable
 fun LiveStatsScreen(
@@ -407,7 +258,7 @@ private fun LiveStatsContent(
                 }
             }
         } else {
-            items(cashiers, key = { cashierKey(it) }) { cashier ->
+            itemsIndexed(cashiers, key = { index, cashier -> cashierKey(cashier, index) }) { _, cashier ->
                 CashierRow(cashier = cashier)
             }
         }
@@ -765,37 +616,6 @@ private fun QrCodeImage(
     }
 }
 
-private fun createQrBitmap(value: String, sizePx: Int): Bitmap? = runCatching {
-    val hints = mapOf(
-        EncodeHintType.MARGIN to 0,
-        EncodeHintType.CHARACTER_SET to "UTF-8",
-        EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M
-    )
-    val matrix = MultiFormatWriter().encode(
-        value,
-        BarcodeFormat.QR_CODE,
-        sizePx,
-        sizePx,
-        hints
-    )
-
-    val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
-    for (x in 0 until sizePx) {
-        for (y in 0 until sizePx) {
-            bitmap.setPixel(x, y, if (matrix[x, y]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
-        }
-    }
-    bitmap
-}.getOrNull()
-
-private fun visitUrl(eventId: String): String {
-    val baseUrl = runCatching { clientConfig().url }
-        .getOrDefault("https://iloppis.se/")
-        .trimEnd('/')
-    val encodedEventId = URLEncoder.encode(eventId, StandardCharsets.UTF_8.toString())
-    return "$baseUrl/visit?event_id=$encodedEventId"
-}
-
 @Composable
 private fun StatRow(
     leftTitle: String,
@@ -953,8 +773,9 @@ private fun EmptyState(
     }
 }
 
-private fun cashierKey(cashier: LiveCashierStatus): String =
+private fun cashierKey(cashier: LiveCashierStatus, index: Int): String =
     listOfNotNull(
+        index.toString(),
         cashier.displayName,
         cashier.state,
         cashier.lastHeartbeatAt,

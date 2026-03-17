@@ -23,7 +23,7 @@ private const val MAX_SAVED_CODES = 20
  */
 @Serializable
 data class SavedCode(
-    /** The alias in XXX-YYY format */
+    /** The alias in XXX-XXX format */
     val alias: String,
     /** Event ID this code belongs to */
     val eventId: String,

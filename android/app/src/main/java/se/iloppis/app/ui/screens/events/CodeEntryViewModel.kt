@@ -79,7 +79,7 @@ data class CodeEntryUiState(
     /** Whether saved codes are still being loaded/validated. */
     val isSavedCodesLoading: Boolean = true
 ) {
-    /** Formatted display code: XXX-YYY */
+    /** Formatted display code: XXX-XXX */
     val displayCode: String
         get() = rawCode
 

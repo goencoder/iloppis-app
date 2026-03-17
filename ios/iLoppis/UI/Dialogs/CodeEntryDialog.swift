@@ -39,8 +39,8 @@ struct CodeEntryDialog: View {
 
                 codeInput
 
-                if let error = state.errorMessage {
-                    Text(error)
+                if let errorKey = state.errorMessage {
+                    Text(LocalizedStringKey(errorKey))
                         .font(.footnote)
                         .foregroundColor(AppColors.textError)
                 }
@@ -85,7 +85,7 @@ struct CodeEntryDialog: View {
             codeBoxes
 
             TextField(
-                "",
+                LocalizedStringKey("code_entry_placeholder"),
                 text: Binding(
                     get: { state.code },
                     set: { onCodeChange($0) }
@@ -103,6 +103,8 @@ struct CodeEntryDialog: View {
             }
             .frame(width: 1, height: 1)
             .opacity(0.01)
+            .accessibilityLabel(LocalizedStringKey("code_entry_input_accessibility_label"))
+            .accessibilityHint(LocalizedStringKey(subtitleKey))
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -126,6 +128,7 @@ struct CodeEntryDialog: View {
                 )
             }
         }
+        .accessibilityHidden(true)
     }
 }
 

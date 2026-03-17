@@ -145,11 +145,11 @@ class ScreenModel : ViewModel() {
                 if(pages.lastOrNull() !is ScreenPage.CodeEntry) {
                     pages.clear()
                     pages.add(ScreenPage.EventList)
-                    pages.add(ScreenPage.CodeEntry(page.mode))
+                    pages.add(ScreenPage.CodeEntry(page.entryMode))
                 }
                 pages.add(page)
             }
-            is ScreenPage.Cashier, is ScreenPage.Scanner -> {
+            is ScreenPage.Cashier, is ScreenPage.Scanner, is ScreenPage.LiveStats -> {
                 // Navigate from CodeConfirm or EventsDetailPage
                 // Keep existing path and add tool page
                 if(pages.lastOrNull() !is ScreenPage.CodeConfirm && pages.lastOrNull() !is ScreenPage.EventsDetailPage) {

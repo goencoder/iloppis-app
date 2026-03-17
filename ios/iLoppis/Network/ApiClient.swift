@@ -138,6 +138,31 @@ struct ApiClient {
         )
     }
 
+    func updateCashierPresence(
+        eventId: String,
+        apiKey: String,
+        requestBody: CashierPresenceHeartbeatRequest
+    ) async throws -> CashierPresenceHeartbeatResponse {
+        try await request(
+            path: "v1/events/\(eventId)/cashier-presence:heartbeat",
+            method: .post,
+            authorization: "Bearer \(apiKey)",
+            body: requestBody
+        )
+    }
+
+    func getEventLiveStats(
+        eventId: String,
+        apiKey: String
+    ) async throws -> LiveStatsResponse {
+        try await request(
+            path: "v1/events/\(eventId)/stats:live",
+            method: .get,
+            authorization: "Bearer \(apiKey)",
+            body: Optional<EmptyBody>.none
+        )
+    }
+
     func scanVisitorTicket(
         eventId: String,
         apiKey: String,
@@ -464,7 +489,7 @@ struct EventFilterRequest: Codable {
     }
 }
 
-struct ApiKeyResponse: Codable {
+struct ApiKeyResponse: Decodable {
     let alias: String
     let apiKey: String
     let isActive: Bool
@@ -472,6 +497,33 @@ struct ApiKeyResponse: Codable {
     let tags: [String]?
     let id: String?
     let eventId: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case alias
+        case apiKey
+        case apiKeySnake = "api_key"
+        case isActive
+        case isActiveSnake = "is_active"
+        case type
+        case tags
+        case id
+        case eventId
+        case eventIdSnake = "event_id"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        alias = try container.decode(String.self, forKey: .alias)
+        apiKey = try container.decodeIfPresent(String.self, forKey: .apiKey)
+            ?? container.decode(String.self, forKey: .apiKeySnake)
+        isActive = try container.decodeIfPresent(Bool.self, forKey: .isActive)
+            ?? container.decode(Bool.self, forKey: .isActiveSnake)
+        type = try container.decodeIfPresent(String.self, forKey: .type)
+        tags = try container.decodeIfPresent([String].self, forKey: .tags)
+        id = try container.decodeIfPresent(String.self, forKey: .id)
+        eventId = try container.decodeIfPresent(String.self, forKey: .eventId)
+            ?? container.decodeIfPresent(String.self, forKey: .eventIdSnake)
+    }
 }
 
 struct VendorDto: Codable {
@@ -508,6 +560,130 @@ struct SoldItemRequest: Codable {
 
 struct CreateSoldItemsRequest: Codable {
     let items: [SoldItemRequest]
+}
+
+enum CashierClientState: String, Codable {
+    case idle = "CASHIER_CLIENT_STATE_IDLE"
+    case activeTransaction = "CASHIER_CLIENT_STATE_ACTIVE_TRANSACTION"
+    case submitting = "CASHIER_CLIENT_STATE_SUBMITTING"
+}
+
+enum CashierClientType: String, Codable {
+    case android = "CASHIER_CLIENT_TYPE_ANDROID"
+    case ios = "CASHIER_CLIENT_TYPE_IOS"
+}
+
+struct CashierPresenceHeartbeatRequest: Codable {
+    let clientState: CashierClientState
+    let pendingPurchasesCount: Int
+    let clientType: CashierClientType
+    let displayName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case clientState = "client_state"
+        case pendingPurchasesCount = "pending_purchases_count"
+        case clientType = "client_type"
+        case displayName = "display_name"
+    }
+}
+
+struct CashierPresenceHeartbeatResponse: Codable {
+    let displayName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case displayName = "display_name"
+    }
+}
+
+struct LiveStatsResponse: Codable {
+    let eventId: String
+    let eventName: String?
+    let cashiers: LiveCashierTotals?
+    let tickets: LiveTicketTotals?
+    let cashierStatuses: [LiveCashierStatus]
+    let generatedAt: String?
+    let eventImageUrl: String?
+    let eventCity: String?
+    let eventStartTime: String?
+    let eventEndTime: String?
+    let sales: LiveSalesTotals?
+
+    enum CodingKeys: String, CodingKey {
+        case eventId = "event_id"
+        case eventName = "event_name"
+        case cashiers
+        case tickets
+        case cashierStatuses = "cashier_statuses"
+        case generatedAt = "generated_at"
+        case eventImageUrl = "event_image_url"
+        case eventCity = "event_city"
+        case eventStartTime = "event_start_time"
+        case eventEndTime = "event_end_time"
+        case sales
+    }
+}
+
+struct LiveCashierTotals: Codable {
+    let openCount: Int
+    let processingCount: Int
+    let stalledCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case openCount = "open_count"
+        case processingCount = "processing_count"
+        case stalledCount = "stalled_count"
+    }
+}
+
+struct LiveTicketTotals: Codable {
+    let bookedCount: Int
+    let scannedCount: Int
+    let notScannedCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case bookedCount = "booked_count"
+        case scannedCount = "scanned_count"
+        case notScannedCount = "not_scanned_count"
+    }
+}
+
+struct LiveSalesTotals: Codable {
+    let purchasesTotal: Int
+    let itemsTotal: Int
+    let revenueTotalSek: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case purchasesTotal = "purchases_total"
+        case itemsTotal = "items_total"
+        case revenueTotalSek = "revenue_total_sek"
+    }
+}
+
+struct LiveCashierStatus: Codable, Identifiable {
+    let displayName: String?
+    let state: String?
+    let lastHeartbeatAt: String?
+    let lastPurchaseAt: String?
+    let pendingPurchasesCount: Int
+    let clientType: String?
+
+    var id: String {
+        [
+            displayName ?? "",
+            state ?? "",
+            lastHeartbeatAt ?? "",
+            clientType ?? ""
+        ].joined(separator: "-")
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case displayName = "display_name"
+        case state
+        case lastHeartbeatAt = "last_heartbeat_at"
+        case lastPurchaseAt = "last_purchase_at"
+        case pendingPurchasesCount = "pending_purchases_count"
+        case clientType = "client_type"
+    }
 }
 
 struct SoldItemDto: Codable {

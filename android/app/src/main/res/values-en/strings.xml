@@ -16,8 +16,10 @@
     <string name="pages_library">Library</string>
 
     <!-- Home Screen -->
+    <string name="home_open_tool">Tools</string>
     <string name="home_open_cashier">Open cashier</string>
     <string name="home_open_scanner">Open scanner</string>
+    <string name="home_open_live_stats">Open live stats</string>
 
     <!-- Event List Screen -->
     <string name="search_placeholder">Search flea market…</string>
@@ -46,8 +48,10 @@
     <string name="button_back">Back</string>
 
     <!-- Code Entry Dialog -->
+    <string name="code_entry_title_tool">Enter tool code</string>
     <string name="code_entry_title_cashier">Enter cashier code</string>
     <string name="code_entry_title_scanner">Enter scanner code</string>
+    <string name="code_entry_subtitle_tool">Enter a tool code to continue to cashier, scanner, or live stats</string>
     <string name="code_entry_subtitle_cashier">Enter your cashier code to open the register</string>
     <string name="code_entry_subtitle_scanner">Enter your scanner code to start ticket scanning</string>
     <string name="button_verify_continue">Verify and continue</string>
@@ -57,21 +61,52 @@
 
     <!-- Code Entry Screen -->
     <string name="code_entry_label">Enter code</string>
+    <string name="code_entry_tool_hint">Enter the tool code</string>
     <string name="code_entry_cashier_hint">Enter the cashier code</string>
     <string name="code_entry_scanner_hint">Enter the scanner code</string>
+    <string name="code_entry_live_stats_hint">Enter the live stats code</string>
     <string name="code_entry_placeholder">XXX-YYY</string>
     <string name="code_entry_error_inactive">The code is not active</string>
+    <string name="code_entry_error_wrong_type_tool">The code is not a valid tool code</string>
     <string name="code_entry_error_wrong_type_cashier">The code is not a cashier code</string>
     <string name="code_entry_error_wrong_type_scanner">The code is not a scanner code</string>
+    <string name="code_entry_error_wrong_type_live_stats">The code is not a live stats code</string>
     <string name="code_entry_error_not_found">Code not found</string>
     <string name="code_entry_error_server">Server error. Try again later.</string>
     <string name="code_entry_error_network">Network error. Check your connection.</string>
+    <string name="code_entry_error_rate_limited">Too many attempts. Please wait and try again.</string>
     <string name="unknown_error">Unknown error</string>
     <string name="verify_button">Verify</string>
 
     <!-- Saved Codes -->
     <string name="saved_codes_header">Recent codes</string>
     <string name="saved_codes_remove">Remove saved code</string>
+
+    <!-- Code Confirmation Screen -->
+    <string name="confirm_event_title">Confirm</string>
+    <string name="confirm_event_message">Code resolved event:</string>
+    <string name="confirm_event_tool_label">Tool: %1$s</string>
+    <string name="open_cashier_button">Open cashier</string>
+    <string name="open_scanner_button">Open scanner</string>
+    <string name="open_live_stats_button">Open live stats</string>
+    <string name="tool_type_cashier">Cashier</string>
+    <string name="tool_type_scanner">Scanner</string>
+    <string name="tool_type_live_stats">Live stats</string>
+    <string name="live_stats_close">Close live stats</string>
+    <string name="live_stats_error_network">Could not load live stats right now.</string>
+    <string name="live_stats_error_server">Live stats server is not responding right now.</string>
+    <string name="live_stats_error_rate_limited">Live stats is temporarily rate limited. Please wait before next update.</string>
+    <string name="live_stats_connection_live">Live</string>
+    <string name="live_stats_connection_polling">Waiting for update</string>
+    <string name="live_stats_connection_rate_limited">Paused due to rate limit</string>
+    <string name="live_stats_event_image_content_description">Event image</string>
+    <string name="live_stats_qr_card_title">iLoppis QR</string>
+    <string name="live_stats_qr_card_subtitle">Scan the QR code to open tools quickly.</string>
+    <string name="live_stats_qr_card_content_description">QR card</string>
+    <string name="live_stats_client_type_android">Android</string>
+    <string name="live_stats_client_type_ios">iOS</string>
+    <string name="live_stats_client_type_web">Web</string>
+    <string name="live_stats_client_type_unknown">Unknown device</string>
 
     <!-- Cashier Selection Screen -->
     <string name="cashier_selection_header">Choose an event to act cashier for</string>

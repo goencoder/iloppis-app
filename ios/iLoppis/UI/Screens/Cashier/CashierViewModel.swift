@@ -10,6 +10,27 @@ final class CashierViewModel: ObservableObject {
     private let eventId: String
     private let apiKey: String
     private let apiClient: ApiClient
+    private lazy var heartbeatCoordinator = CashierHeartbeatCoordinator(
+        shouldRun: { [eventId, apiKey] in
+            !eventId.isEmpty && !apiKey.isEmpty
+        },
+        requestFactory: { [weak self] in
+            await self?.makeHeartbeatRequest()
+        },
+        sendHeartbeat: { [apiClient, eventId, apiKey] request in
+            try await apiClient.updateCashierPresence(
+                eventId: eventId,
+                apiKey: apiKey,
+                requestBody: request
+            )
+        },
+        onHeartbeatResponse: { [weak self] response in
+            await self?.applyHeartbeatResponse(response)
+        },
+        onHeartbeatFailure: { error in
+            logger.warning("Cashier heartbeat failed: \(error.localizedDescription, privacy: .public)")
+        }
+    )
 
     init(eventId: String, eventName: String, apiKey: String, apiClient: ApiClient = ApiClient()) {
         self.eventId = eventId
@@ -17,6 +38,7 @@ final class CashierViewModel: ObservableObject {
         self.apiClient = apiClient
         self.state = CashierState(eventName: eventName)
 
+        heartbeatCoordinator.start()
         Task { await loadVendors() }
     }
 
@@ -257,5 +279,19 @@ final class CashierViewModel: ObservableObject {
 
     private static func makePurchaseId() -> String {
         UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(26).uppercased()
+    }
+
+    private func makeHeartbeatRequest() -> CashierPresenceHeartbeatRequest {
+        let snapshot = state.heartbeatSnapshot()
+        return CashierPresenceHeartbeatRequest(
+            clientState: snapshot.clientState,
+            pendingPurchasesCount: snapshot.pendingPurchasesCount,
+            clientType: .ios,
+            displayName: snapshot.displayName
+        )
+    }
+
+    private func applyHeartbeatResponse(_ response: CashierPresenceHeartbeatResponse) {
+        state.heartbeatDisplayName = response.displayName
     }
 }

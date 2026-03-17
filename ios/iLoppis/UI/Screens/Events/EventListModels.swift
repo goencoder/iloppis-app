@@ -8,10 +8,19 @@ struct CodeEntryState: Equatable {
     var errorMessage: String?
 }
 
+struct CodeConfirmationState: Equatable {
+    let entryMode: CodeEntryMode
+    let resolvedMode: CodeEntryMode
+    let event: Event
+    let apiKey: String
+    let alias: String
+}
+
 enum AppScreen: Equatable {
     case eventList
     case cashier(event: Event, apiKey: String)
     case scanner(event: Event, apiKey: String)
+    case liveStats(event: Event, apiKey: String)
 }
 
 enum EventFilterChip: Equatable {
@@ -26,6 +35,7 @@ struct EventListState: Equatable {
     var filteredEvents: [Event] { applyFilterAndSearch() }
     var selectedEvent: Event?
     var codeEntryState: CodeEntryState?
+    var codeConfirmationState: CodeConfirmationState?
     var currentScreen: AppScreen = .eventList
     var isLoading: Bool = false
     var errorMessage: String?
@@ -60,9 +70,11 @@ enum EventListAction {
     case dismissEventDetail
     case startCodeEntry(mode: CodeEntryMode, event: Event?)
     case dismissCodeEntry
+    case dismissCodeConfirmation
     case updateCode(String)
     case submitCode(String)
-    case codeValidated(apiKey: String, event: Event, mode: CodeEntryMode)
+    case codeValidated(apiKey: String, alias: String, event: Event, entryMode: CodeEntryMode, resolvedMode: CodeEntryMode)
+    case confirmCodeSelection
     case validationFailed(String)
     case navigateBack
     case updateSearch(String)

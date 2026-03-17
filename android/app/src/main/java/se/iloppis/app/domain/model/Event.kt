@@ -81,6 +81,8 @@ fun Event.displayStatus(): EventDisplayStatus {
  * Mode for code entry - determines which type of code is being entered.
  */
 enum class CodeEntryMode {
+    TOOL,
     CASHIER,
-    SCANNER
+    SCANNER,
+    LIVE_STATS
 }

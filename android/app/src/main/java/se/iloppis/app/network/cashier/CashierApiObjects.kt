@@ -1,5 +1,6 @@
 package se.iloppis.app.network.cashier
 
+import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
 
 /**
@@ -164,4 +165,43 @@ data class SoldItemsRequest(
      * List of items
      */
     val items: List<SoldItemObject>
+)
+
+/**
+ * Cashier client activity states for presence heartbeat.
+ */
+enum class CashierClientState {
+    CASHIER_CLIENT_STATE_IDLE,
+    CASHIER_CLIENT_STATE_ACTIVE_TRANSACTION,
+    CASHIER_CLIENT_STATE_SUBMITTING
+}
+
+/**
+ * Cashier client type.
+ */
+enum class CashierClientType {
+    CASHIER_CLIENT_TYPE_ANDROID,
+    CASHIER_CLIENT_TYPE_IOS
+}
+
+/**
+ * Presence heartbeat request body.
+ */
+data class CashierPresenceHeartbeatRequest(
+    @SerializedName("client_state")
+    val clientState: CashierClientState,
+    @SerializedName("pending_purchases_count")
+    val pendingPurchasesCount: Int,
+    @SerializedName("client_type")
+    val clientType: CashierClientType,
+    @SerializedName("display_name")
+    val displayName: String? = null
+)
+
+/**
+ * Presence heartbeat response body.
+ */
+data class CashierPresenceHeartbeatResponse(
+    @SerializedName("display_name")
+    val displayName: String? = null
 )

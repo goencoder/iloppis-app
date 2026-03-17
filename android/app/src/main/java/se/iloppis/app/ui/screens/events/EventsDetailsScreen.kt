@@ -17,10 +17,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.OpenInBrowser
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.QrCode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -266,7 +265,7 @@ private fun EventActionButtons(event: Event) {
 
 
 /**
- * Tool access buttons: Cashier and Scanner.
+ * Tool access button.
  */
 @Composable
 private fun EventToolButtons(event: Event) {
@@ -281,46 +280,21 @@ private fun EventToolButtons(event: Event) {
         modifier = Modifier.padding(bottom = 8.dp)
     )
 
-    Row(
+    AppButton(
+        text = stringResource(R.string.home_open_tool),
+        onClick = {
+            screen.onAction(
+                ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.TOOL, event.id))
+            )
+        },
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Cashier button
-        AppButton(
-            text = stringResource(R.string.home_open_cashier),
-            onClick = {
-                screen.onAction(
-                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.CASHIER, event.id))
-                )
-            },
-            modifier = Modifier.weight(1f),
-            variant = AppButtonVariant.Primary,
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.Payments,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-            }
-        )
-
-        // Scanner button
-        AppButton(
-            text = stringResource(R.string.home_open_scanner),
-            onClick = {
-                screen.onAction(
-                    ScreenAction.NavigateToPage(ScreenPage.CodeEntry(CodeEntryMode.SCANNER, event.id))
-                )
-            },
-            modifier = Modifier.weight(1f),
-            variant = AppButtonVariant.Success,
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.QrCode,
-                    contentDescription = null,
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-            }
-        )
-    }
+        variant = AppButtonVariant.Primary,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Outlined.Build,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+        }
+    )
 }

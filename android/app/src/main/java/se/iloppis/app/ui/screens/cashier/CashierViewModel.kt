@@ -18,8 +18,13 @@ import se.iloppis.app.data.RejectedPurchaseStore
 import se.iloppis.app.data.VendorRepository
 import se.iloppis.app.data.models.PendingItem
 import se.iloppis.app.data.models.SerializableSoldItemErrorCode
-import se.iloppis.app.ui.util.UiText
+import se.iloppis.app.network.ILoppisClient
+import se.iloppis.app.network.cashier.CashierAPI
+import se.iloppis.app.network.cashier.CashierClientType
+import se.iloppis.app.network.cashier.CashierPresenceHeartbeatRequest
 import se.iloppis.app.network.cashier.PaymentMethod
+import se.iloppis.app.network.config.clientConfig
+import se.iloppis.app.ui.util.UiText
 import kotlin.math.ceil
 
 private const val TAG = "CashierViewModel"
@@ -99,6 +104,7 @@ data class CashierUiState(
     // Loading/error states
     val isLoading: Boolean = false,
     val isProcessingPayment: Boolean = false,
+    val heartbeatDisplayName: String? = null,
     val errorMessage: UiText? = null,
     val warningMessage: UiText? = null
 ) {
@@ -163,6 +169,28 @@ class CashierViewModel(
 
     private val _uiState = MutableStateFlow(CashierUiState(eventName = eventName))
     val uiState: StateFlow<CashierUiState> = _uiState.asStateFlow()
+    private val cashierApi: CashierAPI = ILoppisClient(clientConfig()).create()
+    private var rawPendingPurchasesCount: Int = 0
+    private val heartbeatCoordinator = CashierHeartbeatCoordinator(
+        scope = viewModelScope,
+        shouldRun = { eventId.isNotBlank() && apiKey.isNotBlank() },
+        requestFactory = { buildHeartbeatRequest() },
+        sendHeartbeat = { request ->
+            withContext(Dispatchers.IO) {
+                cashierApi.updateCashierPresence(
+                    authorization = "Bearer $apiKey",
+                    eventId = eventId,
+                    request = request
+                )
+            }
+        },
+        onHeartbeatResponse = { response ->
+            _uiState.value = _uiState.value.copy(heartbeatDisplayName = response.displayName)
+        },
+        onHeartbeatFailure = { throwable ->
+            Log.w(TAG, "Cashier heartbeat failed", throwable)
+        }
+    )
 
     // Rejected purchase popup management
     private var lastPopupShown: Long = 0
@@ -174,6 +202,8 @@ class CashierViewModel(
         // Start BackgroundSyncManager (single sync loop, like LoppisKassan)
         val context = ILoppisAppHolder.appContext
         BackgroundSyncManager.start(context, eventId, apiKey)
+        rawPendingPurchasesCount = BackgroundSyncManager.pendingPurchaseCount.value
+        heartbeatCoordinator.start()
 
         // Always initialize with current event/api key (event can change during app session)
         VendorRepository.initialize(eventId, apiKey)
@@ -185,6 +215,7 @@ class CashierViewModel(
         viewModelScope.launch {
             var pendingJob: kotlinx.coroutines.Job? = null
             BackgroundSyncManager.pendingPurchaseCount.collect { count ->
+                rawPendingPurchasesCount = count
                 pendingJob?.cancel()
                 if (count == 0) {
                     // Clear immediately — no reason to delay hiding it
@@ -237,6 +268,11 @@ class CashierViewModel(
                 checkAndShowPopupsIfNeeded()
             }
         }
+    }
+
+    override fun onCleared() {
+        heartbeatCoordinator.stop()
+        super.onCleared()
     }
 
     /**
@@ -547,6 +583,19 @@ class CashierViewModel(
 
     private fun dismissError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
+    }
+
+    private fun buildHeartbeatRequest(): CashierPresenceHeartbeatRequest {
+        val snapshot = _uiState.value.toCashierPresenceSnapshot(
+            rawPendingPurchasesCount = rawPendingPurchasesCount
+        )
+
+        return CashierPresenceHeartbeatRequest(
+            clientState = snapshot.clientState,
+            pendingPurchasesCount = snapshot.pendingPurchasesCount,
+            clientType = CashierClientType.CASHIER_CLIENT_TYPE_ANDROID,
+            displayName = snapshot.displayName
+        )
     }
 
     /**

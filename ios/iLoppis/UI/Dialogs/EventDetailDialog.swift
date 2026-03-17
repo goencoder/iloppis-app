@@ -3,8 +3,7 @@ import SwiftUI
 struct EventDetailDialog: View {
     let event: Event
     let onDismiss: () -> Void
-    let onCashierClick: () -> Void
-    let onScannerClick: () -> Void
+    let onToolClick: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -35,23 +34,13 @@ struct EventDetailDialog: View {
                     .font(.subheadline)
             }
 
-            Text(LocalizedStringKey("select_mode"))
+            Text(LocalizedStringKey("event_detail_tools_section"))
                 .font(.headline)
                 .foregroundColor(AppColors.textPrimary)
 
             VStack(spacing: 10) {
-                Button(action: onCashierClick) {
-                    Text(LocalizedStringKey("button_open_cashier"))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(.white)
-                        .background(AppColors.buttonPrimary)
-                        .cornerRadius(10)
-                }
-                .buttonStyle(.plain)
-
-                Button(action: onScannerClick) {
-                    Text(LocalizedStringKey("button_ticket_scanner"))
+                Button(action: onToolClick) {
+                    Text(LocalizedStringKey("button_tools"))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .foregroundColor(.white)

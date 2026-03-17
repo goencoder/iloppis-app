@@ -16,8 +16,10 @@
     <string name="pages_library">Bibliotek</string>
 
     <!-- Home Screen -->
+    <string name="home_open_tool">Verktyg</string>
     <string name="home_open_cashier">Öppna kassa</string>
     <string name="home_open_scanner">Öppna skanner</string>
+    <string name="home_open_live_stats">Öppna live-statistik</string>
 
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>
@@ -55,15 +57,20 @@
 
     <!-- Code Entry Screen -->
     <string name="code_entry_label">Ange kod</string>
+    <string name="code_entry_tool_hint">Ange verktygskod</string>
     <string name="code_entry_cashier_hint">Ange kassans kod</string>
     <string name="code_entry_scanner_hint">Ange skannerns kod</string>
+    <string name="code_entry_live_stats_hint">Ange live-statistikens kod</string>
     <string name="code_entry_placeholder">XXX-YYY</string>
     <string name="code_entry_error_inactive">Koden är inte aktiv</string>
+    <string name="code_entry_error_wrong_type_tool">Koden är inte en giltig verktygskod</string>
     <string name="code_entry_error_wrong_type_cashier">Koden är inte en kassakod</string>
     <string name="code_entry_error_wrong_type_scanner">Koden är inte en skannerkod</string>
+    <string name="code_entry_error_wrong_type_live_stats">Koden är inte en live-statistik-kod</string>
     <string name="code_entry_error_not_found">Koden hittades inte</string>
     <string name="code_entry_error_server">Serverfel. Försök igen senare.</string>
     <string name="code_entry_error_network">Nätverksfel. Kontrollera din anslutning.</string>
+    <string name="code_entry_error_rate_limited">För många försök. Vänta en stund och försök igen.</string>
     <string name="unknown_error">Okänt fel</string>
     <string name="verify_button">Verifiera</string>
 
@@ -74,13 +81,49 @@
     <!-- Code Confirmation Screen -->
     <string name="confirm_event_title">Bekräfta</string>
     <string name="confirm_event_message">Kod hittade event:</string>
+    <string name="confirm_event_tool_label">Verktyg: %1$s</string>
     <string name="open_cashier_button">Öppna kassa</string>
     <string name="open_scanner_button">Öppna skanner</string>
+    <string name="open_live_stats_button">Öppna live-statistik</string>
+    <string name="tool_type_cashier">Kassa</string>
+    <string name="tool_type_scanner">Skanner</string>
+    <string name="tool_type_live_stats">Live-statistik</string>
     <string name="confirm_button">Bekräfta</string>
+    <string name="live_stats_close">Stäng live-statistik</string>
+    <string name="live_stats_retry">Försök igen</string>
+    <string name="live_stats_error_network">Kunde inte ladda live-statistik just nu.</string>
+    <string name="live_stats_error_server">Servern svarar inte för live-statistik just nu.</string>
+    <string name="live_stats_error_rate_limited">Live-statistik är tillfälligt begränsad. Vänta innan nästa uppdatering.</string>
+    <string name="live_stats_connection_live">Live</string>
+    <string name="live_stats_connection_polling">Väntar på uppdatering</string>
+    <string name="live_stats_connection_rate_limited">Pausad p.g.a. rate limit</string>
+    <string name="live_stats_event_image_content_description">Eventbild</string>
+    <string name="live_stats_qr_card_title">iLoppis QR</string>
+    <string name="live_stats_qr_card_subtitle">Skanna QR-koden för att öppna verktyg snabbt.</string>
+    <string name="live_stats_qr_card_content_description">QR-kort</string>
+    <string name="live_stats_updated_at">Uppdaterad %1$s</string>
+    <string name="live_stats_purchases_label">Köp</string>
+    <string name="live_stats_items_label">Sålda varor</string>
+    <string name="live_stats_total_label">Totalt (SEK)</string>
+    <string name="live_stats_cashiers_label">Kassor</string>
+    <string name="live_stats_cashier_list_title">Kassörer</string>
+    <string name="live_stats_empty_cashiers">Inga kassor syns ännu.</string>
+    <string name="live_stats_unknown_cashier">Okänd kassa</string>
+    <string name="live_stats_pending_count">%1$d väntande</string>
+    <string name="live_stats_state_open">Öppen</string>
+    <string name="live_stats_state_processing">Registrerar köp</string>
+    <string name="live_stats_state_stalled">Behöver tillsyn</string>
+    <string name="live_stats_state_offline">Offline</string>
+    <string name="live_stats_client_type_android">Android</string>
+    <string name="live_stats_client_type_ios">iOS</string>
+    <string name="live_stats_client_type_web">Webb</string>
+    <string name="live_stats_client_type_unknown">Okänd enhet</string>
 
     <!-- Code Entry Dialog -->
+    <string name="code_entry_title_tool">Ange verktygskod</string>
     <string name="code_entry_title_cashier">Ange kassakod</string>
     <string name="code_entry_title_scanner">Ange skannerkod</string>
+    <string name="code_entry_subtitle_tool">Skriv in en verktygskod för att fortsätta till kassa, skanner eller live-statistik</string>
     <string name="code_entry_subtitle_cashier">Skriv in din kassakod för att öppna kassan</string>
     <string name="code_entry_subtitle_scanner">Skriv in din skannerkod för att starta biljettskanning</string>
     <string name="button_verify_continue">Verifiera och fortsätt</string>

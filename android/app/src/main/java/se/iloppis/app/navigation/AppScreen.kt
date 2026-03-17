@@ -11,7 +11,7 @@ import se.iloppis.app.domain.model.Event
  * - EventsDetailPage: Event details with full information and tool options
  * - CodeEntry: Direct code input for Cashier/Scanner (no event selection needed)
  * - CodeConfirm: Show resolved event before entering tool
- * - Cashier/Scanner: Active tool screens
+ * - Cashier/Scanner/LiveStats: Active tool screens
  */
 sealed class ScreenPage {
     /**
@@ -76,7 +76,17 @@ sealed class ScreenPage {
         val apiKey: String,
 
         /**
-         * Tool mode (CASHIER or SCANNER)
+         * Alias used to resolve the tool.
+         */
+        val alias: String,
+
+        /**
+         * Mode used when the user entered the code.
+         */
+        val entryMode: CodeEntryMode,
+
+        /**
+         * Tool mode (CASHIER, SCANNER, or LIVE_STATS)
          */
         val mode: CodeEntryMode
     ) : ScreenPage()
@@ -107,6 +117,21 @@ sealed class ScreenPage {
 
         /**
          * API key
+         */
+        val apiKey: String
+    ) : ScreenPage()
+
+    /**
+     * Live stats page
+     */
+    data class LiveStats(
+        /**
+         * Event that owns this live stats view
+         */
+        val event: Event,
+
+        /**
+         * API key used to fetch live stats directly from backend
          */
         val apiKey: String
     ) : ScreenPage()

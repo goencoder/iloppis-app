@@ -104,18 +104,16 @@ struct CodeEntryDialog: View {
             .frame(width: 1, height: 1)
             .opacity(0.01)
             .accessibilityLabel(LocalizedStringKey("code_entry_input_accessibility_label"))
+            .accessibilityValue(Text(accessibilityCodeValue))
             .accessibilityHint(LocalizedStringKey(subtitleKey))
-            .accessibilityHidden(true)
+            .accessibilityAction {
+                isInputFocused = true
+            }
         }
         .contentShape(Rectangle())
         .onTapGesture {
             isInputFocused = true
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(LocalizedStringKey("code_entry_input_accessibility_label")))
-        .accessibilityValue(Text(accessibilityCodeValue))
-        .accessibilityHint(Text(LocalizedStringKey(subtitleKey)))
-        .accessibilityAddTraits(.isButton)
     }
 
     private var codeBoxes: some View {

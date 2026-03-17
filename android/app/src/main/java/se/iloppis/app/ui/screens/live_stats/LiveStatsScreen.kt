@@ -1,6 +1,7 @@
 package se.iloppis.app.ui.screens.live_stats
 
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -35,6 +36,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,7 +59,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import coil.compose.AsyncImage
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
@@ -547,7 +551,7 @@ private fun MetaQrFace(url: String) {
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
     ) {
         QrCodeImage(
-            value = url,
+            qrValue = url,
             size = 74.dp,
             modifier = Modifier.clip(RoundedCornerShape(6.dp))
         )
@@ -583,19 +587,26 @@ private fun MetaBrandFace() {
 
 @Composable
 private fun QrCodeImage(
-    value: String,
+    qrValue: String,
     size: Dp,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
     val sizePx = with(density) { size.roundToPx().coerceAtLeast(1) }
-    val bitmap = remember(value, sizePx) {
-        createQrBitmap(value = value, sizePx = sizePx)
+    val bitmap by produceState<Bitmap?>(
+        initialValue = null,
+        key1 = qrValue,
+        key2 = sizePx
+    ) {
+        value = withContext(Dispatchers.Default) {
+            createQrBitmap(value = qrValue, sizePx = sizePx)
+        }
     }
+    val renderedBitmap = bitmap
 
-    if (bitmap != null) {
+    if (renderedBitmap != null) {
         Image(
-            bitmap = bitmap.asImageBitmap(),
+            bitmap = renderedBitmap.asImageBitmap(),
             contentDescription = stringResource(R.string.live_stats_qr_card_content_description),
             modifier = modifier.size(size),
             contentScale = ContentScale.Fit

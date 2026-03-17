@@ -30,12 +30,19 @@ internal fun createQrBitmap(value: String, sizePx: Int): Bitmap? = runCatching {
         hints
     )
 
-    val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
-    for (x in 0 until sizePx) {
-        for (y in 0 until sizePx) {
-            bitmap.setPixel(x, y, if (matrix[x, y]) QR_FOREGROUND_ARGB else QR_BACKGROUND_ARGB)
+    val pixels = IntArray(sizePx * sizePx)
+    for (y in 0 until sizePx) {
+        val rowOffset = y * sizePx
+        for (x in 0 until sizePx) {
+            pixels[rowOffset + x] = if (matrix[x, y]) {
+                QR_FOREGROUND_ARGB
+            } else {
+                QR_BACKGROUND_ARGB
+            }
         }
     }
+    val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    bitmap.setPixels(pixels, 0, sizePx, 0, 0, sizePx, sizePx)
     bitmap
 }.getOrNull()
 

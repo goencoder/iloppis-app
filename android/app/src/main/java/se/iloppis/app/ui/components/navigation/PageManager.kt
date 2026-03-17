@@ -56,8 +56,8 @@ fun PageManager() {
                     CodeConfirmScreen(
                         event = page.event,
                         apiKey = page.apiKey,
-                        alias = page.alias,
-                        entryMode = page.entryMode,
+                        _alias = page.alias,
+                        _entryMode = page.entryMode,
                         mode = page.mode
                     )
                 }

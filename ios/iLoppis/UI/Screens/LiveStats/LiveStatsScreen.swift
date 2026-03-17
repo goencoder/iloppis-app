@@ -46,7 +46,7 @@ struct LiveStatsScreen: View {
                             HStack(spacing: 12) {
                                 statCard(
                                     titleKey: "live_stats_total_label",
-                                    value: sekFormatter.string(from: NSNumber(value: snapshot.sales?.revenueTotalSek ?? 0)) ?? "0 kr"
+                                    value: LiveStatsFormatters.sek.string(from: NSNumber(value: snapshot.sales?.revenueTotalSek ?? 0)) ?? "0 kr"
                                 )
                                 statCard(
                                     titleKey: "live_stats_cashiers_label",
@@ -256,12 +256,12 @@ struct LiveStatsScreen: View {
 
     private func timeLabel(from raw: String) -> String? {
         guard let date = parseISODate(raw) else { return nil }
-        return makeTimeFormatter().string(from: date)
+        return LiveStatsFormatters.time.string(from: date)
     }
 
     private func dateLabel(from raw: String) -> String? {
         guard let date = parseISODate(raw) else { return nil }
-        return makeDateFormatter().string(from: date)
+        return LiveStatsFormatters.date.string(from: date)
     }
 
     private func cashierRows(_ cashiers: [LiveCashierStatus]) -> [LiveCashierRow] {
@@ -409,27 +409,29 @@ private let isoFormatterNoFractionalSeconds: ISO8601DateFormatter = {
     return formatter
 }()
 
-private func makeTimeFormatter() -> DateFormatter {
-    let formatter = DateFormatter()
-    formatter.locale = .autoupdatingCurrent
-    formatter.dateFormat = "HH:mm"
-    return formatter
-}
+private enum LiveStatsFormatters {
+    static let time: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
 
-private func makeDateFormatter() -> DateFormatter {
-    let formatter = DateFormatter()
-    formatter.locale = .autoupdatingCurrent
-    formatter.dateFormat = "d MMM"
-    return formatter
-}
+    static let date: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.dateFormat = "d MMM"
+        return formatter
+    }()
 
-private var sekFormatter: NumberFormatter {
-    let formatter = NumberFormatter()
-    formatter.locale = .autoupdatingCurrent
-    formatter.numberStyle = .currency
-    formatter.currencyCode = "SEK"
-    formatter.maximumFractionDigits = 0
-    return formatter
+    static let sek: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.locale = .autoupdatingCurrent
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "SEK"
+        formatter.maximumFractionDigits = 0
+        return formatter
+    }()
 }
 
 private extension String {

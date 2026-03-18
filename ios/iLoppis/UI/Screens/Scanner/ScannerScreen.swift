@@ -11,6 +11,19 @@ struct ScannerScreen: View {
     @State private var isScanningActive: Bool = false
     @State private var manualCode: String = ""
 
+    private static let ticketDetailDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "sv_SE")
+        formatter.dateFormat = "d MMM HH:mm"
+        return formatter
+    }()
+
+    private static let isoFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
     init(event: Event, apiKey: String, onBack: @escaping () -> Void) {
         self.event = event
         self.apiKey = apiKey
@@ -106,14 +119,14 @@ struct ScannerScreen: View {
                 .presentationDetents([.medium])
         }
         .sheet(isPresented: Binding(
-            get: { viewModel.state.ticketSearchVisible },
+            get: { viewModel.state.ticketSearchVisible && viewModel.state.searchDetailTicket == nil },
             set: { if !$0 { viewModel.onAction(.dismissTicketSearch) } }
         )) {
             ticketSearchSheet
                 .presentationDetents([.large])
         }
         .sheet(item: Binding(
-            get: { viewModel.state.searchDetailTicket },
+            get: { viewModel.state.ticketSearchVisible ? nil : viewModel.state.searchDetailTicket },
             set: { _ in viewModel.onAction(.dismissSearchDetail) }
         )) { ticket in
             ticketDetailSheet(ticket)
@@ -350,7 +363,7 @@ struct ScannerScreen: View {
                         .listRowBackground(AppColors.cardBackground)
                     }
                     .listStyle(.plain)
-                } else if !searchQuery.isEmpty {
+                } else if !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text(LocalizedStringKey("scanner_search_no_results"))
                         .font(.footnote)
                         .foregroundColor(AppColors.textMuted)
@@ -417,13 +430,13 @@ struct ScannerScreen: View {
                 if let scannedAt = ticket.scannedAt, !scannedAt.isEmpty {
                     detailField(
                         label: NSLocalizedString("scanner_field_scanned_at_label", comment: ""),
-                        value: scannedAt
+                        value: formatTicketDate(scannedAt)
                     )
                 }
                 if let validFrom = ticket.validFrom, let validUntil = ticket.validUntil {
                     detailField(
                         label: NSLocalizedString("scanner_field_valid_window_label", comment: ""),
-                        value: "\(validFrom) – \(validUntil)"
+                        value: "\(formatTicketDate(validFrom)) – \(formatTicketDate(validUntil))"
                     )
                 }
                 detailField(
@@ -441,7 +454,7 @@ struct ScannerScreen: View {
 
             Spacer()
 
-            if ticket.status != .scanned {
+            if ticket.status == .issued {
                 Button {
                     viewModel.onAction(.scanFromDetail(ticketId: ticket.id))
                 } label: {
@@ -503,6 +516,20 @@ struct ScannerScreen: View {
         case .unknown:
             return AppColors.textMuted
         }
+    }
+
+    private func formatTicketDate(_ raw: String) -> String {
+        if let date = Self.isoFormatter.date(from: raw) {
+            return Self.ticketDetailDateFormatter.string(from: date)
+        }
+
+        let fallbackFormatter = ISO8601DateFormatter()
+        fallbackFormatter.formatOptions = [.withInternetDateTime]
+        if let date = fallbackFormatter.date(from: raw) {
+            return Self.ticketDetailDateFormatter.string(from: date)
+        }
+
+        return raw
     }
 
     private func resultTitle(_ status: ScanStatus) -> String {

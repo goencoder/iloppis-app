@@ -125,7 +125,7 @@ fun TicketDetailSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Primary action: mark as scanned (only for unscanned tickets)
-            if (ticket.status != VisitorTicketStatus.SCANNED) {
+            if (ticket.status == VisitorTicketStatus.NOT_SCANNED) {
                 AppButton(
                     text = stringResource(R.string.scanner_button_mark_scanned),
                     onClick = { onScan(ticket.id) },

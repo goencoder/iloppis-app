@@ -147,7 +147,7 @@ fun TicketSearchDialog(
             AppButton(
                 text = stringResource(R.string.scanner_search_button),
                 onClick = { onSearch(emailQuery, selectedTypeId) },
-                enabled = emailQuery.isNotBlank() && !isSearching,
+                enabled = emailQuery.trim().isNotEmpty() && !isSearching,
                 variant = AppButtonVariant.Primary,
                 modifier = Modifier.fillMaxWidth()
             )

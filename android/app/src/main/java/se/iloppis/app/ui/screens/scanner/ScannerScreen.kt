@@ -937,10 +937,12 @@ private fun TicketDetailsDialog(
                 }
 
                 // Mark as scanned button (only for not-yet-scanned tickets)
-                if (result.ticket?.status == se.iloppis.app.domain.model.VisitorTicketStatus.NOT_SCANNED) {
+                result.ticket?.takeIf {
+                    it.status == se.iloppis.app.domain.model.VisitorTicketStatus.NOT_SCANNED
+                }?.let { ticket ->
                     AppButton(
                         text = stringResource(R.string.scanner_button_mark_scanned),
-                        onClick = { result.ticket.let { onScan(it.id) } },
+                        onClick = { onScan(ticket.id) },
                         enabled = !isProcessing,
                         modifier = Modifier.fillMaxWidth(),
                         variant = AppButtonVariant.Success

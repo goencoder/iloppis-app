@@ -3,6 +3,7 @@ package se.iloppis.app.ui.screens.scanner
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
@@ -274,6 +275,8 @@ class ScannerViewModel(
                     isSearching = false,
                     searchResults = tickets
                 )
+            } catch (e: CancellationException) {
+                Log.d(TAG, "Ticket search cancelled")
             } catch (e: Exception) {
                 Log.e(TAG, "Ticket search failed", e)
                 _uiState.value = _uiState.value.copy(

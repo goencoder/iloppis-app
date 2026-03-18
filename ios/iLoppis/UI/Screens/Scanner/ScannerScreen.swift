@@ -423,10 +423,10 @@ struct ScannerScreen: View {
                         value: formatTicketDate(scannedAt)
                     )
                 }
-                if let validFrom = ticket.validFrom, let validUntil = ticket.validUntil {
+                if let validWindow = ticketValidityWindowText(ticket) {
                     detailField(
                         label: NSLocalizedString("scanner_field_valid_window_label", comment: ""),
-                        value: "\(formatTicketDate(validFrom)) – \(formatTicketDate(validUntil))"
+                        value: validWindow
                     )
                 }
                 detailField(
@@ -483,6 +483,22 @@ struct ScannerScreen: View {
             Text(value)
                 .font(.footnote.weight(.medium))
                 .foregroundColor(color ?? AppColors.textPrimary)
+        }
+    }
+
+    private func ticketValidityWindowText(_ ticket: VisitorTicket) -> String? {
+        let validFrom = ticket.validFrom?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let validUntil = ticket.validUntil?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        switch (validFrom.isEmpty, validUntil.isEmpty) {
+        case (false, false):
+            return "\(formatTicketDate(validFrom)) – \(formatTicketDate(validUntil))"
+        case (false, true):
+            return formatTicketDate(validFrom)
+        case (true, false):
+            return formatTicketDate(validUntil)
+        case (true, true):
+            return nil
         }
     }
 

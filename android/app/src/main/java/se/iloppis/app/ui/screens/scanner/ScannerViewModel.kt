@@ -242,6 +242,9 @@ class ScannerViewModel(
             ticketTypes = emptyList()
         )
         ticketTypesLoadJob = viewModelScope.launch(Dispatchers.IO) {
+            if (!se.iloppis.app.data.TicketTypeRepository.isInitialized()) {
+                se.iloppis.app.data.TicketTypeRepository.refresh(eventId, apiKey)
+            }
             val types = se.iloppis.app.data.TicketTypeRepository.getAllTypes()
                 .map { TicketTypeOption(id = it.first, name = it.second) }
             withContext(Dispatchers.Main) {

@@ -416,12 +416,12 @@ private fun ScannerPreview(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.18f)),
+                    .background(AppColors.NavigatorOverlay.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
                     color = AppColors.DialogBackground,
-                    trackColor = Color.Transparent
+                    trackColor = AppColors.DialogBackground.copy(alpha = 0f)
                 )
             }
         }

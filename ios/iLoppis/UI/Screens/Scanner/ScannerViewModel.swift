@@ -12,6 +12,7 @@ final class ScannerViewModel: ObservableObject {
     private let recentScanBuffer = 50
     private var recentScanIds: [String] = []
     private var searchTask: Task<Void, Never>?
+    private var ticketTypesTask: Task<Void, Never>?
     private var shouldReopenSearchAfterDetailDismiss = false
 
     init(eventId: String, eventName: String, apiKey: String, apiClient: ApiClient = ApiClient()) {
@@ -45,6 +46,7 @@ final class ScannerViewModel: ObservableObject {
 
         case .dismissTicketSearch:
             searchTask?.cancel()
+            ticketTypesTask?.cancel()
             state.ticketSearchVisible = false
             state.isSearching = false
             state.searchResults = []
@@ -201,16 +203,19 @@ final class ScannerViewModel: ObservableObject {
     // MARK: - Ticket Search
 
     private func openTicketSearch() {
+        ticketTypesTask?.cancel()
         state.ticketSearchVisible = true
         state.searchResults = []
         state.searchError = nil
+        state.ticketTypes = []
         // Load ticket types
-        Task {
+        ticketTypesTask = Task {
             do {
                 let response = try await apiClient.listTicketTypes(
                     eventId: eventId,
                     apiKey: apiKey
                 )
+                guard !Task.isCancelled, state.ticketSearchVisible else { return }
                 state.ticketTypes = response.types.map {
                     TicketTypeOption(id: $0.id, name: $0.type)
                 }

@@ -216,6 +216,19 @@
     <string name="scanner_group_remove_ticket">Remove ticket</string>
     <string name="scanner_group_commit_button">Confirm group</string>
 
+    <!-- Ticket search dialog -->
+    <string name="scanner_search_title">Search ticket</string>
+    <string name="scanner_search_description">Search by email address to find tickets.</string>
+    <string name="scanner_search_email_placeholder">Email address…</string>
+    <string name="scanner_search_ticket_type_all">All ticket types</string>
+    <string name="scanner_search_button">Search</string>
+    <string name="scanner_search_no_results">No tickets found.</string>
+    <string name="scanner_search_error">Search failed: %1$s</string>
+    <string name="scanner_button_search">Search ticket manually</string>
+    <string name="scanner_search_result_not_scanned">Not scanned</string>
+    <string name="scanner_search_result_scanned">Scanned</string>
+    <string name="scanner_button_mark_scanned">Mark as scanned</string>
+
     <!-- Server Error Dialog -->
     <string name="dialog_server_error_title">⚠️ Server problem</string>
     <string name="dialog_server_error_message">The iLoppis server is not responding. Cashier works in offline mode.\n\nPurchases are saved locally and will upload automatically when the problem is resolved.\n\nThis requires action from iLoppis support. Contact support if the problem persists for more than 10 minutes.\n\nNumber of pending purchases: %1$d</string>

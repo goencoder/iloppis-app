@@ -37,6 +37,26 @@ final class ScannerViewModel: ObservableObject {
 
         case .submitCode(let code):
             handleManualSubmission(rawCode: code)
+
+        case .requestTicketSearch:
+            openTicketSearch()
+
+        case .dismissTicketSearch:
+            state.ticketSearchVisible = false
+            state.searchResults = []
+            state.searchError = nil
+
+        case .submitTicketSearch(let query, let ticketTypeId):
+            handleTicketSearch(query: query, ticketTypeId: ticketTypeId)
+
+        case .selectSearchResult(let ticket):
+            state.searchDetailTicket = ticket
+
+        case .dismissSearchDetail:
+            state.searchDetailTicket = nil
+
+        case .scanFromDetail(let ticketId):
+            performScanFromDetail(ticketId: ticketId)
         }
     }
 
@@ -168,5 +188,70 @@ final class ScannerViewModel: ObservableObject {
     private struct TicketPayload {
         let ticketId: String
         let eventId: String?
+    }
+
+    // MARK: - Ticket Search
+
+    private func openTicketSearch() {
+        // TODO: Load ticket types from API when TicketTypeRepository is added for iOS
+        state.ticketSearchVisible = true
+        state.searchResults = []
+        state.searchError = nil
+    }
+
+    private func handleTicketSearch(query: String, ticketTypeId: String?) {
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        state.isSearching = true
+        state.searchError = nil
+
+        Task {
+            defer { state.isSearching = false }
+            do {
+                let filter = VisitorTicketFilterDto(
+                    email: nil,
+                    ticketType: ticketTypeId,
+                    status: "TICKET_STATUS_NOT_SCANNED",
+                    freeText: query.trimmingCharacters(in: .whitespacesAndNewlines)
+                )
+                let response = try await apiClient.filterVisitorTickets(
+                    eventId: eventId,
+                    apiKey: apiKey,
+                    filter: filter
+                )
+                let tickets = (response.tickets ?? []).map { VisitorTicketMapper.toDomain($0) }
+                state.searchResults = tickets
+            } catch {
+                state.searchError = error.localizedDescription
+            }
+        }
+    }
+
+    private func performScanFromDetail(ticketId: String) {
+        guard !state.isProcessing else { return }
+        state.isProcessing = true
+
+        Task {
+            defer { state.isProcessing = false }
+            do {
+                let response = try await apiClient.scanVisitorTicket(
+                    eventId: eventId,
+                    apiKey: apiKey,
+                    ticketId: ticketId
+                )
+                let ticket = response.ticket.map { VisitorTicketMapper.toDomain($0) }
+                state.searchDetailTicket = nil
+                state.ticketSearchVisible = false
+                rememberTicket(ticketId)
+                registerResult(ScanResult(ticket: ticket, status: .success))
+            } catch let apiError as ApiError {
+                state.searchDetailTicket = nil
+                state.ticketSearchVisible = false
+                await handleApiError(ticketId: ticketId, error: apiError)
+            } catch {
+                state.searchDetailTicket = nil
+                state.ticketSearchVisible = false
+                registerResult(ScanResult(ticket: nil, status: .error, message: error.localizedDescription))
+            }
+        }
     }
 }

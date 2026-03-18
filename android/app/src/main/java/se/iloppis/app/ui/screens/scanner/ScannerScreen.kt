@@ -72,6 +72,8 @@ import se.iloppis.app.ui.components.CameraScanner
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.dialogs.ManualTicketDialog
+import se.iloppis.app.ui.dialogs.TicketDetailSheet
+import se.iloppis.app.ui.dialogs.TicketSearchDialog
 import se.iloppis.app.ui.theme.AppColors
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -233,7 +235,16 @@ fun ScannerScreen(
                     }
                 }
 
-                // Manual entry is always available as fallback
+                // Manual search is the primary manual CTA
+                AppButton(
+                    text = stringResource(R.string.scanner_button_search),
+                    onClick = { viewModel.onAction(ScannerAction.RequestTicketSearch) },
+                    enabled = !uiState.isProcessing,
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = AppButtonVariant.Primary
+                )
+
+                // Manual code entry is always available as fallback
                 AppButton(
                     text = stringResource(R.string.scanner_button_manual_entry),
                     onClick = { viewModel.onAction(ScannerAction.RequestManualEntry) },
@@ -303,9 +314,31 @@ fun ScannerScreen(
         TicketDetailsDialog(
             result = result,
             eventName = event.name,
-            onDismiss = { viewModel.onAction(ScannerAction.DismissTicketDetails) }
+            isProcessing = uiState.isProcessing,
+            onDismiss = { viewModel.onAction(ScannerAction.DismissTicketDetails) },
+            onScan = { ticketId -> viewModel.onAction(ScannerAction.ScanFromDetail(ticketId)) }
         )
     }
+
+    // Ticket search dialog
+    TicketSearchDialog(
+        visible = uiState.ticketSearchVisible,
+        isSearching = uiState.isSearching,
+        searchResults = uiState.searchResults,
+        searchError = uiState.searchError,
+        ticketTypes = uiState.ticketTypes,
+        onDismiss = { viewModel.onAction(ScannerAction.DismissTicketSearch) },
+        onSearch = { query, typeId -> viewModel.onAction(ScannerAction.SubmitTicketSearch(query, typeId)) },
+        onSelectTicket = { ticket -> viewModel.onAction(ScannerAction.SelectSearchResult(ticket)) }
+    )
+
+    // Search result detail sheet
+    TicketDetailSheet(
+        ticket = uiState.searchDetailTicket,
+        isProcessing = uiState.isProcessing,
+        onDismiss = { viewModel.onAction(ScannerAction.DismissSearchDetail) },
+        onScan = { ticketId -> viewModel.onAction(ScannerAction.ScanFromDetail(ticketId)) }
+    )
 }
 
 @Composable
@@ -800,7 +833,9 @@ private fun formatValidWindow(ticket: se.iloppis.app.domain.model.VisitorTicket)
 private fun TicketDetailsDialog(
     result: ScanResult,
     eventName: String,
-    onDismiss: () -> Unit
+    isProcessing: Boolean = false,
+    onDismiss: () -> Unit,
+    onScan: (String) -> Unit = {}
 ) {
     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -901,12 +936,23 @@ private fun TicketDetailsDialog(
                     }
                 }
 
+                // Mark as scanned button (only for not-yet-scanned tickets)
+                if (result.ticket?.status == se.iloppis.app.domain.model.VisitorTicketStatus.NOT_SCANNED) {
+                    AppButton(
+                        text = stringResource(R.string.scanner_button_mark_scanned),
+                        onClick = { result.ticket.let { onScan(it.id) } },
+                        enabled = !isProcessing,
+                        modifier = Modifier.fillMaxWidth(),
+                        variant = AppButtonVariant.Success
+                    )
+                }
+
                 // Close button
                 AppButton(
                     text = stringResource(R.string.scanner_button_close),
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
-                    variant = AppButtonVariant.Primary
+                    variant = AppButtonVariant.Secondary
                 )
             }
         }

@@ -59,3 +59,39 @@ data class VisitorTicketResponse(
      */
     val ticket: ApiVisitorTicket?
 )
+
+/**
+ * Filter for visitor tickets.
+ */
+data class VisitorTicketFilter(
+    val email: String? = null,
+    val ticketType: String? = null,
+    val status: String? = null,
+    val freeText: String? = null
+)
+
+/**
+ * Request body for filtering visitor tickets.
+ */
+data class FilterVisitorTicketsRequest(
+    val filter: VisitorTicketFilter? = null,
+    val pagination: PaginationRequest? = null
+)
+
+/**
+ * Pagination parameters for filter requests.
+ */
+data class PaginationRequest(
+    val pageSize: Int? = null,
+    val pageToken: String? = null
+)
+
+/**
+ * Response from filtering visitor tickets.
+ */
+data class FilterVisitorTicketsResponse(
+    val tickets: List<ApiVisitorTicket> = emptyList(),
+    val nextPageToken: String? = null,
+    val prevPageToken: String? = null,
+    val total: Int? = null
+)

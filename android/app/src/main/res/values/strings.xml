@@ -225,6 +225,19 @@
     <string name="scanner_group_remove_ticket">Ta bort biljett</string>
     <string name="scanner_group_commit_button">Bekräfta grupp</string>
 
+    <!-- Ticket search dialog -->
+    <string name="scanner_search_title">Sök biljett</string>
+    <string name="scanner_search_description">Sök på e-postadress för att hitta biljetter.</string>
+    <string name="scanner_search_email_placeholder">E-postadress…</string>
+    <string name="scanner_search_ticket_type_all">Alla biljettyper</string>
+    <string name="scanner_search_button">Sök</string>
+    <string name="scanner_search_no_results">Inga biljetter hittades.</string>
+    <string name="scanner_search_error">Sökningen misslyckades: %1$s</string>
+    <string name="scanner_button_search">Sök biljett manuellt</string>
+    <string name="scanner_search_result_not_scanned">Ej skannad</string>
+    <string name="scanner_search_result_scanned">Skannad</string>
+    <string name="scanner_button_mark_scanned">Markera som skannad</string>
+
     <!-- Server Error Dialog -->
     <string name="dialog_server_error_title">⚠️ Serverproblem</string>
     <string name="dialog_server_error_message">iLoppis-servern svarar inte. Kassa fungerar i offline-läge.\n\nKöp sparas lokalt och laddas upp automatiskt när problemet är löst.\n\nDetta kräver åtgärd från iLoppis support. Kontakta supporten om problemet kvarstår mer än 10 minuter.\n\nAntal väntande köp: %1$d</string>

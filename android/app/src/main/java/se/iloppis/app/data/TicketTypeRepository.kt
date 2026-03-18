@@ -54,4 +54,13 @@ object TicketTypeRepository {
             ticketTypeMap.isNotEmpty()
         }
     }
+
+    /**
+     * Returns all cached ticket type entries as (id, name) pairs.
+     */
+    suspend fun getAllTypes(): List<Pair<String, String>> {
+        return mutex.withLock {
+            ticketTypeMap.entries.map { it.key to it.value }
+        }
+    }
 }

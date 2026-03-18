@@ -53,6 +53,11 @@ struct PendingScan: Identifiable, Equatable {
     }
 }
 
+struct TicketTypeOption: Identifiable, Equatable {
+    let id: String
+    let name: String
+}
+
 struct ScannerState: Equatable {
     let eventName: String
 
@@ -65,6 +70,13 @@ struct ScannerState: Equatable {
     var pendingScans: [PendingScan] = []
 
     var pendingCount: Int { pendingScans.count }
+
+    var ticketSearchVisible: Bool = false
+    var isSearching: Bool = false
+    var searchResults: [VisitorTicket] = []
+    var searchError: String? = nil
+    var searchDetailTicket: VisitorTicket? = nil
+    var ticketTypes: [TicketTypeOption] = []
 }
 
 enum ScannerAction {
@@ -73,4 +85,10 @@ enum ScannerAction {
     case submitCode(String)
     case clearManualError
     case dismissResult
+    case requestTicketSearch
+    case dismissTicketSearch
+    case submitTicketSearch(query: String, ticketTypeId: String?)
+    case selectSearchResult(VisitorTicket)
+    case dismissSearchDetail
+    case scanFromDetail(ticketId: String)
 }

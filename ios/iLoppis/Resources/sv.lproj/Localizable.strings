@@ -150,3 +150,22 @@
 "scanner_manual_error_format" = "Koden kunde inte tolkas.";
 "scanner_manual_confirm" = "Verifiera";
 "scanner_camera_not_ready" = "Kameran är inte redo ännu. Använd manuell inmatning.";
+
+/* Ticket search */
+"scanner_search_title" = "Sök biljett";
+"scanner_search_description" = "Sök på e-postadress för att hitta biljetter.";
+"scanner_search_email_placeholder" = "E-postadress…";
+"scanner_search_ticket_type_all" = "Alla biljettyper";
+"scanner_search_button" = "Sök";
+"scanner_search_no_results" = "Inga biljetter hittades.";
+"scanner_search_error" = "Sökningen misslyckades: %@";
+"scanner_button_search" = "Sök biljett manuellt";
+"scanner_search_result_not_scanned" = "Ej skannad";
+"scanner_search_result_scanned" = "Skannad";
+"scanner_button_mark_scanned" = "Markera som skannad";
+"scanner_field_status" = "Status:";
+"scanner_field_ticket_type_label" = "Biljettyp:";
+"scanner_field_email_label" = "E-post:";
+"scanner_field_scanned_at_label" = "Skannad:";
+"scanner_field_valid_window_label" = "Giltighet:";
+"scanner_field_ticket_id" = "Biljett-ID:";

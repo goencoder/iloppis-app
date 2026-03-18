@@ -58,6 +58,18 @@ struct ScannerScreen: View {
                         .disabled(!(cameraState == .notDetermined || cameraState == .denied))
 
                         Button {
+                            viewModel.onAction(.requestTicketSearch)
+                        } label: {
+                            Text(LocalizedStringKey("scanner_button_search"))
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(AppColors.buttonPrimary)
+                                .cornerRadius(10)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
                             viewModel.onAction(.requestManualEntry)
                         } label: {
                             Text(LocalizedStringKey("scanner_button_manual_entry"))
@@ -92,6 +104,20 @@ struct ScannerScreen: View {
         )) { result in
             scanResultSheet(result)
                 .presentationDetents([.medium])
+        }
+        .sheet(isPresented: Binding(
+            get: { viewModel.state.ticketSearchVisible },
+            set: { if !$0 { viewModel.onAction(.dismissTicketSearch) } }
+        )) {
+            ticketSearchSheet
+                .presentationDetents([.large])
+        }
+        .sheet(item: Binding(
+            get: { viewModel.state.searchDetailTicket },
+            set: { _ in viewModel.onAction(.dismissSearchDetail) }
+        )) { ticket in
+            ticketDetailSheet(ticket)
+                .presentationDetents([.medium, .large])
         }
         .overlay {
             if viewModel.state.isProcessing {
@@ -267,6 +293,216 @@ struct ScannerScreen: View {
             .buttonStyle(.plain)
         }
         .padding(16)
+    }
+
+    @State private var searchQuery: String = ""
+    @State private var selectedTicketTypeId: String? = nil
+
+    private var ticketSearchSheet: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(LocalizedStringKey("scanner_search_description"))
+                    .font(.subheadline)
+                    .foregroundColor(AppColors.textSecondary)
+
+                TextField(NSLocalizedString("scanner_search_email_placeholder", comment: ""), text: $searchQuery)
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .keyboardType(.emailAddress)
+
+                if !viewModel.state.ticketTypes.isEmpty {
+                    Picker(NSLocalizedString("scanner_search_ticket_type_all", comment: ""), selection: $selectedTicketTypeId) {
+                        Text(LocalizedStringKey("scanner_search_ticket_type_all")).tag(nil as String?)
+                        ForEach(viewModel.state.ticketTypes) { type in
+                            Text(type.name).tag(type.id as String?)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
+                Button {
+                    viewModel.onAction(.submitTicketSearch(query: searchQuery, ticketTypeId: selectedTicketTypeId))
+                } label: {
+                    Text(LocalizedStringKey("scanner_search_button"))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(searchQuery.isEmpty ? AppColors.textMuted : AppColors.buttonPrimary)
+                        .cornerRadius(10)
+                }
+                .buttonStyle(.plain)
+                .disabled(searchQuery.isEmpty)
+
+                if viewModel.state.isSearching {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                } else if let error = viewModel.state.searchError {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundColor(AppColors.error)
+                } else if !viewModel.state.searchResults.isEmpty {
+                    List(viewModel.state.searchResults) { ticket in
+                        Button {
+                            viewModel.onAction(.selectSearchResult(ticket))
+                        } label: {
+                            ticketSearchRow(ticket)
+                        }
+                        .listRowBackground(AppColors.cardBackground)
+                    }
+                    .listStyle(.plain)
+                } else if !searchQuery.isEmpty {
+                    Text(LocalizedStringKey("scanner_search_no_results"))
+                        .font(.footnote)
+                        .foregroundColor(AppColors.textMuted)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 20)
+                }
+
+                Spacer()
+            }
+            .padding(16)
+            .navigationTitle(LocalizedStringKey("scanner_search_title"))
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .onAppear {
+            searchQuery = ""
+            selectedTicketTypeId = nil
+        }
+    }
+
+    private func ticketSearchRow(_ ticket: VisitorTicket) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let email = ticket.email, !email.isEmpty {
+                Text(email)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundColor(AppColors.textPrimary)
+            }
+            HStack(spacing: 8) {
+                if let type = ticket.ticketType, !type.isEmpty {
+                    Text(type)
+                        .font(.caption)
+                        .foregroundColor(AppColors.textSecondary)
+                }
+                Text(ticketStatusLabel(ticket.status))
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(ticketStatusColor(ticket.status))
+            }
+        }
+    }
+
+    private func ticketDetailSheet(_ ticket: VisitorTicket) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(LocalizedStringKey("scanner_search_title"))
+                .font(.title3.weight(.bold))
+                .foregroundColor(AppColors.textPrimary)
+
+            VStack(alignment: .leading, spacing: 8) {
+                detailField(
+                    label: NSLocalizedString("scanner_field_status", comment: ""),
+                    value: ticketStatusLabel(ticket.status),
+                    color: ticketStatusColor(ticket.status)
+                )
+                if let type = ticket.ticketType, !type.isEmpty {
+                    detailField(
+                        label: NSLocalizedString("scanner_field_ticket_type_label", comment: ""),
+                        value: type
+                    )
+                }
+                if let email = ticket.email, !email.isEmpty {
+                    detailField(
+                        label: NSLocalizedString("scanner_field_email_label", comment: ""),
+                        value: email
+                    )
+                }
+                if let scannedAt = ticket.scannedAt, !scannedAt.isEmpty {
+                    detailField(
+                        label: NSLocalizedString("scanner_field_scanned_at_label", comment: ""),
+                        value: scannedAt
+                    )
+                }
+                if let validFrom = ticket.validFrom, let validUntil = ticket.validUntil {
+                    detailField(
+                        label: NSLocalizedString("scanner_field_valid_window_label", comment: ""),
+                        value: "\(validFrom) – \(validUntil)"
+                    )
+                }
+                detailField(
+                    label: NSLocalizedString("scanner_field_ticket_id", comment: ""),
+                    value: ticket.id
+                )
+            }
+            .padding(12)
+            .background(AppColors.cardBackground)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(AppColors.border, lineWidth: 1)
+            )
+
+            Spacer()
+
+            if ticket.status != .scanned {
+                Button {
+                    viewModel.onAction(.scanFromDetail(ticketId: ticket.id))
+                } label: {
+                    Text(LocalizedStringKey("scanner_button_mark_scanned"))
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(AppColors.success)
+                        .cornerRadius(10)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Button {
+                viewModel.onAction(.dismissSearchDetail)
+            } label: {
+                Text(LocalizedStringKey("scanner_button_close_result"))
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .foregroundColor(AppColors.textPrimary)
+                    .background(AppColors.cardBackground)
+                    .cornerRadius(10)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .background(AppColors.background.ignoresSafeArea())
+    }
+
+    private func detailField(label: String, value: String, color: Color? = nil) -> some View {
+        HStack(alignment: .top) {
+            Text(label)
+                .font(.footnote)
+                .foregroundColor(AppColors.textMuted)
+                .frame(width: 100, alignment: .leading)
+            Text(value)
+                .font(.footnote.weight(.medium))
+                .foregroundColor(color ?? AppColors.textPrimary)
+        }
+    }
+
+    private func ticketStatusLabel(_ status: VisitorTicketStatus) -> String {
+        switch status {
+        case .scanned:
+            return NSLocalizedString("scanner_search_result_scanned", comment: "")
+        case .issued:
+            return NSLocalizedString("scanner_search_result_not_scanned", comment: "")
+        case .unknown:
+            return "?"
+        }
+    }
+
+    private func ticketStatusColor(_ status: VisitorTicketStatus) -> Color {
+        switch status {
+        case .scanned:
+            return AppColors.info
+        case .issued:
+            return AppColors.success
+        case .unknown:
+            return AppColors.textMuted
+        }
     }
 
     private func resultTitle(_ status: ScanStatus) -> String {

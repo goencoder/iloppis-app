@@ -23,13 +23,13 @@ private const val MAX_SAVED_CODES = 20
  */
 @Serializable
 data class SavedCode(
-    /** The alias in XXX-YYY format */
+    /** The alias in XXX-XXX format */
     val alias: String,
     /** Event ID this code belongs to */
     val eventId: String,
     /** Human-readable event name for display */
     val eventName: String,
-    /** CASHIER or SCANNER */
+    /** TOOL type such as CASHIER, SCANNER, or LIVE_STATS */
     val codeType: String,
     /** Epoch millis when the code was saved */
     val savedAt: Long = System.currentTimeMillis()

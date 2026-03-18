@@ -27,6 +27,10 @@ private struct RootView: View {
                 ScannerScreen(event: event, apiKey: apiKey) {
                 viewModel.onAction(.navigateBack)
             }
+        case let .liveStats(event, apiKey):
+            LiveStatsScreen(event: event, apiKey: apiKey) {
+                viewModel.onAction(.navigateBack)
+            }
         }
     }
 }

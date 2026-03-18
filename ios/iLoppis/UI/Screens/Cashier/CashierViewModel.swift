@@ -1,5 +1,6 @@
 import Foundation
 import OSLog
+import Security
 
 private let logger = Logger(subsystem: "se.iloppis.app", category: "CashierViewModel")
 
@@ -10,6 +11,28 @@ final class CashierViewModel: ObservableObject {
     private let eventId: String
     private let apiKey: String
     private let apiClient: ApiClient
+    private lazy var heartbeatCoordinator = CashierHeartbeatCoordinator(
+        shouldRun: { [eventId, apiKey] in
+            !eventId.isEmpty && !apiKey.isEmpty
+        },
+        requestFactory: { [weak self] in
+            guard let self else { return nil }
+            return await self.makeHeartbeatRequestForHeartbeatLoop()
+        },
+        sendHeartbeat: { [apiClient, eventId, apiKey] request in
+            try await apiClient.updateCashierPresence(
+                eventId: eventId,
+                apiKey: apiKey,
+                requestBody: request
+            )
+        },
+        onHeartbeatResponse: { [weak self] response in
+            await self?.applyHeartbeatResponse(response)
+        },
+        onHeartbeatFailure: { error in
+            logger.warning("Cashier heartbeat failed: \(error.localizedDescription, privacy: .public)")
+        }
+    )
 
     init(eventId: String, eventName: String, apiKey: String, apiClient: ApiClient = ApiClient()) {
         self.eventId = eventId
@@ -17,6 +40,7 @@ final class CashierViewModel: ObservableObject {
         self.apiClient = apiClient
         self.state = CashierState(eventName: eventName)
 
+        heartbeatCoordinator.start()
         Task { await loadVendors() }
     }
 
@@ -256,6 +280,71 @@ final class CashierViewModel: ObservableObject {
     }
 
     private static func makePurchaseId() -> String {
-        UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(26).uppercased()
+        let timestampMs = UInt64(Date().timeIntervalSince1970 * 1000)
+        var bytes = [UInt8](repeating: 0, count: 16)
+        bytes[0] = UInt8((timestampMs >> 40) & 0xFF)
+        bytes[1] = UInt8((timestampMs >> 32) & 0xFF)
+        bytes[2] = UInt8((timestampMs >> 24) & 0xFF)
+        bytes[3] = UInt8((timestampMs >> 16) & 0xFF)
+        bytes[4] = UInt8((timestampMs >> 8) & 0xFF)
+        bytes[5] = UInt8(timestampMs & 0xFF)
+
+        var entropy = [UInt8](repeating: 0, count: 10)
+        let status = SecRandomCopyBytes(kSecRandomDefault, entropy.count, &entropy)
+        if status == errSecSuccess {
+            bytes.replaceSubrange(6..<16, with: entropy)
+        } else {
+            var uuid = UUID().uuid
+            let uuidBytes = withUnsafeBytes(of: &uuid) { Array($0) }
+            bytes.replaceSubrange(6..<16, with: uuidBytes.prefix(10))
+        }
+
+        return encodeCrockfordBase32(bytes)
     }
+
+    private func makeHeartbeatRequest() -> CashierPresenceHeartbeatRequest {
+        let snapshot = state.heartbeatSnapshot()
+        return CashierPresenceHeartbeatRequest(
+            clientState: snapshot.clientState,
+            pendingPurchasesCount: snapshot.pendingPurchasesCount,
+            clientType: .ios,
+            displayName: snapshot.displayName
+        )
+    }
+
+    private func makeHeartbeatRequestForHeartbeatLoop() -> CashierPresenceHeartbeatRequest {
+        makeHeartbeatRequest()
+    }
+
+    private func applyHeartbeatResponse(_ response: CashierPresenceHeartbeatResponse) {
+        state.heartbeatDisplayName = response.displayName
+    }
+}
+
+private let crockfordBase32Alphabet = Array("0123456789ABCDEFGHJKMNPQRSTVWXYZ")
+
+private func encodeCrockfordBase32(_ bytes: [UInt8]) -> String {
+    var output = ""
+    output.reserveCapacity(26)
+
+    var buffer = 0
+    var bitCount = 0
+
+    for byte in bytes {
+        buffer = (buffer << 8) | Int(byte)
+        bitCount += 8
+
+        while bitCount >= 5 {
+            let index = (buffer >> (bitCount - 5)) & 0x1F
+            output.append(crockfordBase32Alphabet[index])
+            bitCount -= 5
+        }
+    }
+
+    if bitCount > 0 {
+        let index = (buffer << (5 - bitCount)) & 0x1F
+        output.append(crockfordBase32Alphabet[index])
+    }
+
+    return output
 }

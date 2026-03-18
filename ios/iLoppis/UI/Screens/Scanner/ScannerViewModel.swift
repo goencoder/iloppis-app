@@ -86,7 +86,7 @@ final class ScannerViewModel: ObservableObject {
 
     private func handleApiError(ticketId: String, error: ApiError) async {
         switch error {
-        case .http(let status, let message):
+        case .http(let status, let message, _):
             switch status {
             case 404:
                 registerResult(ScanResult(ticket: nil, status: .invalid, message: message), closeManual: false)

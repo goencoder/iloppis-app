@@ -5,8 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.QrCode
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -31,7 +30,7 @@ import se.iloppis.app.ui.theme.AppColors
  * Unified main screen combining Home and Event List.
  *
  * This screen displays:
- * - Quick access buttons for Cashier/Scanner via direct code entry
+ * - Quick access button for tool access via direct code entry
  * - Functional event search with 300ms debounce
  * - Filter chips mapped to real API calls
  * - List of events with computed status badges
@@ -56,17 +55,10 @@ fun EventListScreen() {
                 )
             )
         },
-        onCashierClick = {
+        onToolClick = {
             screen.onAction(
                 ScreenAction.NavigateToPage(
-                    ScreenPage.CodeEntry(CodeEntryMode.CASHIER)
-                )
-            )
-        },
-        onScannerClick = {
-            screen.onAction(
-                ScreenAction.NavigateToPage(
-                    ScreenPage.CodeEntry(CodeEntryMode.SCANNER)
+                    ScreenPage.CodeEntry(CodeEntryMode.TOOL)
                 )
             )
         }
@@ -84,8 +76,7 @@ private fun UnifiedEventListContent(
     onSearchChange: (String) -> Unit,
     onFilterSelect: (EventFilterChip) -> Unit,
     onEventClick: (Event) -> Unit,
-    onCashierClick: () -> Unit,
-    onScannerClick: () -> Unit,
+    onToolClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -121,21 +112,19 @@ private fun UnifiedEventListContent(
             modifier = Modifier.weight(1f)
         )
 
-        // ── Sticky footer: Cashier / Scanner buttons ──
+        // ── Sticky footer: tool access button ──
         FooterToolButtons(
-            onCashierClick = onCashierClick,
-            onScannerClick = onScannerClick
+            onToolClick = onToolClick
         )
     }
 }
 
 /**
- * Sticky footer with Cashier and Scanner tool buttons.
+ * Sticky footer with a single tool entry button.
  */
 @Composable
 private fun FooterToolButtons(
-    onCashierClick: () -> Unit,
-    onScannerClick: () -> Unit
+    onToolClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -150,28 +139,14 @@ private fun FooterToolButtons(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             AppButton(
-                text = stringResource(R.string.home_open_cashier),
-                onClick = onCashierClick,
-                modifier = Modifier.weight(1f),
+                text = stringResource(R.string.home_open_tool),
+                onClick = onToolClick,
+                modifier = Modifier.fillMaxWidth(),
                 variant = AppButtonVariant.Primary,
                 size = AppButtonSize.Large,
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Outlined.Payments,
-                        contentDescription = null,
-                        modifier = Modifier.padding(end = 4.dp)
-                    )
-                }
-            )
-            AppButton(
-                text = stringResource(R.string.home_open_scanner),
-                onClick = onScannerClick,
-                modifier = Modifier.weight(1f),
-                variant = AppButtonVariant.Success,
-                size = AppButtonSize.Large,
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.QrCode,
+                        imageVector = Icons.Outlined.Build,
                         contentDescription = null,
                         modifier = Modifier.padding(end = 4.dp)
                     )

@@ -13,6 +13,16 @@ import se.iloppis.app.network.ILoppisApiInterface
  */
 interface CashierAPI : ILoppisApiInterface {
     /**
+     * Sends cashier presence heartbeat.
+     */
+    @POST("v1/events/{event_id}/cashier-presence:heartbeat")
+    suspend fun updateCashierPresence(
+        @Header("Authorization") authorization: String,
+        @Path("event_id") eventId: String,
+        @Body request: CashierPresenceHeartbeatRequest
+    ) : CashierPresenceHeartbeatResponse
+
+    /**
      * Sends sold items create request
      */
     @POST("v1/events/{event_id}/sold-items")

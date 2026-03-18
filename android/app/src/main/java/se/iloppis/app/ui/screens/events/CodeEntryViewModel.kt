@@ -24,6 +24,34 @@ import se.iloppis.app.network.keys.KeyAPI
 
 private const val TAG = "CodeEntryViewModel"
 
+private fun normalizeApiKeyType(type: String?): String =
+    type?.uppercase()?.replace("-", "_").orEmpty()
+
+private fun resolveToolMode(type: String?): CodeEntryMode? {
+    val normalized = normalizeApiKeyType(type)
+    return when {
+        normalized.contains("LIVE_STATS") -> CodeEntryMode.LIVE_STATS
+        normalized.contains("SCANNER") -> CodeEntryMode.SCANNER
+        normalized.contains("CASHIER") -> CodeEntryMode.CASHIER
+        else -> null
+    }
+}
+
+private fun isToolModeAllowed(entryMode: CodeEntryMode, resolvedMode: CodeEntryMode?): Boolean {
+    if (resolvedMode == null) return false
+    return when (entryMode) {
+        CodeEntryMode.TOOL -> true
+        else -> entryMode == resolvedMode
+    }
+}
+
+private fun wrongTypeErrorKey(entryMode: CodeEntryMode): String = when (entryMode) {
+    CodeEntryMode.CASHIER -> "wrong_type_cashier"
+    CodeEntryMode.SCANNER -> "wrong_type_scanner"
+    CodeEntryMode.LIVE_STATS -> "wrong_type_live_stats"
+    CodeEntryMode.TOOL -> "wrong_type_tool"
+}
+
 // ──────────────────────────────────────────────
 // State
 // ──────────────────────────────────────────────
@@ -51,7 +79,7 @@ data class CodeEntryUiState(
     /** Whether saved codes are still being loaded/validated. */
     val isSavedCodesLoading: Boolean = true
 ) {
-    /** Formatted display code: XXX-YYY */
+    /** Formatted display code: XXX-XXX */
     val displayCode: String
         get() = rawCode
 
@@ -61,6 +89,8 @@ data class CodeEntryUiState(
 data class CodeVerifiedResult(
     val event: Event,
     val apiKey: String,
+    val alias: String,
+    val entryMode: CodeEntryMode,
     val mode: CodeEntryMode
 )
 
@@ -159,28 +189,25 @@ class CodeEntryViewModel(
                 val allCodes = SavedCodesStore.loadAll()
 
                 // Filter by mode
-                val modeStr = mode.name
                 val filtered = allCodes
-                    .filter { it.codeType == modeStr }
+                    .filter {
+                        mode == CodeEntryMode.TOOL || it.codeType == mode.name
+                    }
                     .let { codes ->
                         // Filter by eventId if navigating from event page
                         if (eventId != null) codes.filter { it.eventId == eventId }
                         else codes
                     }
 
-                // Show immediately, then validate async
+                // Show immediately. Do not auto-validate all aliases against backend,
+                // because that can trigger burst traffic and rate limiting.
                 val initial = filtered.map {
-                    ValidatedSavedCode(savedCode = it, isValid = true, isValidating = true)
+                    ValidatedSavedCode(savedCode = it, isValid = true, isValidating = false)
                 }
                 _uiState.value = _uiState.value.copy(
                     savedCodes = initial,
                     isSavedCodesLoading = false
                 )
-
-                // Validate each code asynchronously
-                for (code in filtered) {
-                    launch { validateSavedCode(code) }
-                }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load saved codes", e)
                 _uiState.value = _uiState.value.copy(
@@ -189,51 +216,6 @@ class CodeEntryViewModel(
                 )
             }
         }
-    }
-
-    private suspend fun validateSavedCode(code: SavedCode) {
-        try {
-            val keyApi = ILoppisClient(clientConfig()).create<KeyAPI>()
-            val response = keyApi.getApiKeyByAlias(code.alias)
-
-            val responseType = response.type?.uppercase() ?: ""
-            val isTypeValid = when (mode) {
-                CodeEntryMode.CASHIER -> responseType.contains("CASHIER")
-                CodeEntryMode.SCANNER -> responseType.contains("SCANNER")
-            }
-            val isValid = response.isActive && (responseType.isEmpty() || isTypeValid)
-
-            updateSavedCodeValidation(code.alias, isValid)
-
-            // If invalid, remove from persistent store
-            if (!isValid) {
-                SavedCodesStore.remove(code.alias)
-            }
-        } catch (e: HttpException) {
-            if (e.code() == 404) {
-                // Code no longer exists
-                updateSavedCodeValidation(code.alias, isValid = false)
-                SavedCodesStore.remove(code.alias)
-            } else {
-                // Network error — assume still valid
-                updateSavedCodeValidation(code.alias, isValid = true)
-            }
-        } catch (e: Exception) {
-            // Network error — assume still valid to not degrade offline experience
-            Log.w(TAG, "Could not validate saved code ${code.alias}", e)
-            updateSavedCodeValidation(code.alias, isValid = true)
-        }
-    }
-
-    private fun updateSavedCodeValidation(alias: String, isValid: Boolean) {
-        val current = _uiState.value
-        val updated = current.savedCodes.map { entry ->
-            if (entry.savedCode.alias == alias) {
-                entry.copy(isValid = isValid, isValidating = false)
-            } else entry
-        }
-        // Remove invalid entries from the displayed list
-        _uiState.value = current.copy(savedCodes = updated.filter { it.isValid || it.isValidating })
     }
 
     private fun useSavedCode(code: SavedCode) {
@@ -283,22 +265,24 @@ class CodeEntryViewModel(
                 }
 
                 // Validate type matches mode
-                val responseType = response.type?.uppercase() ?: ""
-                val isValidType = when (mode) {
-                    CodeEntryMode.CASHIER -> responseType.contains("CASHIER")
-                    CodeEntryMode.SCANNER -> responseType.contains("SCANNER")
-                }
-                if (responseType.isNotEmpty() && !isValidType) {
+                val resolvedMode = resolveToolMode(response.type)
+                if (!isToolModeAllowed(mode, resolvedMode)) {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorKey = if (mode == CodeEntryMode.CASHIER) "wrong_type_cashier" else "wrong_type_scanner"
+                        errorKey = wrongTypeErrorKey(mode)
                     )
                     return@launch
                 }
 
                 // Fetch the event to show in confirmation
+                val resolvedEventId = response.eventId.takeIf { it.isNotBlank() } ?: eventId
+                if (resolvedEventId.isNullOrBlank()) {
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorKey = "not_found")
+                    return@launch
+                }
+
                 val eventApi = ILoppisClient(clientConfig()).create<EventAPI>()
-                val eventResponse = eventApi.get(response.eventId)
+                val eventResponse = eventApi.get(resolvedEventId)
                 val event = eventResponse.events.firstOrNull()?.toDomain()
 
                 if (event == null) {
@@ -308,12 +292,17 @@ class CodeEntryViewModel(
 
                 // Save the code for future quick access.
                 // Do not persist the API key — it is re-fetched on next use.
+                val actualMode = resolvedMode ?: run {
+                    _uiState.value = _uiState.value.copy(isLoading = false, errorKey = wrongTypeErrorKey(mode))
+                    return@launch
+                }
+
                 SavedCodesStore.save(
                     SavedCode(
                         alias = formattedAlias,
                         eventId = event.id,
                         eventName = event.name,
-                        codeType = mode.name
+                        codeType = actualMode.name
                     )
                 )
 
@@ -322,7 +311,9 @@ class CodeEntryViewModel(
                     verifiedResult = CodeVerifiedResult(
                         event = event,
                         apiKey = response.apiKey,
-                        mode = mode
+                        alias = formattedAlias,
+                        entryMode = mode,
+                        mode = actualMode
                     )
                 )
             } catch (e: HttpException) {
@@ -330,6 +321,7 @@ class CodeEntryViewModel(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     errorKey = when (e.code()) {
+                        429 -> "rate_limited"
                         400, 404, 422 -> "not_found"
                         401, 403 -> "inactive"
                         in 500..599 -> "server"

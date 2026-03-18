@@ -36,8 +36,7 @@ struct EventListScreen: View {
                 EventDetailDialog(
                     event: event,
                     onDismiss: { viewModel.onAction(.dismissEventDetail) },
-                    onCashierClick: { viewModel.onAction(.startCodeEntry(mode: .cashier, event: event)) },
-                    onScannerClick: { viewModel.onAction(.startCodeEntry(mode: .scanner, event: event)) }
+                    onToolClick: { viewModel.onAction(.startCodeEntry(mode: .tool, event: event)) }
                 )
                 .presentationDetents([.medium, .large])
             }
@@ -45,7 +44,14 @@ struct EventListScreen: View {
                 get: { viewModel.state.codeEntryState != nil },
                 set: { if !$0 { viewModel.onAction(.dismissCodeEntry) } }
             )) {
-                if let entry = viewModel.state.codeEntryState {
+                if let confirmation = viewModel.state.codeConfirmationState {
+                    CodeConfirmDialog(
+                        state: confirmation,
+                        onConfirm: { viewModel.onAction(.confirmCodeSelection) },
+                        onBack: { viewModel.onAction(.dismissCodeConfirmation) }
+                    )
+                    .presentationDetents([.medium])
+                } else if let entry = viewModel.state.codeEntryState {
                     CodeEntryDialog(
                         state: entry,
                         onCodeChange: { viewModel.onAction(.updateCode($0)) },
@@ -71,39 +77,21 @@ struct EventListScreen: View {
     }
 
     private var quickAccessButtons: some View {
-        HStack(spacing: 16) {
-            Button(action: { viewModel.onAction(.startCodeEntry(mode: .cashier, event: nil)) }) {
-                HStack {
-                    Image(systemName: "creditcard.fill")
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(LocalizedStringKey("home_open_cashier"))
-                            .font(.system(size: 14, weight: .semibold))
-                    }
+        Button(action: { viewModel.onAction(.startCodeEntry(mode: .tool, event: nil)) }) {
+            HStack {
+                Image(systemName: "wrench.and.screwdriver.fill")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(LocalizedStringKey("button_tools"))
+                        .font(.system(size: 14, weight: .semibold))
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(12)
-                .background(AppColors.buttonPrimary)
-                .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-            .buttonStyle(.plain)
-
-            Button(action: { viewModel.onAction(.startCodeEntry(mode: .scanner, event: nil)) }) {
-                HStack {
-                    Image(systemName: "qrcode")
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(LocalizedStringKey("home_open_scanner"))
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(12)
-                .background(AppColors.buttonSecondary)
-                .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
+            .background(AppColors.buttonPrimary)
+            .foregroundColor(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
+        .buttonStyle(.plain)
     }
 
     private var searchBar: some View {

@@ -9,6 +9,7 @@ import se.iloppis.app.ui.screens.events.CodeConfirmScreen
 import se.iloppis.app.ui.screens.events.CodeEntryScreen
 import se.iloppis.app.ui.screens.events.EventListScreen
 import se.iloppis.app.ui.screens.events.EventsDetailsScreen
+import se.iloppis.app.ui.screens.live_stats.LiveStatsScreen
 import se.iloppis.app.ui.screens.scanner.ScannerScreen
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.screens.splash.SplashScreen
@@ -25,6 +26,7 @@ import se.iloppis.app.ui.states.ScreenAction
 @Composable
 fun PageManager() {
     val screen = screenContext()
+    val activePage = screen.pages.lastOrNull()
 
     /* Screen overlays */
     if(screen.overlay != null) screen.overlay!!()
@@ -54,6 +56,8 @@ fun PageManager() {
                     CodeConfirmScreen(
                         event = page.event,
                         apiKey = page.apiKey,
+                        _alias = page.alias,
+                        _entryMode = page.entryMode,
                         mode = page.mode
                     )
                 }
@@ -73,6 +77,15 @@ fun PageManager() {
                         event = page.event,
                         apiKey = page.apiKey,
                         onBack = { screen.onAction(ScreenAction.NavigateHome) }
+                    )
+                }
+
+                /* Live stats screen */
+                is ScreenPage.LiveStats -> NavEntry(page) {
+                    LiveStatsScreen(
+                        event = page.event,
+                        apiKey = page.apiKey,
+                        isActivePage = page == activePage
                     )
                 }
             }

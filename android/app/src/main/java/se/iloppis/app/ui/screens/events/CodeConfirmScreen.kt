@@ -26,11 +26,17 @@ import se.iloppis.app.ui.theme.AppColors
  * Confirmation screen after code entry.
  *
  * Shows which event the code resolved to (name, dates, location, status).
- * User confirms before entering the Cashier/Scanner tool.
+ * User confirms before entering the selected tool.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CodeConfirmScreen(event: Event, apiKey: String, mode: CodeEntryMode) {
+fun CodeConfirmScreen(
+    event: Event,
+    apiKey: String,
+    _alias: String,
+    _entryMode: CodeEntryMode,
+    mode: CodeEntryMode
+) {
     val screen = screenContext()
 
     Scaffold(
@@ -126,6 +132,14 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: CodeEntryMode) {
                             color = AppColors.TextSecondary
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.confirm_event_tool_label, toolLabel(mode)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AppColors.TextPrimary,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
 
@@ -133,14 +147,18 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: CodeEntryMode) {
             AppButton(
                 text = stringResource(
                     when (mode) {
+                        CodeEntryMode.TOOL -> R.string.home_open_tool
                         CodeEntryMode.CASHIER -> R.string.open_cashier_button
                         CodeEntryMode.SCANNER -> R.string.open_scanner_button
+                        CodeEntryMode.LIVE_STATS -> R.string.open_live_stats_button
                     }
                 ),
                 onClick = {
                     val toolPage = when (mode) {
+                        CodeEntryMode.TOOL -> ScreenPage.EventList
                         CodeEntryMode.CASHIER -> ScreenPage.Cashier(event, apiKey)
                         CodeEntryMode.SCANNER -> ScreenPage.Scanner(event, apiKey)
+                        CodeEntryMode.LIVE_STATS -> ScreenPage.LiveStats(event, apiKey)
                     }
                     screen.onAction(
                         ScreenAction.NavigateToPage(toolPage, true)
@@ -164,3 +182,13 @@ fun CodeConfirmScreen(event: Event, apiKey: String, mode: CodeEntryMode) {
         }
     }
 }
+
+@Composable
+private fun toolLabel(mode: CodeEntryMode): String = stringResource(
+    when (mode) {
+        CodeEntryMode.TOOL -> R.string.home_open_tool
+        CodeEntryMode.CASHIER -> R.string.tool_type_cashier
+        CodeEntryMode.SCANNER -> R.string.tool_type_scanner
+        CodeEntryMode.LIVE_STATS -> R.string.tool_type_live_stats
+    }
+)

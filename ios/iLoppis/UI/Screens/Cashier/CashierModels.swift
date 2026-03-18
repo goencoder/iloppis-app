@@ -58,6 +58,7 @@ struct CashierState: Equatable {
 
     var isLoading: Bool = false
     var isProcessingPayment: Bool = false
+    var heartbeatDisplayName: String? = nil
     var errorMessage: String? = nil
     var warningMessage: String? = nil
 

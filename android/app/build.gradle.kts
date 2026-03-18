@@ -132,6 +132,9 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
     implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.browser)
+    implementation(libs.coil.compose)
+    implementation(libs.zxing.core)
 
     // Testing
     testImplementation(libs.junit)

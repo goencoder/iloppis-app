@@ -9,7 +9,6 @@ struct ScannerScreen: View {
 
     @State private var cameraState: CameraAuthorizationState = CameraPermission.currentState()
     @State private var isScanningActive: Bool = false
-    @State private var manualCode: String = ""
 
     private static let ticketDetailDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -92,13 +91,6 @@ struct ScannerScreen: View {
         .background(AppColors.background.ignoresSafeArea())
         .onAppear {
             cameraState = CameraPermission.currentState()
-        }
-        .sheet(isPresented: Binding(
-            get: { viewModel.state.manualEntryVisible },
-            set: { if !$0 { viewModel.onAction(.dismissManualEntry) } }
-        )) {
-            manualEntrySheet
-                .presentationDetents([.medium])
         }
         .sheet(item: Binding(
             get: { viewModel.state.activeResult },
@@ -190,64 +182,6 @@ struct ScannerScreen: View {
             }
         }
         .padding(.top, 4)
-    }
-
-    private var manualEntrySheet: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(LocalizedStringKey("scanner_manual_title"))
-                .font(.headline)
-                .foregroundColor(AppColors.textPrimary)
-
-            Text(LocalizedStringKey("scanner_manual_description"))
-                .foregroundColor(AppColors.textSecondary)
-
-            TextField(LocalizedStringKey("scanner_manual_placeholder"), text: $manualCode)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-                .padding(12)
-                .background(AppColors.background)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(AppColors.border, lineWidth: 1)
-                )
-
-            if let error = viewModel.state.manualEntryError {
-                Text(manualErrorText(error))
-                    .foregroundColor(AppColors.textError)
-                    .font(.footnote)
-            }
-
-            HStack(spacing: 12) {
-                Button {
-                    viewModel.onAction(.dismissManualEntry)
-                } label: {
-                    Text(LocalizedStringKey("button_cancel"))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(AppColors.textPrimary)
-                        .background(AppColors.cardBackground)
-                        .cornerRadius(10)
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    viewModel.onAction(.submitCode(manualCode))
-                } label: {
-                    Text(LocalizedStringKey("scanner_manual_confirm"))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(AppColors.dialogBackground)
-                        .background(AppColors.buttonPrimary)
-                        .cornerRadius(10)
-                }
-                .buttonStyle(.plain)
-            }
-
-            Spacer()
-        }
-        .padding(16)
-        .onAppear { manualCode = "" }
     }
 
     private func scanResultSheet(_ result: ScanResult) -> some View {
@@ -409,7 +343,7 @@ struct ScannerScreen: View {
 
     private func ticketDetailSheet(_ ticket: VisitorTicket) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(LocalizedStringKey("scanner_search_title"))
+            Text(LocalizedStringKey("scanner_ticket_details_title"))
                 .font(.title3.weight(.bold))
                 .foregroundColor(AppColors.textPrimary)
 
@@ -569,18 +503,6 @@ struct ScannerScreen: View {
             isScanningActive = true
         }
     }
-
-    private func manualErrorText(_ error: ManualEntryError) -> String {
-        switch error {
-        case .emptyInput:
-            return NSLocalizedString("scanner_manual_error_empty", comment: "")
-        case .wrongEvent:
-            return String(format: NSLocalizedString("scanner_manual_error_event", comment: ""), event.name)
-        case .invalidFormat:
-            return NSLocalizedString("scanner_manual_error_format", comment: "")
-        }
-    }
-    
 
     private func historyRow(_ item: ScanResult) -> some View {
         HStack(alignment: .top, spacing: 10) {

@@ -38,10 +38,7 @@ private const val SCAN_TIMEOUT_MS = 5000L
  * Sealed actions that the scanner screen can trigger.
  */
 sealed class ScannerAction {
-    data object RequestManualEntry : ScannerAction()
-    data object DismissManualEntry : ScannerAction()
     data class SubmitCode(val code: String) : ScannerAction()
-    data object ClearManualError : ScannerAction()
     data object DismissResult : ScannerAction()
     data class ShowTicketDetails(val result: ScanResult) : ScannerAction()
     data object DismissTicketDetails : ScannerAction()
@@ -58,15 +55,6 @@ sealed class ScannerAction {
     data class SelectSearchResult(val ticket: VisitorTicket) : ScannerAction()
     data object DismissSearchDetail : ScannerAction()
     data class ScanFromDetail(val ticketId: String) : ScannerAction()
-}
-
-/**
- * Local error reasons for manual code entry.
- */
-enum class ManualEntryError {
-    EMPTY_INPUT,
-    WRONG_EVENT,
-    INVALID_FORMAT
 }
 
 /**
@@ -114,8 +102,6 @@ data class TicketTypeOption(
 data class ScannerUiState(
     val eventName: String,
     val isProcessing: Boolean = false,
-    val manualEntryVisible: Boolean = false,
-    val manualEntryError: ManualEntryError? = null,
     val activeResult: ScanResult? = null,
     val history: List<ScanResult> = emptyList(),
     val groupedHistory: List<HistoryItem> = emptyList(),
@@ -192,13 +178,7 @@ class ScannerViewModel(
 
     fun onAction(action: ScannerAction) {
         when (action) {
-            is ScannerAction.RequestManualEntry -> _uiState.value = _uiState.value.copy(manualEntryVisible = true)
-            is ScannerAction.DismissManualEntry -> _uiState.value = _uiState.value.copy(
-                manualEntryVisible = false,
-                manualEntryError = null
-            )
             is ScannerAction.SubmitCode -> handleCodeSubmission(action.code)
-            is ScannerAction.ClearManualError -> _uiState.value = _uiState.value.copy(manualEntryError = null)
             is ScannerAction.DismissResult -> _uiState.value = _uiState.value.copy(activeResult = null)
             is ScannerAction.ShowTicketDetails -> _uiState.value = _uiState.value.copy(ticketDetailsResult = action.result)
             is ScannerAction.DismissTicketDetails -> _uiState.value = _uiState.value.copy(ticketDetailsResult = null)
@@ -343,19 +323,12 @@ class ScannerViewModel(
         val trimmed = rawCode.trim()
 
         when {
-            trimmed.isEmpty() -> {
-                _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.EMPTY_INPUT)
-                return
-            }
+            trimmed.isEmpty() -> return
         }
 
-        val payload = decodePayload(trimmed) ?: run {
-            _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.INVALID_FORMAT)
-            return
-        }
+        val payload = decodePayload(trimmed) ?: return
 
         if (!payload.eventId.isNullOrBlank() && payload.eventId != eventId) {
-            _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.WRONG_EVENT)
             return
         }
 
@@ -369,7 +342,7 @@ class ScannerViewModel(
         }
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isProcessing = true, manualEntryError = null)
+            _uiState.value = _uiState.value.copy(isProcessing = true)
             val scanId = UUID.randomUUID().toString()
             val now = Instant.now().toString()
 
@@ -561,14 +534,12 @@ class ScannerViewModel(
         }
     }
 
-    private fun showResult(handler: ScanResultHandler, closeManual: Boolean = true) {
+    private fun showResult(handler: ScanResultHandler) {
         val result = ScanResultHandler.toScanResult(handler)
         val updatedHistory = (listOf(result) + _uiState.value.history).take(MAX_HISTORY)
 
         _uiState.value = _uiState.value.copy(
             isProcessing = false,
-            manualEntryVisible = if (closeManual) false else _uiState.value.manualEntryVisible,
-            manualEntryError = null,
             activeResult = result,
             history = updatedHistory
         )

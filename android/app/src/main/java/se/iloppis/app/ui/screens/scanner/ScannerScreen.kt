@@ -70,7 +70,6 @@ import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.CameraScanner
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
-import se.iloppis.app.ui.dialogs.ManualTicketDialog
 import se.iloppis.app.ui.dialogs.TicketDetailSheet
 import se.iloppis.app.ui.dialogs.TicketSearchDialog
 import se.iloppis.app.ui.theme.AppColors
@@ -280,16 +279,6 @@ fun ScannerScreen(
             )
         }
     }
-
-    ManualTicketDialog(
-        visible = uiState.manualEntryVisible,
-        eventName = event.name,
-        error = uiState.manualEntryError,
-        isProcessing = uiState.isProcessing,
-        onDismiss = { viewModel.onAction(ScannerAction.DismissManualEntry) },
-        onTextChanged = { viewModel.onAction(ScannerAction.ClearManualError) },
-        onSubmit = { code -> viewModel.onAction(ScannerAction.SubmitCode(code)) }
-    )
 
     // Ticket details dialog
     uiState.ticketDetailsResult?.let { result ->

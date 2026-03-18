@@ -148,6 +148,7 @@
 "scanner_manual_error_event" = "Biljetten hör inte till %@.";
 "scanner_manual_error_format" = "Koden kunde inte tolkas.";
 "scanner_manual_confirm" = "Verifiera";
+"scanner_ticket_details_title" = "Biljettinfo";
 "scanner_camera_not_ready" = "Kameran är inte redo ännu. Sök biljett manuellt.";
 
 /* Ticket search */

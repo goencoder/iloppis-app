@@ -2,12 +2,6 @@ import Foundation
 
 // Uses domain model `VisitorTicket` from `Domain/Model/VisitorTicket.swift`.
 
-enum ManualEntryError: Equatable {
-    case emptyInput
-    case wrongEvent
-    case invalidFormat
-}
-
 enum ScanStatus: Equatable {
     case success
     case duplicate
@@ -62,8 +56,6 @@ struct ScannerState: Equatable {
     let eventName: String
 
     var isProcessing: Bool = false
-    var manualEntryVisible: Bool = false
-    var manualEntryError: ManualEntryError? = nil
 
     var activeResult: ScanResult? = nil
     var history: [ScanResult] = []
@@ -83,10 +75,6 @@ struct ScannerState: Equatable {
 }
 
 enum ScannerAction {
-    case requestManualEntry
-    case dismissManualEntry
-    case submitCode(String)
-    case clearManualError
     case dismissResult
     case requestTicketSearch
     case dismissTicketSearch

@@ -148,6 +148,7 @@
 "scanner_manual_error_event" = "This ticket does not belong to %@.";
 "scanner_manual_error_format" = "The code could not be parsed.";
 "scanner_manual_confirm" = "Verify";
+"scanner_ticket_details_title" = "Ticket details";
 "scanner_camera_not_ready" = "Camera not ready yet. Search for the ticket manually.";
 
 /* Ticket search */

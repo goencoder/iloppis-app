@@ -24,22 +24,8 @@ final class ScannerViewModel: ObservableObject {
 
     func onAction(_ action: ScannerAction) {
         switch action {
-        case .requestManualEntry:
-            state.manualEntryVisible = true
-            state.manualEntryError = nil
-
-        case .dismissManualEntry:
-            state.manualEntryVisible = false
-            state.manualEntryError = nil
-
-        case .clearManualError:
-            state.manualEntryError = nil
-
         case .dismissResult:
             state.activeResult = nil
-
-        case .submitCode(let code):
-            handleManualSubmission(rawCode: code)
 
         case .requestTicketSearch:
             openTicketSearch()
@@ -80,29 +66,8 @@ final class ScannerViewModel: ObservableObject {
         }
     }
 
-    private func handleManualSubmission(rawCode: String) {
-        let trimmed = rawCode.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            state.manualEntryError = .emptyInput
-            return
-        }
-
-        guard let payload = decodePayload(trimmed) else {
-            state.manualEntryError = .invalidFormat
-            return
-        }
-
-        if let payloadEvent = payload.eventId, !payloadEvent.isEmpty, payloadEvent != eventId {
-            state.manualEntryError = .wrongEvent
-            return
-        }
-
-        performScan(ticketId: payload.ticketId)
-    }
-
     private func performScan(ticketId: String) {
         state.isProcessing = true
-        state.manualEntryError = nil
 
         Task {
             defer { state.isProcessing = false }
@@ -129,25 +94,25 @@ final class ScannerViewModel: ObservableObject {
         case .http(let status, let message, _):
             switch status {
             case 404:
-                registerResult(ScanResult(ticket: nil, status: .invalid, message: message), closeManual: false)
+                registerResult(ScanResult(ticket: nil, status: .invalid, message: message))
 
             case 400, 412:
                 let ticket = await fetchTicketIfExists(ticketId: ticketId)
                 if ticket?.status == .scanned {
                     registerResult(ScanResult(ticket: ticket, status: .duplicate, message: message))
                 } else {
-                    registerResult(ScanResult(ticket: ticket, status: .invalid, message: message), closeManual: false)
+                    registerResult(ScanResult(ticket: ticket, status: .invalid, message: message))
                 }
 
             case 401, 403:
                 registerResult(ScanResult(ticket: nil, status: .error, message: message))
 
             default:
-                registerResult(ScanResult(ticket: nil, status: .error, message: message), closeManual: false)
+                registerResult(ScanResult(ticket: nil, status: .error, message: message))
             }
 
         default:
-            registerResult(ScanResult(ticket: nil, status: .error, message: error.localizedDescription), closeManual: false)
+            registerResult(ScanResult(ticket: nil, status: .error, message: error.localizedDescription))
         }
     }
 
@@ -164,13 +129,9 @@ final class ScannerViewModel: ObservableObject {
         }
     }
 
-    private func registerResult(_ result: ScanResult, closeManual: Bool = true) {
+    private func registerResult(_ result: ScanResult) {
         state.history = ([result] + state.history).prefix(maxHistory).map { $0 }
         state.activeResult = result
-        if closeManual {
-            state.manualEntryVisible = false
-        }
-        state.manualEntryError = nil
     }
 
     private func registerOffline(ticketId: String, message: String?) {
@@ -188,26 +149,6 @@ final class ScannerViewModel: ObservableObject {
             recentScanIds.removeFirst()
         }
         recentScanIds.append(ticketId)
-    }
-
-    private func decodePayload(_ raw: String) -> TicketPayload? {
-        if raw.hasPrefix("{") && raw.hasSuffix("}") {
-            guard let data = raw.data(using: .utf8),
-                  let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
-                return nil
-            }
-            let ticketId = (json["ticket_id"] as? String) ?? (json["ticketId"] as? String)
-            let eventId = (json["event_id"] as? String) ?? (json["eventId"] as? String)
-            guard let ticketId, !ticketId.isEmpty else { return nil }
-            return TicketPayload(ticketId: ticketId, eventId: eventId)
-        }
-
-        return TicketPayload(ticketId: raw, eventId: nil)
-    }
-
-    private struct TicketPayload {
-        let ticketId: String
-        let eventId: String?
     }
 
     // MARK: - Ticket Search

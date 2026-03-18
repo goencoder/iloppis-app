@@ -162,6 +162,7 @@
 "scanner_button_search" = "Search ticket manually";
 "scanner_search_result_not_scanned" = "Not scanned";
 "scanner_search_result_scanned" = "Scanned";
+"scanner_status_unknown" = "Unknown";
 "scanner_button_mark_scanned" = "Mark as scanned";
 "scanner_field_status" = "Status:";
 "scanner_field_ticket_type_label" = "Ticket type:";

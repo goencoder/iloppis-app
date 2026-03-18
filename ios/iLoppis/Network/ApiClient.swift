@@ -206,6 +206,18 @@ struct ApiClient {
         )
     }
 
+    func listTicketTypes(
+        eventId: String,
+        apiKey: String
+    ) async throws -> ListTicketTypesResponse {
+        return try await request(
+            path: "v1/events/\(eventId)/ticket_types",
+            method: .get,
+            authorization: "Bearer \(apiKey)",
+            body: Optional<EmptyBody>.none
+        )
+    }
+
     // MARK: - Core request
 
     private func request<Response: Decodable, Body: Encodable>(
@@ -817,4 +829,13 @@ struct FilterVisitorTicketsResponse: Codable {
     let nextPageToken: String?
     let prevPageToken: String?
     let total: Int?
+}
+
+struct TicketTypeDto: Codable {
+    let id: String
+    let type: String
+}
+
+struct ListTicketTypesResponse: Codable {
+    let types: [TicketTypeDto]
 }

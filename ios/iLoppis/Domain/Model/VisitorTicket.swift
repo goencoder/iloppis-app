@@ -19,9 +19,9 @@ enum VisitorTicketStatus: Equatable {
 
     init(raw: String?) {
         switch (raw ?? "").uppercased() {
-        case "SCANNED":
+        case "SCANNED", "TICKET_STATUS_SCANNED":
             self = .scanned
-        case "ISSUED":
+        case "ISSUED", "TICKET_STATUS_NOT_SCANNED":
             self = .issued
         default:
             self = .unknown(raw ?? "")

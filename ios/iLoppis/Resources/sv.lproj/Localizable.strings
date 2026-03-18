@@ -162,6 +162,7 @@
 "scanner_button_search" = "Sök biljett manuellt";
 "scanner_search_result_not_scanned" = "Ej skannad";
 "scanner_search_result_scanned" = "Skannad";
+"scanner_status_unknown" = "Okänd";
 "scanner_button_mark_scanned" = "Markera som skannad";
 "scanner_field_status" = "Status:";
 "scanner_field_ticket_type_label" = "Biljettyp:";

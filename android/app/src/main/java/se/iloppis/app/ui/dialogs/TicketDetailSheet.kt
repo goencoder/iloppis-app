@@ -24,6 +24,13 @@ import se.iloppis.app.domain.model.VisitorTicketStatus
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+private val svLocale = Locale.Builder().setLanguage("sv").setRegion("SE").build()
+private val dateTimeFormatter = DateTimeFormatter.ofPattern("d MMM HH:mm", svLocale)
+    .withZone(ZoneId.systemDefault())
 
 /**
  * Bottom sheet showing ticket details with an optional "Mark as scanned" action.
@@ -63,11 +70,12 @@ fun TicketDetailSheet(
             val statusText = when (ticket.status) {
                 VisitorTicketStatus.SCANNED -> stringResource(R.string.scanner_search_result_scanned)
                 VisitorTicketStatus.NOT_SCANNED -> stringResource(R.string.scanner_search_result_not_scanned)
-                else -> stringResource(R.string.scanner_search_result_not_scanned)
+                VisitorTicketStatus.UNSPECIFIED -> stringResource(R.string.scanner_status_unknown)
             }
             val statusColor = when (ticket.status) {
                 VisitorTicketStatus.SCANNED -> AppColors.Info
-                else -> AppColors.Success
+                VisitorTicketStatus.NOT_SCANNED -> AppColors.Success
+                VisitorTicketStatus.UNSPECIFIED -> AppColors.TextMuted
             }
             DetailField(
                 label = stringResource(R.string.scanner_field_status_label),
@@ -95,7 +103,7 @@ fun TicketDetailSheet(
             ticket.scannedAt?.let { scannedAt ->
                 DetailField(
                     label = stringResource(R.string.scanner_field_scanned_at_label),
-                    value = scannedAt.toString()
+                    value = dateTimeFormatter.format(scannedAt)
                 )
             }
 
@@ -167,8 +175,8 @@ private fun DetailField(
 }
 
 private fun buildValidWindowString(ticket: VisitorTicket): String? {
-    val from = ticket.validFrom?.toString()
-    val until = ticket.validUntil?.toString()
+    val from = ticket.validFrom?.let { dateTimeFormatter.format(it) }
+    val until = ticket.validUntil?.let { dateTimeFormatter.format(it) }
     return when {
         from != null && until != null -> "$from – $until"
         from != null -> "$from –"

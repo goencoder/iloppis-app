@@ -11,6 +11,7 @@ final class ScannerViewModel: ObservableObject {
     private let maxHistory = 20
     private let recentScanBuffer = 50
     private var recentScanIds: [String] = []
+    private var searchTask: Task<Void, Never>?
 
     init(eventId: String, eventName: String, apiKey: String, apiClient: ApiClient = ApiClient()) {
         self.eventId = eventId
@@ -42,7 +43,9 @@ final class ScannerViewModel: ObservableObject {
             openTicketSearch()
 
         case .dismissTicketSearch:
+            searchTask?.cancel()
             state.ticketSearchVisible = false
+            state.isSearching = false
             state.searchResults = []
             state.searchError = nil
 
@@ -51,9 +54,11 @@ final class ScannerViewModel: ObservableObject {
 
         case .selectSearchResult(let ticket):
             state.searchDetailTicket = ticket
+            state.ticketSearchVisible = false
 
         case .dismissSearchDetail:
             state.searchDetailTicket = nil
+            state.ticketSearchVisible = true
 
         case .scanFromDetail(let ticketId):
             performScanFromDetail(ticketId: ticketId)
@@ -193,24 +198,42 @@ final class ScannerViewModel: ObservableObject {
     // MARK: - Ticket Search
 
     private func openTicketSearch() {
-        // TODO: Load ticket types from API when TicketTypeRepository is added for iOS
         state.ticketSearchVisible = true
         state.searchResults = []
         state.searchError = nil
+        // Load ticket types
+        Task {
+            do {
+                let response = try await apiClient.listTicketTypes(
+                    eventId: eventId,
+                    apiKey: apiKey
+                )
+                state.ticketTypes = response.types.map {
+                    TicketTypeOption(id: $0.id, name: $0.type)
+                }
+            } catch {
+                // Non-critical: picker just won't show
+            }
+        }
     }
 
     private func handleTicketSearch(query: String, ticketTypeId: String?) {
         guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        searchTask?.cancel()
         state.isSearching = true
         state.searchError = nil
 
-        Task {
-            defer { state.isSearching = false }
+        searchTask = Task {
+            defer { if !Task.isCancelled { state.isSearching = false } }
             do {
+                // Resolve ticket type ID to name for the API filter
+                let ticketTypeName: String? = ticketTypeId.flatMap { id in
+                    state.ticketTypes.first(where: { $0.id == id })?.name
+                }
                 let filter = VisitorTicketFilterDto(
                     email: nil,
-                    ticketType: ticketTypeId,
-                    status: "TICKET_STATUS_NOT_SCANNED",
+                    ticketType: ticketTypeName,
+                    status: nil,
                     freeText: query.trimmingCharacters(in: .whitespacesAndNewlines)
                 )
                 let response = try await apiClient.filterVisitorTickets(
@@ -218,9 +241,11 @@ final class ScannerViewModel: ObservableObject {
                     apiKey: apiKey,
                     filter: filter
                 )
+                guard !Task.isCancelled else { return }
                 let tickets = (response.tickets ?? []).map { VisitorTicketMapper.toDomain($0) }
                 state.searchResults = tickets
             } catch {
+                guard !Task.isCancelled else { return }
                 state.searchError = error.localizedDescription
             }
         }

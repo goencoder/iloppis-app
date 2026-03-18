@@ -241,12 +241,12 @@ private fun TicketSearchResultRow(
             val statusText = when (ticket.status) {
                 VisitorTicketStatus.SCANNED -> stringResource(R.string.scanner_search_result_scanned)
                 VisitorTicketStatus.NOT_SCANNED -> stringResource(R.string.scanner_search_result_not_scanned)
-                else -> ""
+                VisitorTicketStatus.UNSPECIFIED -> stringResource(R.string.scanner_status_unknown)
             }
             val statusColor = when (ticket.status) {
                 VisitorTicketStatus.SCANNED -> AppColors.Info
                 VisitorTicketStatus.NOT_SCANNED -> AppColors.Success
-                else -> AppColors.TextMuted
+                VisitorTicketStatus.UNSPECIFIED -> AppColors.TextMuted
             }
             Text(
                 text = statusText,

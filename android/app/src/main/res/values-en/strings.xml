@@ -227,6 +227,7 @@
     <string name="scanner_button_search">Search ticket manually</string>
     <string name="scanner_search_result_not_scanned">Not scanned</string>
     <string name="scanner_search_result_scanned">Scanned</string>
+    <string name="scanner_status_unknown">Unknown</string>
     <string name="scanner_button_mark_scanned">Mark as scanned</string>
 
     <!-- Server Error Dialog -->

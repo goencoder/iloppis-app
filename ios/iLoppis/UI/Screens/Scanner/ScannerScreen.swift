@@ -327,17 +327,17 @@ struct ScannerScreen: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .foregroundColor(.white)
-                        .background(searchQuery.isEmpty ? AppColors.textMuted : AppColors.buttonPrimary)
+                        .background(searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? AppColors.textMuted : AppColors.buttonPrimary)
                         .cornerRadius(10)
                 }
                 .buttonStyle(.plain)
-                .disabled(searchQuery.isEmpty)
+                .disabled(searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
                 if viewModel.state.isSearching {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                 } else if let error = viewModel.state.searchError {
-                    Text(error)
+                    Text(String(format: NSLocalizedString("scanner_search_error", comment: ""), error))
                         .font(.footnote)
                         .foregroundColor(AppColors.error)
                 } else if !viewModel.state.searchResults.isEmpty {
@@ -490,7 +490,7 @@ struct ScannerScreen: View {
         case .issued:
             return NSLocalizedString("scanner_search_result_not_scanned", comment: "")
         case .unknown:
-            return "?"
+            return NSLocalizedString("scanner_status_unknown", comment: "")
         }
     }
 

@@ -236,6 +236,7 @@
     <string name="scanner_button_search">Sök biljett manuellt</string>
     <string name="scanner_search_result_not_scanned">Ej skannad</string>
     <string name="scanner_search_result_scanned">Skannad</string>
+    <string name="scanner_status_unknown">Okänd</string>
     <string name="scanner_button_mark_scanned">Markera som skannad</string>
 
     <!-- Server Error Dialog -->

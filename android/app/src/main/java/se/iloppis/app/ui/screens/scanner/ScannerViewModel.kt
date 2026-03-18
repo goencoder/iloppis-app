@@ -52,6 +52,8 @@ sealed class ScannerAction {
     data object ToggleErrorScans : ScannerAction()
     data object RequestTicketSearch : ScannerAction()
     data object DismissTicketSearch : ScannerAction()
+    data class UpdateTicketSearchQuery(val query: String) : ScannerAction()
+    data class UpdateTicketSearchType(val ticketTypeId: String?) : ScannerAction()
     data class SubmitTicketSearch(val query: String, val ticketTypeId: String?) : ScannerAction()
     data class SelectSearchResult(val ticket: VisitorTicket) : ScannerAction()
     data object DismissSearchDetail : ScannerAction()
@@ -129,6 +131,9 @@ data class ScannerUiState(
     val showErrorScans: Boolean = false,
     val ticketSearchVisible: Boolean = false,
     val isSearching: Boolean = false,
+    val searchQuery: String = "",
+    val selectedTicketTypeId: String? = null,
+    val hasSubmittedTicketSearch: Boolean = false,
     val searchResults: List<VisitorTicket> = emptyList(),
     val searchError: String? = null,
     val searchDetailTicket: VisitorTicket? = null,
@@ -216,10 +221,19 @@ class ScannerViewModel(
                 _uiState.value = _uiState.value.copy(
                     ticketSearchVisible = false,
                     isSearching = false,
+                    searchQuery = "",
+                    selectedTicketTypeId = null,
+                    hasSubmittedTicketSearch = false,
                     searchResults = emptyList(),
                     searchError = null
                 )
             }
+            is ScannerAction.UpdateTicketSearchQuery -> _uiState.value = _uiState.value.copy(
+                searchQuery = action.query
+            )
+            is ScannerAction.UpdateTicketSearchType -> _uiState.value = _uiState.value.copy(
+                selectedTicketTypeId = action.ticketTypeId
+            )
             is ScannerAction.SubmitTicketSearch -> handleTicketSearch(action.query, action.ticketTypeId)
             is ScannerAction.SelectSearchResult -> _uiState.value = _uiState.value.copy(
                 searchDetailTicket = action.ticket,
@@ -237,8 +251,6 @@ class ScannerViewModel(
         ticketTypesLoadJob?.cancel()
         _uiState.value = _uiState.value.copy(
             ticketSearchVisible = true,
-            searchResults = emptyList(),
-            searchError = null,
             ticketTypes = emptyList()
         )
         ticketTypesLoadJob = viewModelScope.launch(Dispatchers.IO) {
@@ -257,7 +269,12 @@ class ScannerViewModel(
         if (query.isBlank()) return
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSearching = true, searchError = null)
+            _uiState.value = _uiState.value.copy(
+                isSearching = true,
+                hasSubmittedTicketSearch = true,
+                searchResults = emptyList(),
+                searchError = null
+            )
             try {
                 // Resolve ticket type ID to name for the API filter
                 val ticketTypeName = ticketTypeId?.let {

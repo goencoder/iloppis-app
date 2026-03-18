@@ -27,7 +27,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -53,23 +52,20 @@ import se.iloppis.app.ui.theme.AppColors
 fun TicketSearchDialog(
     visible: Boolean,
     isSearching: Boolean,
+    query: String,
+    selectedTypeId: String?,
+    hasSubmittedSearch: Boolean,
     searchResults: List<VisitorTicket>,
     searchError: String?,
     ticketTypes: List<TicketTypeOption>,
     onDismiss: () -> Unit,
+    onQueryChange: (String) -> Unit,
+    onTicketTypeChange: (String?) -> Unit,
     onSearch: (query: String, ticketTypeId: String?) -> Unit,
     onSelectTicket: (VisitorTicket) -> Unit
 ) {
     if (!visible) return
-
-    var query by rememberSaveable { mutableStateOf("") }
-    var selectedTypeId by rememberSaveable { mutableStateOf<String?>(null) }
     var dropdownExpanded by rememberSaveable { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        query = ""
-        selectedTypeId = null
-    }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -98,7 +94,7 @@ fun TicketSearchDialog(
 
             OutlinedTextField(
                 value = query,
-                onValueChange = { query = it },
+                onValueChange = onQueryChange,
                 placeholder = { Text(stringResource(R.string.scanner_search_email_placeholder)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -128,7 +124,7 @@ fun TicketSearchDialog(
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.scanner_search_ticket_type_all)) },
                         onClick = {
-                            selectedTypeId = null
+                            onTicketTypeChange(null)
                             dropdownExpanded = false
                         }
                     )
@@ -136,7 +132,7 @@ fun TicketSearchDialog(
                         DropdownMenuItem(
                             text = { Text(type.name) },
                             onClick = {
-                                selectedTypeId = type.id
+                                onTicketTypeChange(type.id)
                                 dropdownExpanded = false
                             }
                         )
@@ -174,7 +170,7 @@ fun TicketSearchDialog(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-                searchResults.isEmpty() && query.isNotBlank() && !isSearching -> {
+                searchResults.isEmpty() && hasSubmittedSearch && !isSearching -> {
                     Text(
                         text = stringResource(R.string.scanner_search_no_results),
                         color = AppColors.TextSecondary,

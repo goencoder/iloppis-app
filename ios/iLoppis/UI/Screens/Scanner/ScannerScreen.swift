@@ -93,16 +93,6 @@ struct ScannerScreen: View {
         .onAppear {
             cameraState = CameraPermission.currentState()
         }
-        .onChange(of: viewModel.state.ticketSearchVisible) { isVisible in
-            if !isVisible && viewModel.state.searchDetailTicket == nil {
-                resetTicketSearchInputs()
-            }
-        }
-        .onChange(of: viewModel.state.searchDetailTicket?.id) { ticketId in
-            if ticketId == nil && !viewModel.state.ticketSearchVisible {
-                resetTicketSearchInputs()
-            }
-        }
         .sheet(isPresented: Binding(
             get: { viewModel.state.manualEntryVisible },
             set: { if !$0 { viewModel.onAction(.dismissManualEntry) } }
@@ -308,9 +298,6 @@ struct ScannerScreen: View {
         .padding(16)
     }
 
-    @State private var searchQuery: String = ""
-    @State private var selectedTicketTypeId: String? = nil
-
     private var ticketSearchSheet: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
@@ -318,13 +305,25 @@ struct ScannerScreen: View {
                     .font(.subheadline)
                     .foregroundColor(AppColors.textSecondary)
 
-                TextField(NSLocalizedString("scanner_search_email_placeholder", comment: ""), text: $searchQuery)
+                TextField(
+                    NSLocalizedString("scanner_search_email_placeholder", comment: ""),
+                    text: Binding(
+                        get: { viewModel.state.searchQuery },
+                        set: { viewModel.onAction(.updateTicketSearchQuery($0)) }
+                    )
+                )
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
 
                 if !viewModel.state.ticketTypes.isEmpty {
-                    Picker(NSLocalizedString("scanner_search_ticket_type_all", comment: ""), selection: $selectedTicketTypeId) {
+                    Picker(
+                        NSLocalizedString("scanner_search_ticket_type_all", comment: ""),
+                        selection: Binding(
+                            get: { viewModel.state.selectedTicketTypeId },
+                            set: { viewModel.onAction(.updateTicketSearchType($0)) }
+                        )
+                    ) {
                         Text(LocalizedStringKey("scanner_search_ticket_type_all")).tag(nil as String?)
                         ForEach(viewModel.state.ticketTypes) { type in
                             Text(type.name).tag(type.id as String?)
@@ -334,17 +333,26 @@ struct ScannerScreen: View {
                 }
 
                 Button {
-                    viewModel.onAction(.submitTicketSearch(query: searchQuery, ticketTypeId: selectedTicketTypeId))
+                    viewModel.onAction(
+                        .submitTicketSearch(
+                            query: viewModel.state.searchQuery,
+                            ticketTypeId: viewModel.state.selectedTicketTypeId
+                        )
+                    )
                 } label: {
                     Text(LocalizedStringKey("scanner_search_button"))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .foregroundColor(AppColors.dialogBackground)
-                        .background(searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? AppColors.textMuted : AppColors.buttonPrimary)
+                        .background(
+                            viewModel.state.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                ? AppColors.textMuted
+                                : AppColors.buttonPrimary
+                        )
                         .cornerRadius(10)
                 }
                 .buttonStyle(.plain)
-                .disabled(searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(viewModel.state.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
                 if viewModel.state.isSearching {
                     ProgressView()
@@ -363,7 +371,7 @@ struct ScannerScreen: View {
                         .listRowBackground(AppColors.cardBackground)
                     }
                     .listStyle(.plain)
-                } else if !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                } else if viewModel.state.hasSubmittedTicketSearch {
                     Text(LocalizedStringKey("scanner_search_no_results"))
                         .font(.footnote)
                         .foregroundColor(AppColors.textMuted)
@@ -490,11 +498,6 @@ struct ScannerScreen: View {
                 .font(.footnote.weight(.medium))
                 .foregroundColor(color ?? AppColors.textPrimary)
         }
-    }
-
-    private func resetTicketSearchInputs() {
-        searchQuery = ""
-        selectedTicketTypeId = nil
     }
 
     private func ticketValidityWindowText(_ ticket: VisitorTicket) -> String? {

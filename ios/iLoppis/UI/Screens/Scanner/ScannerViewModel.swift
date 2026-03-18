@@ -47,10 +47,20 @@ final class ScannerViewModel: ObservableObject {
         case .dismissTicketSearch:
             searchTask?.cancel()
             ticketTypesTask?.cancel()
+            shouldReopenSearchAfterDetailDismiss = false
             state.ticketSearchVisible = false
             state.isSearching = false
+            state.searchQuery = ""
+            state.selectedTicketTypeId = nil
+            state.hasSubmittedTicketSearch = false
             state.searchResults = []
             state.searchError = nil
+
+        case .updateTicketSearchQuery(let query):
+            state.searchQuery = query
+
+        case .updateTicketSearchType(let ticketTypeId):
+            state.selectedTicketTypeId = ticketTypeId
 
         case .submitTicketSearch(let query, let ticketTypeId):
             handleTicketSearch(query: query, ticketTypeId: ticketTypeId)
@@ -205,8 +215,6 @@ final class ScannerViewModel: ObservableObject {
     private func openTicketSearch() {
         ticketTypesTask?.cancel()
         state.ticketSearchVisible = true
-        state.searchResults = []
-        state.searchError = nil
         state.ticketTypes = []
         // Load ticket types
         ticketTypesTask = Task {
@@ -229,6 +237,8 @@ final class ScannerViewModel: ObservableObject {
         guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         searchTask?.cancel()
         state.isSearching = true
+        state.hasSubmittedTicketSearch = true
+        state.searchResults = []
         state.searchError = nil
 
         searchTask = Task {

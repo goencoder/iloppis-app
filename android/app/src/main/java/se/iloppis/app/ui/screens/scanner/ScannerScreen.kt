@@ -306,10 +306,15 @@ fun ScannerScreen(
     TicketSearchDialog(
         visible = uiState.ticketSearchVisible,
         isSearching = uiState.isSearching,
+        query = uiState.searchQuery,
+        selectedTypeId = uiState.selectedTicketTypeId,
+        hasSubmittedSearch = uiState.hasSubmittedTicketSearch,
         searchResults = uiState.searchResults,
         searchError = uiState.searchError,
         ticketTypes = uiState.ticketTypes,
         onDismiss = { viewModel.onAction(ScannerAction.DismissTicketSearch) },
+        onQueryChange = { query -> viewModel.onAction(ScannerAction.UpdateTicketSearchQuery(query)) },
+        onTicketTypeChange = { typeId -> viewModel.onAction(ScannerAction.UpdateTicketSearchType(typeId)) },
         onSearch = { query, typeId -> viewModel.onAction(ScannerAction.SubmitTicketSearch(query, typeId)) },
         onSelectTicket = { ticket -> viewModel.onAction(ScannerAction.SelectSearchResult(ticket)) }
     )

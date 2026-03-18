@@ -179,8 +179,8 @@ private fun buildValidWindowString(ticket: VisitorTicket): String? {
     val until = ticket.validUntil?.let { dateTimeFormatter.format(it) }
     return when {
         from != null && until != null -> "$from – $until"
-        from != null -> "$from –"
-        until != null -> "– $until"
+        from != null -> from
+        until != null -> until
         else -> null
     }
 }

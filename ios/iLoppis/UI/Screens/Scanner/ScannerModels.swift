@@ -73,6 +73,9 @@ struct ScannerState: Equatable {
 
     var ticketSearchVisible: Bool = false
     var isSearching: Bool = false
+    var searchQuery: String = ""
+    var selectedTicketTypeId: String? = nil
+    var hasSubmittedTicketSearch: Bool = false
     var searchResults: [VisitorTicket] = []
     var searchError: String? = nil
     var searchDetailTicket: VisitorTicket? = nil
@@ -87,6 +90,8 @@ enum ScannerAction {
     case dismissResult
     case requestTicketSearch
     case dismissTicketSearch
+    case updateTicketSearchQuery(String)
+    case updateTicketSearchType(String?)
     case submitTicketSearch(query: String, ticketTypeId: String?)
     case selectSearchResult(VisitorTicket)
     case dismissSearchDetail

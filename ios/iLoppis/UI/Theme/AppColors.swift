@@ -46,4 +46,7 @@ struct AppColors {
     static let buttonInfo = info
     static let buttonDanger = error
     static let swishBlue = Color(red: 0.0, green: 0.478, blue: 0.800) // #007ACC
+
+    // Surface / overlay helpers
+    static let navigatorOverlay = textPrimary
 }

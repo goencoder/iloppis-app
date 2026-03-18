@@ -62,7 +62,7 @@ struct ScannerScreen: View {
                             Text(LocalizedStringKey("scanner_button_grant_permission"))
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .foregroundColor(.white)
+                                .foregroundColor(AppColors.dialogBackground)
                                 .background(AppColors.buttonPrimary)
                                 .cornerRadius(10)
                         }
@@ -76,7 +76,7 @@ struct ScannerScreen: View {
                             Text(LocalizedStringKey("scanner_button_search"))
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .foregroundColor(.white)
+                                .foregroundColor(AppColors.dialogBackground)
                                 .background(AppColors.buttonPrimary)
                                 .cornerRadius(10)
                         }
@@ -92,6 +92,16 @@ struct ScannerScreen: View {
         .background(AppColors.background.ignoresSafeArea())
         .onAppear {
             cameraState = CameraPermission.currentState()
+        }
+        .onChange(of: viewModel.state.ticketSearchVisible) { isVisible in
+            if !isVisible && viewModel.state.searchDetailTicket == nil {
+                resetTicketSearchInputs()
+            }
+        }
+        .onChange(of: viewModel.state.searchDetailTicket?.id) { ticketId in
+            if ticketId == nil && !viewModel.state.ticketSearchVisible {
+                resetTicketSearchInputs()
+            }
         }
         .sheet(isPresented: Binding(
             get: { viewModel.state.manualEntryVisible },
@@ -143,10 +153,10 @@ struct ScannerScreen: View {
 
             if viewModel.state.isProcessing {
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.black.opacity(0.18))
+                    .fill(AppColors.navigatorOverlay.opacity(0.18))
 
                 ProgressView()
-                    .tint(.white)
+                    .tint(AppColors.dialogBackground)
                     .scaleEffect(1.2)
             }
         }
@@ -237,7 +247,7 @@ struct ScannerScreen: View {
                     Text(LocalizedStringKey("scanner_manual_confirm"))
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .foregroundColor(.white)
+                        .foregroundColor(AppColors.dialogBackground)
                         .background(AppColors.buttonPrimary)
                         .cornerRadius(10)
                 }
@@ -289,7 +299,7 @@ struct ScannerScreen: View {
                 Text(LocalizedStringKey("scanner_button_close_result"))
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .foregroundColor(.white)
+                    .foregroundColor(AppColors.dialogBackground)
                     .background(AppColors.buttonPrimary)
                     .cornerRadius(10)
             }
@@ -329,7 +339,7 @@ struct ScannerScreen: View {
                     Text(LocalizedStringKey("scanner_search_button"))
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .foregroundColor(.white)
+                        .foregroundColor(AppColors.dialogBackground)
                         .background(searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? AppColors.textMuted : AppColors.buttonPrimary)
                         .cornerRadius(10)
                 }
@@ -366,10 +376,6 @@ struct ScannerScreen: View {
             .padding(16)
             .navigationTitle(LocalizedStringKey("scanner_search_title"))
             .navigationBarTitleDisplayMode(.inline)
-        }
-        .onAppear {
-            searchQuery = ""
-            selectedTicketTypeId = nil
         }
     }
 
@@ -451,7 +457,7 @@ struct ScannerScreen: View {
                     Text(LocalizedStringKey("scanner_button_mark_scanned"))
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .foregroundColor(.white)
+                        .foregroundColor(AppColors.dialogBackground)
                         .background(AppColors.success)
                         .cornerRadius(10)
                 }
@@ -484,6 +490,11 @@ struct ScannerScreen: View {
                 .font(.footnote.weight(.medium))
                 .foregroundColor(color ?? AppColors.textPrimary)
         }
+    }
+
+    private func resetTicketSearchInputs() {
+        searchQuery = ""
+        selectedTicketTypeId = nil
     }
 
     private func ticketValidityWindowText(_ ticket: VisitorTicket) -> String? {
@@ -647,7 +658,7 @@ struct ScannerScreen: View {
                 Text(LocalizedStringKey("scanner_button_close_result"))
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .foregroundColor(.white)
+                    .foregroundColor(AppColors.dialogBackground)
                     .background(AppColors.buttonPrimary)
                     .cornerRadius(10)
             }

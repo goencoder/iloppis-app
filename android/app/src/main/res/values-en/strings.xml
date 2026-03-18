@@ -120,6 +120,7 @@
     <string name="live_stats_client_type_android">Android</string>
     <string name="live_stats_client_type_ios">iOS</string>
     <string name="live_stats_client_type_web">Web</string>
+    <string name="live_stats_client_type_cashier">Cashier</string>
     <string name="live_stats_client_type_unknown">Unknown device</string>
 
     <!-- Cashier Selection Screen -->

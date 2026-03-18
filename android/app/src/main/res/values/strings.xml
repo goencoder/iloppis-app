@@ -117,6 +117,7 @@
     <string name="live_stats_client_type_android">Android</string>
     <string name="live_stats_client_type_ios">iOS</string>
     <string name="live_stats_client_type_web">Webb</string>
+    <string name="live_stats_client_type_cashier">Kassa</string>
     <string name="live_stats_client_type_unknown">Okänd enhet</string>
 
     <!-- Code Entry Dialog -->

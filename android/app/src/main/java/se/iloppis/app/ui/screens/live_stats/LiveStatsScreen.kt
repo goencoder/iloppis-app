@@ -20,17 +20,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -85,8 +82,7 @@ private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", svLocale)
 fun LiveStatsScreen(
     event: Event,
     apiKey: String,
-    isActivePage: Boolean = true,
-    onClose: () -> Unit
+    isActivePage: Boolean = true
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel: LiveStatsViewModel = viewModel(
@@ -144,22 +140,6 @@ fun LiveStatsScreen(
                     event = event,
                     snapshot = snapshot,
                     errorKey = uiState.errorKey
-                )
-            }
-        }
-
-        Surface(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp),
-            shape = CircleShape,
-            color = AppColors.CardBackground.copy(alpha = 0.86f)
-        ) {
-            IconButton(onClick = onClose) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = stringResource(R.string.live_stats_close),
-                    tint = AppColors.TextSecondary
                 )
             }
         }
@@ -850,6 +830,7 @@ private fun clientTypeLabel(rawClientType: String?): String {
         normalized.contains("ANDROID") -> R.string.live_stats_client_type_android
         normalized.contains("IOS") -> R.string.live_stats_client_type_ios
         normalized.contains("WEB") -> R.string.live_stats_client_type_web
+        normalized.contains("CASHIER") || normalized.contains("KASSA") -> R.string.live_stats_client_type_cashier
         else -> R.string.live_stats_client_type_unknown
     }
     return stringResource(labelRes)

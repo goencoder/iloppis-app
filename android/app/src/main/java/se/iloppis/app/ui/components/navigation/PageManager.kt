@@ -85,8 +85,7 @@ fun PageManager() {
                     LiveStatsScreen(
                         event = page.event,
                         apiKey = page.apiKey,
-                        isActivePage = page == activePage,
-                        onClose = { screen.onAction(ScreenAction.NavigateHome) }
+                        isActivePage = page == activePage
                     )
                 }
             }

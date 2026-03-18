@@ -35,7 +35,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -151,13 +150,6 @@ fun ScannerScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (uiState.isProcessing) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = AppColors.Primary
-                )
-            }
-
             if (uiState.pendingCount > 0) {
                 OfflineBanner(pendingCount = uiState.pendingCount)
             }
@@ -244,16 +236,6 @@ fun ScannerScreen(
                     variant = AppButtonVariant.Primary
                 )
 
-                // Manual code entry is always available as fallback
-                AppButton(
-                    text = stringResource(R.string.scanner_button_manual_entry),
-                    onClick = { viewModel.onAction(ScannerAction.RequestManualEntry) },
-                    enabled = !uiState.isProcessing,
-                    modifier = Modifier.fillMaxWidth(),
-                    variant = AppButtonVariant.Outlined,
-                    contentColor = AppColors.Primary,
-                    borderColor = AppColors.Primary
-                )
             }
 
             // Total scans counter
@@ -427,6 +409,20 @@ private fun ScannerPreview(
                         color = AppColors.Success.copy(alpha = 0.75f)
                     )
                 }
+            }
+        }
+
+        if (uiState.isProcessing) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = AppColors.DialogBackground,
+                    trackColor = Color.Transparent
+                )
             }
         }
     }

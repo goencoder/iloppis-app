@@ -13,8 +13,8 @@ struct ScannerScreen: View {
 
     private static let ticketDetailDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "sv_SE")
-        formatter.dateFormat = "d MMM HH:mm"
+        formatter.locale = .autoupdatingCurrent
+        formatter.setLocalizedDateFormatFromTemplate("d MMM HH:mm")
         return formatter
     }()
 
@@ -82,17 +82,6 @@ struct ScannerScreen: View {
                         }
                         .buttonStyle(.plain)
 
-                        Button {
-                            viewModel.onAction(.requestManualEntry)
-                        } label: {
-                            Text(LocalizedStringKey("scanner_button_manual_entry"))
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .foregroundColor(AppColors.textPrimary)
-                                .background(AppColors.cardBackground)
-                                .cornerRadius(10)
-                        }
-                        .buttonStyle(.plain)
                     }
 
                     historySection
@@ -132,16 +121,6 @@ struct ScannerScreen: View {
             ticketDetailSheet(ticket)
                 .presentationDetents([.medium, .large])
         }
-        .overlay {
-            if viewModel.state.isProcessing {
-                ZStack {
-                    Color.black.opacity(0.3).ignoresSafeArea()
-                    ProgressView()
-                        .tint(.white)
-                        .scaleEffect(1.2)
-                }
-            }
-        }
     }
 
     private var header: some View {
@@ -159,7 +138,18 @@ struct ScannerScreen: View {
     }
 
     private var cameraSection: some View {
-        cameraPlaceholder
+        ZStack {
+            cameraPlaceholder
+
+            if viewModel.state.isProcessing {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color.black.opacity(0.18))
+
+                ProgressView()
+                    .tint(.white)
+                    .scaleEffect(1.2)
+            }
+        }
     }
 
     private var cameraPlaceholder: some View {
@@ -321,7 +311,7 @@ struct ScannerScreen: View {
                 TextField(NSLocalizedString("scanner_search_email_placeholder", comment: ""), text: $searchQuery)
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
-                    .keyboardType(.emailAddress)
+                    .disableAutocorrection(true)
 
                 if !viewModel.state.ticketTypes.isEmpty {
                     Picker(NSLocalizedString("scanner_search_ticket_type_all", comment: ""), selection: $selectedTicketTypeId) {

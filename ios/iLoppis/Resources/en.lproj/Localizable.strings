@@ -111,14 +111,13 @@
 "scanner_title" = "Ticket Scanner";
 "scanner_button_scan" = "Start scanning";
 "scanner_button_pause" = "Pause scanning";
-"scanner_button_manual_entry" = "Enter code manually";
 "scanner_button_enable_camera" = "Enable camera";
 "scanner_button_grant_permission" = "Grant camera permission";
 "scanner_permission_rationale" = "Camera is needed to scan QR codes on tickets.";
 "scanner_permission_needed" = "Enable camera to scan tickets";
 "scanner_tap_to_scan" = "Tap the button to start scanning";
 "scanner_scanning_active" = "Scanning…";
-"scanner_manual_hint" = "Camera not working? Use manual entry.";
+"scanner_manual_hint" = "Camera not working? Search for the ticket manually.";
 "scanner_preview_placeholder" = "Camera preview will appear here when the scanner is active.";
 "scanner_preview_icon" = "📷";
 "scanner_button_close_result" = "Close";
@@ -149,12 +148,12 @@
 "scanner_manual_error_event" = "This ticket does not belong to %@.";
 "scanner_manual_error_format" = "The code could not be parsed.";
 "scanner_manual_confirm" = "Verify";
-"scanner_camera_not_ready" = "Camera not ready yet. Use manual entry.";
+"scanner_camera_not_ready" = "Camera not ready yet. Search for the ticket manually.";
 
 /* Ticket search */
 "scanner_search_title" = "Search ticket";
-"scanner_search_description" = "Search by email address to find tickets.";
-"scanner_search_email_placeholder" = "Email address…";
+"scanner_search_description" = "Search by email address or ticket code to find tickets.";
+"scanner_search_email_placeholder" = "Email address/code...";
 "scanner_search_ticket_type_all" = "All ticket types";
 "scanner_search_button" = "Search";
 "scanner_search_no_results" = "No tickets found.";

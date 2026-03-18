@@ -154,7 +154,6 @@
     <string name="scanner_title">Ticket scanner</string>
     <string name="scanner_button_scan">Start scanning</string>
     <string name="scanner_button_pause">Pause scanning</string>
-    <string name="scanner_button_manual_entry">Enter code manually</string>
     <string name="scanner_button_enable_camera">Enable camera</string>
     <string name="scanner_button_grant_permission">Grant camera permission</string>
     <string name="scanner_permission_rationale">Camera is needed to scan QR codes on tickets.</string>
@@ -218,8 +217,8 @@
 
     <!-- Ticket search dialog -->
     <string name="scanner_search_title">Search ticket</string>
-    <string name="scanner_search_description">Search by email address to find tickets.</string>
-    <string name="scanner_search_email_placeholder">Email address…</string>
+    <string name="scanner_search_description">Search by email address or ticket code to find tickets.</string>
+    <string name="scanner_search_email_placeholder">Email address/code...</string>
     <string name="scanner_search_ticket_type_all">All ticket types</string>
     <string name="scanner_search_button">Search</string>
     <string name="scanner_search_no_results">No tickets found.</string>

@@ -161,6 +161,7 @@ class ScannerViewModel(
     private val groupManager = GroupScanManager()
     private val recentScanIds = ArrayDeque<String>(RECENT_SCAN_BUFFER)
     private var searchJob: Job? = null
+    private var ticketTypesLoadJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         ScannerUiState(
@@ -211,6 +212,7 @@ class ScannerViewModel(
             is ScannerAction.RequestTicketSearch -> openTicketSearch()
             is ScannerAction.DismissTicketSearch -> {
                 searchJob?.cancel()
+                ticketTypesLoadJob?.cancel()
                 _uiState.value = _uiState.value.copy(
                     ticketSearchVisible = false,
                     isSearching = false,
@@ -232,15 +234,21 @@ class ScannerViewModel(
     }
 
     private fun openTicketSearch() {
-        viewModelScope.launch(Dispatchers.IO) {
+        ticketTypesLoadJob?.cancel()
+        _uiState.value = _uiState.value.copy(
+            ticketSearchVisible = true,
+            searchResults = emptyList(),
+            searchError = null,
+            ticketTypes = emptyList()
+        )
+        ticketTypesLoadJob = viewModelScope.launch(Dispatchers.IO) {
             val types = se.iloppis.app.data.TicketTypeRepository.getAllTypes()
                 .map { TicketTypeOption(id = it.first, name = it.second) }
-            _uiState.value = _uiState.value.copy(
-                ticketSearchVisible = true,
-                searchResults = emptyList(),
-                searchError = null,
-                ticketTypes = types
-            )
+            withContext(Dispatchers.Main) {
+                if (_uiState.value.ticketSearchVisible) {
+                    _uiState.value = _uiState.value.copy(ticketTypes = types)
+                }
+            }
         }
     }
 
@@ -281,7 +289,7 @@ class ScannerViewModel(
                 Log.e(TAG, "Ticket search failed", e)
                 _uiState.value = _uiState.value.copy(
                     isSearching = false,
-                    searchError = e.message
+                    searchError = e.message ?: e.localizedMessage ?: e.toString()
                 )
             }
         }

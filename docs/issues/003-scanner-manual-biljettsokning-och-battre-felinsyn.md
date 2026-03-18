@@ -125,8 +125,8 @@ Det saknas alltså ett arbetsflöde för:
 
 Utvecklaren ska uttryckligen följa:
 
-- `/Users/goranengdahl/GolandProjects/iloppis-app/AGENTS.md`
-- `/Users/goranengdahl/GolandProjects/iloppis-app/.github/copilot-instructions.md`
+- `AGENTS.md`
+- `.github/copilot-instructions.md`
 
 Detta innebär bland annat:
 
@@ -334,7 +334,7 @@ Scenario:
 - [ ] Nytt manuellt sökflöde implementerat.
 - [ ] Detaljvyn stöder entréåtgärd från sök/felresultat.
 - [ ] Android och iOS är funktionellt paritetsjusterade.
-- [ ] Implementationen följer uttryckligen reglerna i `/Users/goranengdahl/GolandProjects/iloppis-app/AGENTS.md` och `/Users/goranengdahl/GolandProjects/iloppis-app/.github/copilot-instructions.md`.
+- [ ] Implementationen följer uttryckligen reglerna i `AGENTS.md` och `.github/copilot-instructions.md`.
 - [ ] Inga hårdkodade färger eller hårdkodad användartext har introducerats; `AppColors` och lokaliserade strängresurser används.
 - [ ] Nytt UI-testfall implementerat för respektive plattform eller testlager där det hör hemma.
 - [ ] Nytt UI-testfall kört och grönt.

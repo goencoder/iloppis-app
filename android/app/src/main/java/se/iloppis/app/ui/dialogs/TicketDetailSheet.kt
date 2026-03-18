@@ -34,7 +34,7 @@ private val dateTimeFormatter = DateTimeFormatter.ofPattern("d MMM HH:mm", svLoc
 
 /**
  * Bottom sheet showing ticket details with an optional "Mark as scanned" action.
- * Used by both search results and error history detail views.
+ * Used by the manual ticket search flow.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

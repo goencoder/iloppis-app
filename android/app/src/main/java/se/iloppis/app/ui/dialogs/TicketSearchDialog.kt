@@ -46,7 +46,7 @@ import se.iloppis.app.ui.screens.scanner.TicketTypeOption
 import se.iloppis.app.ui.theme.AppColors
 
 /**
- * Bottom sheet for searching visitor tickets by email and ticket type.
+ * Bottom sheet for searching visitor tickets by email or ticket code, optionally filtered by ticket type.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,12 +62,12 @@ fun TicketSearchDialog(
 ) {
     if (!visible) return
 
-    var emailQuery by rememberSaveable { mutableStateOf("") }
+    var query by rememberSaveable { mutableStateOf("") }
     var selectedTypeId by rememberSaveable { mutableStateOf<String?>(null) }
     var dropdownExpanded by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        emailQuery = ""
+        query = ""
         selectedTypeId = null
     }
 
@@ -97,8 +97,8 @@ fun TicketSearchDialog(
             )
 
             OutlinedTextField(
-                value = emailQuery,
-                onValueChange = { emailQuery = it },
+                value = query,
+                onValueChange = { query = it },
                 placeholder = { Text(stringResource(R.string.scanner_search_email_placeholder)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -146,8 +146,8 @@ fun TicketSearchDialog(
 
             AppButton(
                 text = stringResource(R.string.scanner_search_button),
-                onClick = { onSearch(emailQuery, selectedTypeId) },
-                enabled = emailQuery.trim().isNotEmpty() && !isSearching,
+                onClick = { onSearch(query, selectedTypeId) },
+                enabled = query.trim().isNotEmpty() && !isSearching,
                 variant = AppButtonVariant.Primary,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -174,7 +174,7 @@ fun TicketSearchDialog(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-                searchResults.isEmpty() && emailQuery.isNotBlank() && !isSearching -> {
+                searchResults.isEmpty() && query.isNotBlank() && !isSearching -> {
                     Text(
                         text = stringResource(R.string.scanner_search_no_results),
                         color = AppColors.TextSecondary,

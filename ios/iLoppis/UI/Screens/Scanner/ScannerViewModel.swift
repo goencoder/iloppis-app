@@ -12,6 +12,7 @@ final class ScannerViewModel: ObservableObject {
     private let recentScanBuffer = 50
     private var recentScanIds: [String] = []
     private var searchTask: Task<Void, Never>?
+    private var shouldReopenSearchAfterDetailDismiss = false
 
     init(eventId: String, eventName: String, apiKey: String, apiClient: ApiClient = ApiClient()) {
         self.eventId = eventId
@@ -53,12 +54,14 @@ final class ScannerViewModel: ObservableObject {
             handleTicketSearch(query: query, ticketTypeId: ticketTypeId)
 
         case .selectSearchResult(let ticket):
+            shouldReopenSearchAfterDetailDismiss = true
             state.searchDetailTicket = ticket
             state.ticketSearchVisible = false
 
         case .dismissSearchDetail:
             state.searchDetailTicket = nil
-            state.ticketSearchVisible = true
+            state.ticketSearchVisible = shouldReopenSearchAfterDetailDismiss
+            shouldReopenSearchAfterDetailDismiss = false
 
         case .scanFromDetail(let ticketId):
             performScanFromDetail(ticketId: ticketId)
@@ -254,6 +257,7 @@ final class ScannerViewModel: ObservableObject {
     private func performScanFromDetail(ticketId: String) {
         guard !state.isProcessing else { return }
         state.isProcessing = true
+        shouldReopenSearchAfterDetailDismiss = false
 
         Task {
             defer { state.isProcessing = false }

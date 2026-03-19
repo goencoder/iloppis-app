@@ -10,6 +10,20 @@ struct VisitorTicket: Identifiable, Equatable {
     let validFrom: String?
     let validUntil: String?
     let scannedAt: String?
+
+    func withTicketType(_ ticketType: String?) -> VisitorTicket {
+        VisitorTicket(
+            id: id,
+            eventId: eventId,
+            ticketType: ticketType,
+            email: email,
+            status: status,
+            issuedAt: issuedAt,
+            validFrom: validFrom,
+            validUntil: validUntil,
+            scannedAt: scannedAt
+        )
+    }
 }
 
 enum VisitorTicketStatus: Equatable {

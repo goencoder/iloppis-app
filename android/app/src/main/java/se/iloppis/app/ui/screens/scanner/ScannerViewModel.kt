@@ -601,11 +601,14 @@ class ScannerViewModel(
     private suspend fun loadScanHistory() = withContext(Dispatchers.IO) {
         val scans = CommittedScansStore.getRecentScansForEvent(eventId, HISTORY_PAGE_SIZE)
         val history = scans.map { scan ->
+            val ticketType = scan.ticketType?.let {
+                se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
+            }
             val ticket = if (scan.ticketType != null || scan.email != null) {
                 VisitorTicket(
                     id = scan.ticketId,
                     eventId = scan.eventId,
-                    ticketType = scan.ticketType,
+                    ticketType = ticketType,
                     email = scan.email,
                     status = VisitorTicketStatus.SCANNED,
                     issuedAt = null,
@@ -652,11 +655,14 @@ class ScannerViewModel(
             val currentSize = _uiState.value.history.size
             val scans = CommittedScansStore.getRecentScansForEvent(eventId, currentSize + HISTORY_PAGE_SIZE)
             val history = scans.map { scan ->
+                val ticketType = scan.ticketType?.let {
+                    se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
+                }
                 val ticket = if (scan.ticketType != null || scan.email != null) {
                     VisitorTicket(
                         id = scan.ticketId,
                         eventId = scan.eventId,
-                        ticketType = scan.ticketType,
+                        ticketType = ticketType,
                         email = scan.email,
                         status = VisitorTicketStatus.SCANNED,
                         issuedAt = null,
@@ -724,8 +730,10 @@ class ScannerViewModel(
         if (forceRefresh || !repository.isInitialized()) {
             repository.refresh(eventId, apiKey)
         }
-        return repository.getAllTypes()
+        val options = repository.getAllTypes()
             .map { TicketTypeOption(id = it.first, name = it.second) }
+        normalizeVisibleTickets()
+        return options
     }
 
     private suspend fun resolveTicketTypeName(ticket: VisitorTicket): VisitorTicket {
@@ -733,6 +741,41 @@ class ScannerViewModel(
             se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
         }
         return ticket.copy(ticketType = typeName)
+    }
+
+    private suspend fun normalizeVisibleTickets() {
+        val normalizedActiveResult = _uiState.value.activeResult?.let { normalizeScanResult(it) }
+        val normalizedTicketDetailsResult = _uiState.value.ticketDetailsResult?.let { normalizeScanResult(it) }
+        val normalizedHistory = _uiState.value.history.map { normalizeScanResult(it) }
+        val normalizedCurrentGroup = _uiState.value.currentGroup.map { normalizeScanResult(it) }
+        val normalizedSearchResults = _uiState.value.searchResults.map { resolveTicketTypeName(it) }
+        val normalizedSearchDetailTicket = _uiState.value.searchDetailTicket?.let { resolveTicketTypeName(it) }
+        val normalizedGroupTicketType = normalizedCurrentGroup
+            .firstNotNullOfOrNull { it.ticket?.ticketType }
+
+        groupManager.restoreGroup(
+            email = _uiState.value.currentGroupEmail,
+            ticketType = normalizedGroupTicketType,
+            scans = normalizedCurrentGroup
+        )
+
+        withContext(Dispatchers.Main) {
+            _uiState.value = _uiState.value.copy(
+                activeResult = normalizedActiveResult,
+                ticketDetailsResult = normalizedTicketDetailsResult,
+                history = normalizedHistory,
+                currentGroup = normalizedCurrentGroup,
+                currentGroupTicketType = normalizedGroupTicketType,
+                searchResults = normalizedSearchResults,
+                searchDetailTicket = normalizedSearchDetailTicket
+            )
+            updateGroupedHistory()
+        }
+    }
+
+    private suspend fun normalizeScanResult(result: ScanResult): ScanResult {
+        val normalizedTicket = result.ticket?.let { resolveTicketTypeName(it) }
+        return result.copy(ticket = normalizedTicket)
     }
 
     private fun showInvalidScanResult(messageResId: Int, vararg formatArgs: Any) {

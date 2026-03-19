@@ -45,6 +45,16 @@ class GroupScanManager {
         }
         currentScans.add(result)
     }
+
+    /**
+     * Replaces the in-memory group state after view-model level normalization.
+     */
+    fun restoreGroup(email: String?, ticketType: String?, scans: List<ScanResult>) {
+        currentEmail = email
+        currentTicketType = ticketType
+        currentScans.clear()
+        currentScans.addAll(scans)
+    }
     
     /**
      * Removes scan from current group.

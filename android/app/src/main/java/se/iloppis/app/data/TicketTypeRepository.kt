@@ -9,6 +9,7 @@ import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.tickets.TicketsAPI
 
 private const val TAG = "TicketTypeRepository"
+private val UUID_PATTERN = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 /**
  * Global singleton for ticket type name resolution.
@@ -47,9 +48,9 @@ object TicketTypeRepository {
      * Resolve ticket type UUID to display name.
      * Returns the UUID if not found (graceful degradation).
      */
-    suspend fun resolveTypeName(ticketTypeId: String): String {
+    suspend fun resolveTypeName(ticketTypeId: String): String? {
         return mutex.withLock {
-            ticketTypeMap[ticketTypeId] ?: ticketTypeId
+            ticketTypeMap[ticketTypeId] ?: ticketTypeId.takeUnless(::looksLikeOpaqueTypeId)
         }
     }
 
@@ -70,4 +71,6 @@ object TicketTypeRepository {
             ticketTypeMap.entries.map { it.key to it.value }
         }
     }
+
+    private fun looksLikeOpaqueTypeId(value: String): Boolean = UUID_PATTERN.matches(value)
 }

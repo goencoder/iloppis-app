@@ -14,12 +14,16 @@ final class ScannerViewModel: ObservableObject {
     private var searchTask: Task<Void, Never>?
     private var ticketTypesTask: Task<Void, Never>?
     private var shouldReopenSearchAfterDetailDismiss = false
+    private var ticketTypeNamesById: [String: String] = [:]
 
     init(eventId: String, eventName: String, apiKey: String, apiClient: ApiClient = ApiClient()) {
         self.eventId = eventId
         self.apiKey = apiKey
         self.apiClient = apiClient
         self.state = ScannerState(eventName: eventName)
+        ticketTypesTask = Task { [weak self] in
+            await self?.loadTicketTypes(publishOptions: false)
+        }
     }
 
     deinit {
@@ -82,7 +86,9 @@ final class ScannerViewModel: ObservableObject {
                     apiKey: apiKey,
                     ticketId: ticketId
                 )
-                let ticket = response.ticket.map { VisitorTicketMapper.toDomain($0) }
+                let ticket = response.ticket
+                    .map { VisitorTicketMapper.toDomain($0) }
+                    .map(normalizeTicket)
                 rememberTicket(ticketId)
                 registerResult(ScanResult(ticket: ticket, status: .success))
             } catch let apiError as ApiError {
@@ -128,7 +134,9 @@ final class ScannerViewModel: ObservableObject {
                 apiKey: apiKey,
                 ticketId: ticketId
             )
-            return response.ticket.map { VisitorTicketMapper.toDomain($0) }
+            return response.ticket
+                .map { VisitorTicketMapper.toDomain($0) }
+                .map(normalizeTicket)
         } catch {
             return nil
         }
@@ -161,21 +169,9 @@ final class ScannerViewModel: ObservableObject {
     private func openTicketSearch() {
         ticketTypesTask?.cancel()
         state.ticketSearchVisible = true
-        state.ticketTypes = []
-        // Load ticket types
-        ticketTypesTask = Task {
-            do {
-                let response = try await apiClient.listTicketTypes(
-                    eventId: eventId,
-                    apiKey: apiKey
-                )
-                guard !Task.isCancelled, state.ticketSearchVisible else { return }
-                state.ticketTypes = response.types.map {
-                    TicketTypeOption(id: $0.id, name: $0.type)
-                }
-            } catch {
-                // Non-critical: picker just won't show
-            }
+        state.ticketTypes = ticketTypeOptions()
+        ticketTypesTask = Task { [weak self] in
+            await self?.loadTicketTypes(publishOptions: true)
         }
     }
 
@@ -206,7 +202,9 @@ final class ScannerViewModel: ObservableObject {
                     filter: filter
                 )
                 guard !Task.isCancelled else { return }
-                let tickets = (response.tickets ?? []).map { VisitorTicketMapper.toDomain($0) }
+                let tickets = (response.tickets ?? [])
+                    .map { VisitorTicketMapper.toDomain($0) }
+                    .map(normalizeTicket)
                 state.searchResults = tickets
             } catch {
                 guard !Task.isCancelled else { return }
@@ -228,7 +226,9 @@ final class ScannerViewModel: ObservableObject {
                     apiKey: apiKey,
                     ticketId: ticketId
                 )
-                let ticket = response.ticket.map { VisitorTicketMapper.toDomain($0) }
+                let ticket = response.ticket
+                    .map { VisitorTicketMapper.toDomain($0) }
+                    .map(normalizeTicket)
                 state.searchDetailTicket = nil
                 state.ticketSearchVisible = false
                 rememberTicket(ticketId)
@@ -243,5 +243,70 @@ final class ScannerViewModel: ObservableObject {
                 registerResult(ScanResult(ticket: nil, status: .error, message: error.localizedDescription))
             }
         }
+    }
+
+    private func loadTicketTypes(publishOptions: Bool) async {
+        do {
+            let response = try await apiClient.listTicketTypes(
+                eventId: eventId,
+                apiKey: apiKey
+            )
+            guard !Task.isCancelled else { return }
+
+            ticketTypeNamesById = response.types.reduce(into: [:]) { result, type in
+                result[type.id] = type.type
+            }
+
+            if publishOptions && state.ticketSearchVisible {
+                state.ticketTypes = ticketTypeOptions()
+            }
+
+            normalizeVisibleTickets()
+        } catch {
+            // Non-critical: ticket type labels degrade gracefully.
+        }
+    }
+
+    private func ticketTypeOptions() -> [TicketTypeOption] {
+        ticketTypeNamesById
+            .map { TicketTypeOption(id: $0.key, name: $0.value) }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    private func normalizeVisibleTickets() {
+        state.activeResult = state.activeResult.map { result in
+            ScanResult(
+                id: result.id,
+                ticket: result.ticket.map(normalizeTicket),
+                status: result.status,
+                timestamp: result.timestamp,
+                message: result.message,
+                offline: result.offline
+            )
+        }
+        state.history = state.history.map { result in
+            ScanResult(
+                id: result.id,
+                ticket: result.ticket.map(normalizeTicket),
+                status: result.status,
+                timestamp: result.timestamp,
+                message: result.message,
+                offline: result.offline
+            )
+        }
+        state.searchResults = state.searchResults.map(normalizeTicket)
+        state.searchDetailTicket = state.searchDetailTicket.map(normalizeTicket)
+    }
+
+    private func normalizeTicket(_ ticket: VisitorTicket) -> VisitorTicket {
+        ticket.withTicketType(displayTicketType(ticket.ticketType))
+    }
+
+    private func displayTicketType(_ raw: String?) -> String? {
+        guard let raw, !raw.isEmpty else { return nil }
+        if let resolved = ticketTypeNamesById[raw], !resolved.isEmpty {
+            return resolved
+        }
+        return UUID(uuidString: raw) == nil ? raw : nil
     }
 }

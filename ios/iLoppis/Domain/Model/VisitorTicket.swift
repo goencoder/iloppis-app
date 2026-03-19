@@ -10,6 +10,20 @@ struct VisitorTicket: Identifiable, Equatable {
     let validFrom: String?
     let validUntil: String?
     let scannedAt: String?
+
+    func withTicketType(_ ticketType: String?) -> VisitorTicket {
+        VisitorTicket(
+            id: id,
+            eventId: eventId,
+            ticketType: ticketType,
+            email: email,
+            status: status,
+            issuedAt: issuedAt,
+            validFrom: validFrom,
+            validUntil: validUntil,
+            scannedAt: scannedAt
+        )
+    }
 }
 
 enum VisitorTicketStatus: Equatable {
@@ -19,9 +33,9 @@ enum VisitorTicketStatus: Equatable {
 
     init(raw: String?) {
         switch (raw ?? "").uppercased() {
-        case "SCANNED":
+        case "SCANNED", "TICKET_STATUS_SCANNED":
             self = .scanned
-        case "ISSUED":
+        case "ISSUED", "TICKET_STATUS_NOT_SCANNED":
             self = .issued
         default:
             self = .unknown(raw ?? "")

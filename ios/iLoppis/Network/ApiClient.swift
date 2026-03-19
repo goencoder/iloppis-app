@@ -189,6 +189,35 @@ struct ApiClient {
         )
     }
 
+    func filterVisitorTickets(
+        eventId: String,
+        apiKey: String,
+        filter: VisitorTicketFilterDto
+    ) async throws -> FilterVisitorTicketsResponse {
+        let body = FilterVisitorTicketsRequestBody(
+            filter: filter,
+            pagination: PaginationDto(pageSize: 50)
+        )
+        return try await request(
+            path: "v1/events/\(eventId)/visitor_tickets:filter",
+            method: .post,
+            authorization: "Bearer \(apiKey)",
+            body: body
+        )
+    }
+
+    func listTicketTypes(
+        eventId: String,
+        apiKey: String
+    ) async throws -> ListTicketTypesResponse {
+        return try await request(
+            path: "v1/events/\(eventId)/ticket_types",
+            method: .get,
+            authorization: "Bearer \(apiKey)",
+            body: Optional<EmptyBody>.none
+        )
+    }
+
     // MARK: - Core request
 
     private func request<Response: Decodable, Body: Encodable>(
@@ -777,4 +806,36 @@ struct ScanVisitorTicketResponse: Codable {
 
 struct GetVisitorTicketResponse: Codable {
     let ticket: VisitorTicketDto?
+}
+
+struct VisitorTicketFilterDto: Codable {
+    let email: String?
+    let ticketType: String?
+    let status: String?
+    let freeText: String?
+}
+
+struct PaginationDto: Codable {
+    let pageSize: Int?
+}
+
+struct FilterVisitorTicketsRequestBody: Codable {
+    let filter: VisitorTicketFilterDto?
+    let pagination: PaginationDto?
+}
+
+struct FilterVisitorTicketsResponse: Codable {
+    let tickets: [VisitorTicketDto]?
+    let nextPageToken: String?
+    let prevPageToken: String?
+    let total: Int?
+}
+
+struct TicketTypeDto: Codable {
+    let id: String
+    let type: String
+}
+
+struct ListTicketTypesResponse: Codable {
+    let types: [TicketTypeDto]
 }

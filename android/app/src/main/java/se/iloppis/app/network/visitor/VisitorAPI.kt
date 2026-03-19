@@ -31,4 +31,14 @@ interface VisitorAPI : ILoppisApiInterface {
         @Path("event_id") eventId: String,
         @Path("ticket_id") ticketId: String
     ) : VisitorTicketResponse
+
+    /**
+     * Filters visitor tickets by email, ticket type, status, or free text.
+     */
+    @POST("v1/events/{event_id}/visitor_tickets:filter")
+    suspend fun filterTickets(
+        @Header("Authorization") authorization: String,
+        @Path("event_id") eventId: String,
+        @Body body: FilterVisitorTicketsRequest
+    ) : FilterVisitorTicketsResponse
 }

@@ -3,7 +3,9 @@ package se.iloppis.app.ui.screens.scanner
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,7 @@ import se.iloppis.app.domain.model.VisitorTicketStatus
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.visitor.VisitorAPI
+import se.iloppis.app.R
 import java.io.IOException
 import java.time.Instant
 import java.util.ArrayDeque
@@ -36,10 +39,7 @@ private const val SCAN_TIMEOUT_MS = 5000L
  * Sealed actions that the scanner screen can trigger.
  */
 sealed class ScannerAction {
-    data object RequestManualEntry : ScannerAction()
-    data object DismissManualEntry : ScannerAction()
     data class SubmitCode(val code: String) : ScannerAction()
-    data object ClearManualError : ScannerAction()
     data object DismissResult : ScannerAction()
     data class ShowTicketDetails(val result: ScanResult) : ScannerAction()
     data object DismissTicketDetails : ScannerAction()
@@ -48,15 +48,14 @@ sealed class ScannerAction {
     data class RemoveFromGroup(val ticketId: String) : ScannerAction()
     data object LoadMoreHistory : ScannerAction()
     data object ToggleErrorScans : ScannerAction()
-}
-
-/**
- * Local error reasons for manual code entry.
- */
-enum class ManualEntryError {
-    EMPTY_INPUT,
-    WRONG_EVENT,
-    INVALID_FORMAT
+    data object RequestTicketSearch : ScannerAction()
+    data object DismissTicketSearch : ScannerAction()
+    data class UpdateTicketSearchQuery(val query: String) : ScannerAction()
+    data class UpdateTicketSearchType(val ticketTypeId: String?) : ScannerAction()
+    data class SubmitTicketSearch(val query: String, val ticketTypeId: String?) : ScannerAction()
+    data class SelectSearchResult(val ticket: VisitorTicket) : ScannerAction()
+    data object DismissSearchDetail : ScannerAction()
+    data class ScanFromDetail(val ticketId: String) : ScannerAction()
 }
 
 /**
@@ -91,13 +90,19 @@ data class PendingScan(
 )
 
 /**
+ * A ticket type entry for the search dropdown.
+ */
+data class TicketTypeOption(
+    val id: String,
+    val name: String
+)
+
+/**
  * Complete UI state for the scanner screen.
  */
 data class ScannerUiState(
     val eventName: String,
     val isProcessing: Boolean = false,
-    val manualEntryVisible: Boolean = false,
-    val manualEntryError: ManualEntryError? = null,
     val activeResult: ScanResult? = null,
     val history: List<ScanResult> = emptyList(),
     val groupedHistory: List<HistoryItem> = emptyList(),
@@ -110,7 +115,16 @@ data class ScannerUiState(
     val currentGroupEmail: String? = null,
     val currentGroupTicketType: String? = null,
     val isGroupExpanded: Boolean = false,
-    val showErrorScans: Boolean = false
+    val showErrorScans: Boolean = false,
+    val ticketSearchVisible: Boolean = false,
+    val isSearching: Boolean = false,
+    val searchQuery: String = "",
+    val selectedTicketTypeId: String? = null,
+    val hasSubmittedTicketSearch: Boolean = false,
+    val searchResults: List<VisitorTicket> = emptyList(),
+    val searchError: String? = null,
+    val searchDetailTicket: VisitorTicket? = null,
+    val ticketTypes: List<TicketTypeOption> = emptyList()
 ) {
     val pendingCount: Int get() = pendingScans.size
     val currentGroupCount: Int get() = currentGroup.size
@@ -138,6 +152,8 @@ class ScannerViewModel(
     private val visitorTicketApi: VisitorAPI = ILoppisClient(clientConfig()).create()
     private val groupManager = GroupScanManager()
     private val recentScanIds = ArrayDeque<String>(RECENT_SCAN_BUFFER)
+    private var searchJob: Job? = null
+    private var ticketTypesLoadJob: Job? = null
 
     private val _uiState = MutableStateFlow(
         ScannerUiState(
@@ -155,21 +171,14 @@ class ScannerViewModel(
         se.iloppis.app.data.EventStoreManager.initializeForEvent(context, eventId)
 
         loadInitialData()
-        // Ticket type name resolution
-        viewModelScope.launch(Dispatchers.IO) {
-            se.iloppis.app.data.TicketTypeRepository.refresh(eventId, apiKey)
+        ticketTypesLoadJob = viewModelScope.launch(Dispatchers.IO) {
+            loadTicketTypeOptions(forceRefresh = true)
         }
     }
 
     fun onAction(action: ScannerAction) {
         when (action) {
-            is ScannerAction.RequestManualEntry -> _uiState.value = _uiState.value.copy(manualEntryVisible = true)
-            is ScannerAction.DismissManualEntry -> _uiState.value = _uiState.value.copy(
-                manualEntryVisible = false,
-                manualEntryError = null
-            )
             is ScannerAction.SubmitCode -> handleCodeSubmission(action.code)
-            is ScannerAction.ClearManualError -> _uiState.value = _uiState.value.copy(manualEntryError = null)
             is ScannerAction.DismissResult -> _uiState.value = _uiState.value.copy(activeResult = null)
             is ScannerAction.ShowTicketDetails -> _uiState.value = _uiState.value.copy(ticketDetailsResult = action.result)
             is ScannerAction.DismissTicketDetails -> _uiState.value = _uiState.value.copy(ticketDetailsResult = null)
@@ -185,6 +194,126 @@ class ScannerViewModel(
                 // Re-filter history
                 updateGroupedHistory()
             }
+            is ScannerAction.RequestTicketSearch -> openTicketSearch()
+            is ScannerAction.DismissTicketSearch -> {
+                searchJob?.cancel()
+                ticketTypesLoadJob?.cancel()
+                _uiState.value = _uiState.value.copy(
+                    ticketSearchVisible = false,
+                    isSearching = false,
+                    searchQuery = "",
+                    selectedTicketTypeId = null,
+                    hasSubmittedTicketSearch = false,
+                    searchResults = emptyList(),
+                    searchError = null
+                )
+            }
+            is ScannerAction.UpdateTicketSearchQuery -> _uiState.value = _uiState.value.copy(
+                searchQuery = action.query
+            )
+            is ScannerAction.UpdateTicketSearchType -> _uiState.value = _uiState.value.copy(
+                selectedTicketTypeId = action.ticketTypeId
+            )
+            is ScannerAction.SubmitTicketSearch -> handleTicketSearch(action.query, action.ticketTypeId)
+            is ScannerAction.SelectSearchResult -> _uiState.value = _uiState.value.copy(
+                searchDetailTicket = action.ticket,
+                ticketSearchVisible = false
+            )
+            is ScannerAction.DismissSearchDetail -> _uiState.value = _uiState.value.copy(
+                searchDetailTicket = null,
+                ticketSearchVisible = true
+            )
+            is ScannerAction.ScanFromDetail -> performScanFromDetail(action.ticketId)
+        }
+    }
+
+    private fun openTicketSearch() {
+        ticketTypesLoadJob?.cancel()
+        _uiState.value = _uiState.value.copy(
+            ticketSearchVisible = true,
+            ticketTypes = emptyList()
+        )
+        ticketTypesLoadJob = viewModelScope.launch(Dispatchers.IO) {
+            val types = loadTicketTypeOptions()
+            withContext(Dispatchers.Main) {
+                if (_uiState.value.ticketSearchVisible) {
+                    _uiState.value = _uiState.value.copy(ticketTypes = types)
+                }
+            }
+        }
+    }
+
+    private fun handleTicketSearch(query: String, ticketTypeId: String?) {
+        if (query.isBlank()) return
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isSearching = true,
+                hasSubmittedTicketSearch = true,
+                searchResults = emptyList(),
+                searchError = null
+            )
+            try {
+                val ticketTypeName = _uiState.value.ticketTypes
+                    .firstOrNull { it.id == ticketTypeId }
+                    ?.name
+                val filter = se.iloppis.app.network.visitor.VisitorTicketFilter(
+                    freeText = query.trim(),
+                    ticketType = ticketTypeName,
+                    status = null
+                )
+                val request = se.iloppis.app.network.visitor.FilterVisitorTicketsRequest(
+                    filter = filter,
+                    pagination = se.iloppis.app.network.visitor.PaginationRequest(pageSize = 50)
+                )
+                val response = withContext(Dispatchers.IO) {
+                    visitorTicketApi.filterTickets(
+                        authorization = "Bearer $apiKey",
+                        eventId = eventId,
+                        body = request
+                    )
+                }
+                val tickets = buildList {
+                    for (ticketDto in response.tickets) {
+                        add(resolveTicketTypeName(ticketDto.toDomain()))
+                    }
+                }
+                _uiState.value = _uiState.value.copy(
+                    isSearching = false,
+                    searchResults = tickets
+                )
+            } catch (e: CancellationException) {
+                Log.d(TAG, "Ticket search cancelled")
+            } catch (e: Exception) {
+                Log.e(TAG, "Ticket search failed", e)
+                _uiState.value = _uiState.value.copy(
+                    isSearching = false,
+                    searchError = e.message ?: e.localizedMessage ?: e.toString()
+                )
+            }
+        }
+    }
+
+    private fun performScanFromDetail(ticketId: String) {
+        if (_uiState.value.isProcessing) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isProcessing = true,
+                searchDetailTicket = null,
+                ticketSearchVisible = false,
+                ticketDetailsResult = null
+            )
+            val scanId = UUID.randomUUID().toString()
+            val now = Instant.now().toString()
+            try {
+                val ticket = performOnlineScan(TicketPayload(ticketId = ticketId, eventId = null))
+                handleSuccessfulScan(scanId, ticketId, now, ticket, wasOffline = false)
+            } catch (e: HttpException) {
+                handleHttpError(e, TicketPayload(ticketId = ticketId, eventId = null))
+            } catch (e: Exception) {
+                Log.e(TAG, "Scan from detail failed", e)
+                showResult(ScanResultHandler.Error(e.message ?: unknownErrorMessage()))
+            }
         }
     }
 
@@ -193,18 +322,26 @@ class ScannerViewModel(
 
         when {
             trimmed.isEmpty() -> {
-                _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.EMPTY_INPUT)
+                showInvalidScanResult(R.string.scanner_manual_error_empty)
                 return
             }
         }
 
         val payload = decodePayload(trimmed) ?: run {
-            _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.INVALID_FORMAT)
+            showInvalidScanResult(R.string.scanner_manual_error_format)
+            return
+        }
+
+        if (payload.ticketId.isBlank()) {
+            showInvalidScanResult(R.string.scanner_manual_error_format)
             return
         }
 
         if (!payload.eventId.isNullOrBlank() && payload.eventId != eventId) {
-            _uiState.value = _uiState.value.copy(manualEntryError = ManualEntryError.WRONG_EVENT)
+            showInvalidScanResult(
+                R.string.scanner_manual_error_event,
+                _uiState.value.eventName
+            )
             return
         }
 
@@ -218,7 +355,7 @@ class ScannerViewModel(
         }
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isProcessing = true, manualEntryError = null)
+            _uiState.value = _uiState.value.copy(isProcessing = true)
             val scanId = UUID.randomUUID().toString()
             val now = Instant.now().toString()
 
@@ -235,7 +372,7 @@ class ScannerViewModel(
                 handleOfflineScan(scanId, payload.ticketId, now)
             } catch (e: Throwable) {
                 Log.e(TAG, "Unexpected scan failure", e)
-                showResult(ScanResultHandler.Error(e.message ?: "Unknown error"))
+                showResult(ScanResultHandler.Error(e.message ?: unknownErrorMessage()))
             }
         }
     }
@@ -410,14 +547,12 @@ class ScannerViewModel(
         }
     }
 
-    private fun showResult(handler: ScanResultHandler, closeManual: Boolean = true) {
+    private fun showResult(handler: ScanResultHandler) {
         val result = ScanResultHandler.toScanResult(handler)
         val updatedHistory = (listOf(result) + _uiState.value.history).take(MAX_HISTORY)
 
         _uiState.value = _uiState.value.copy(
             isProcessing = false,
-            manualEntryVisible = if (closeManual) false else _uiState.value.manualEntryVisible,
-            manualEntryError = null,
             activeResult = result,
             history = updatedHistory
         )
@@ -466,11 +601,14 @@ class ScannerViewModel(
     private suspend fun loadScanHistory() = withContext(Dispatchers.IO) {
         val scans = CommittedScansStore.getRecentScansForEvent(eventId, HISTORY_PAGE_SIZE)
         val history = scans.map { scan ->
+            val ticketType = scan.ticketType?.let {
+                se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
+            }
             val ticket = if (scan.ticketType != null || scan.email != null) {
                 VisitorTicket(
                     id = scan.ticketId,
                     eventId = scan.eventId,
-                    ticketType = scan.ticketType,
+                    ticketType = ticketType,
                     email = scan.email,
                     status = VisitorTicketStatus.SCANNED,
                     issuedAt = null,
@@ -517,11 +655,14 @@ class ScannerViewModel(
             val currentSize = _uiState.value.history.size
             val scans = CommittedScansStore.getRecentScansForEvent(eventId, currentSize + HISTORY_PAGE_SIZE)
             val history = scans.map { scan ->
+                val ticketType = scan.ticketType?.let {
+                    se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
+                }
                 val ticket = if (scan.ticketType != null || scan.email != null) {
                     VisitorTicket(
                         id = scan.ticketId,
                         eventId = scan.eventId,
-                        ticketType = scan.ticketType,
+                        ticketType = ticketType,
                         email = scan.email,
                         status = VisitorTicketStatus.SCANNED,
                         issuedAt = null,
@@ -584,12 +725,66 @@ class ScannerViewModel(
         recentScanIds.addLast(ticketId)
     }
 
+    private suspend fun loadTicketTypeOptions(forceRefresh: Boolean = false): List<TicketTypeOption> {
+        val repository = se.iloppis.app.data.TicketTypeRepository
+        if (forceRefresh || !repository.isInitialized()) {
+            repository.refresh(eventId, apiKey)
+        }
+        val options = repository.getAllTypes()
+            .map { TicketTypeOption(id = it.first, name = it.second) }
+        normalizeVisibleTickets()
+        return options
+    }
+
     private suspend fun resolveTicketTypeName(ticket: VisitorTicket): VisitorTicket {
         val typeName = ticket.ticketType?.let {
             se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
         }
         return ticket.copy(ticketType = typeName)
     }
+
+    private suspend fun normalizeVisibleTickets() {
+        val normalizedActiveResult = _uiState.value.activeResult?.let { normalizeScanResult(it) }
+        val normalizedTicketDetailsResult = _uiState.value.ticketDetailsResult?.let { normalizeScanResult(it) }
+        val normalizedHistory = _uiState.value.history.map { normalizeScanResult(it) }
+        val normalizedCurrentGroup = _uiState.value.currentGroup.map { normalizeScanResult(it) }
+        val normalizedSearchResults = _uiState.value.searchResults.map { resolveTicketTypeName(it) }
+        val normalizedSearchDetailTicket = _uiState.value.searchDetailTicket?.let { resolveTicketTypeName(it) }
+        val normalizedGroupTicketType = normalizedCurrentGroup
+            .firstNotNullOfOrNull { it.ticket?.ticketType }
+
+        groupManager.restoreGroup(
+            email = _uiState.value.currentGroupEmail,
+            ticketType = normalizedGroupTicketType,
+            scans = normalizedCurrentGroup
+        )
+
+        withContext(Dispatchers.Main) {
+            _uiState.value = _uiState.value.copy(
+                activeResult = normalizedActiveResult,
+                ticketDetailsResult = normalizedTicketDetailsResult,
+                history = normalizedHistory,
+                currentGroup = normalizedCurrentGroup,
+                currentGroupTicketType = normalizedGroupTicketType,
+                searchResults = normalizedSearchResults,
+                searchDetailTicket = normalizedSearchDetailTicket
+            )
+            updateGroupedHistory()
+        }
+    }
+
+    private suspend fun normalizeScanResult(result: ScanResult): ScanResult {
+        val normalizedTicket = result.ticket?.let { resolveTicketTypeName(it) }
+        return result.copy(ticket = normalizedTicket)
+    }
+
+    private fun showInvalidScanResult(messageResId: Int, vararg formatArgs: Any) {
+        val message = se.iloppis.app.ILoppisAppHolder.appContext.getString(messageResId, *formatArgs)
+        showResult(ScanResultHandler.Invalid(ticket = null, message = message))
+    }
+
+    private fun unknownErrorMessage(): String =
+        se.iloppis.app.ILoppisAppHolder.appContext.getString(R.string.unknown_error)
 
     private fun extractErrorMessage(error: HttpException): String {
         return try {

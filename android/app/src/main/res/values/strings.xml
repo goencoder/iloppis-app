@@ -163,7 +163,6 @@
     <string name="scanner_title">Biljettskanner</string>
     <string name="scanner_button_scan">Starta skanning</string>
     <string name="scanner_button_pause">Pausa skanning</string>
-    <string name="scanner_button_manual_entry">Ange kod manuellt</string>
     <string name="scanner_button_enable_camera">Aktivera kamera</string>
     <string name="scanner_button_grant_permission">Ge kamerabehörighet</string>
     <string name="scanner_permission_rationale">Kameran behövs för att skanna QR-koder på biljetter.</string>
@@ -224,6 +223,20 @@
     <string name="scanner_group_unknown_type">Okänd typ</string>
     <string name="scanner_group_remove_ticket">Ta bort biljett</string>
     <string name="scanner_group_commit_button">Bekräfta grupp</string>
+
+    <!-- Ticket search dialog -->
+    <string name="scanner_search_title">Sök biljett</string>
+    <string name="scanner_search_description">Sök på e-postadress eller biljettkod för att hitta biljetter.</string>
+    <string name="scanner_search_email_placeholder">E-postadress/kod...</string>
+    <string name="scanner_search_ticket_type_all">Alla biljettyper</string>
+    <string name="scanner_search_button">Sök</string>
+    <string name="scanner_search_no_results">Inga biljetter hittades.</string>
+    <string name="scanner_search_error">Sökningen misslyckades: %1$s</string>
+    <string name="scanner_button_search">Sök biljett manuellt</string>
+    <string name="scanner_search_result_not_scanned">Ej skannad</string>
+    <string name="scanner_search_result_scanned">Skannad</string>
+    <string name="scanner_status_unknown">Okänd</string>
+    <string name="scanner_button_mark_scanned">Markera som skannad</string>
 
     <!-- Server Error Dialog -->
     <string name="dialog_server_error_title">⚠️ Serverproblem</string>

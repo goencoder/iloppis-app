@@ -35,7 +35,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -71,7 +70,8 @@ import se.iloppis.app.domain.model.Event
 import se.iloppis.app.ui.components.CameraScanner
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
-import se.iloppis.app.ui.dialogs.ManualTicketDialog
+import se.iloppis.app.ui.dialogs.TicketDetailSheet
+import se.iloppis.app.ui.dialogs.TicketSearchDialog
 import se.iloppis.app.ui.theme.AppColors
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -149,13 +149,6 @@ fun ScannerScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (uiState.isProcessing) {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = AppColors.Primary
-                )
-            }
-
             if (uiState.pendingCount > 0) {
                 OfflineBanner(pendingCount = uiState.pendingCount)
             }
@@ -233,16 +226,15 @@ fun ScannerScreen(
                     }
                 }
 
-                // Manual entry is always available as fallback
+                // Manual search is the primary manual CTA
                 AppButton(
-                    text = stringResource(R.string.scanner_button_manual_entry),
-                    onClick = { viewModel.onAction(ScannerAction.RequestManualEntry) },
+                    text = stringResource(R.string.scanner_button_search),
+                    onClick = { viewModel.onAction(ScannerAction.RequestTicketSearch) },
                     enabled = !uiState.isProcessing,
                     modifier = Modifier.fillMaxWidth(),
-                    variant = AppButtonVariant.Outlined,
-                    contentColor = AppColors.Primary,
-                    borderColor = AppColors.Primary
+                    variant = AppButtonVariant.Primary
                 )
+
             }
 
             // Total scans counter
@@ -288,24 +280,41 @@ fun ScannerScreen(
         }
     }
 
-    ManualTicketDialog(
-        visible = uiState.manualEntryVisible,
-        eventName = event.name,
-        error = uiState.manualEntryError,
-        isProcessing = uiState.isProcessing,
-        onDismiss = { viewModel.onAction(ScannerAction.DismissManualEntry) },
-        onTextChanged = { viewModel.onAction(ScannerAction.ClearManualError) },
-        onSubmit = { code -> viewModel.onAction(ScannerAction.SubmitCode(code)) }
-    )
-
     // Ticket details dialog
     uiState.ticketDetailsResult?.let { result ->
         TicketDetailsDialog(
             result = result,
             eventName = event.name,
-            onDismiss = { viewModel.onAction(ScannerAction.DismissTicketDetails) }
+            isProcessing = uiState.isProcessing,
+            onDismiss = { viewModel.onAction(ScannerAction.DismissTicketDetails) },
+            onScan = { ticketId -> viewModel.onAction(ScannerAction.ScanFromDetail(ticketId)) }
         )
     }
+
+    // Ticket search dialog
+    TicketSearchDialog(
+        visible = uiState.ticketSearchVisible,
+        isSearching = uiState.isSearching,
+        query = uiState.searchQuery,
+        selectedTypeId = uiState.selectedTicketTypeId,
+        hasSubmittedSearch = uiState.hasSubmittedTicketSearch,
+        searchResults = uiState.searchResults,
+        searchError = uiState.searchError,
+        ticketTypes = uiState.ticketTypes,
+        onDismiss = { viewModel.onAction(ScannerAction.DismissTicketSearch) },
+        onQueryChange = { query -> viewModel.onAction(ScannerAction.UpdateTicketSearchQuery(query)) },
+        onTicketTypeChange = { typeId -> viewModel.onAction(ScannerAction.UpdateTicketSearchType(typeId)) },
+        onSearch = { query, typeId -> viewModel.onAction(ScannerAction.SubmitTicketSearch(query, typeId)) },
+        onSelectTicket = { ticket -> viewModel.onAction(ScannerAction.SelectSearchResult(ticket)) }
+    )
+
+    // Search result detail sheet
+    TicketDetailSheet(
+        ticket = uiState.searchDetailTicket,
+        isProcessing = uiState.isProcessing,
+        onDismiss = { viewModel.onAction(ScannerAction.DismissSearchDetail) },
+        onScan = { ticketId -> viewModel.onAction(ScannerAction.ScanFromDetail(ticketId)) }
+    )
 }
 
 @Composable
@@ -394,6 +403,20 @@ private fun ScannerPreview(
                         color = AppColors.Success.copy(alpha = 0.75f)
                     )
                 }
+            }
+        }
+
+        if (uiState.isProcessing) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(AppColors.NavigatorOverlay.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = AppColors.DialogBackground,
+                    trackColor = AppColors.DialogBackground.copy(alpha = 0f)
+                )
             }
         }
     }
@@ -800,7 +823,9 @@ private fun formatValidWindow(ticket: se.iloppis.app.domain.model.VisitorTicket)
 private fun TicketDetailsDialog(
     result: ScanResult,
     eventName: String,
-    onDismiss: () -> Unit
+    isProcessing: Boolean = false,
+    onDismiss: () -> Unit,
+    onScan: (String) -> Unit = {}
 ) {
     androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -901,12 +926,25 @@ private fun TicketDetailsDialog(
                     }
                 }
 
+                // Mark as scanned button (only for not-yet-scanned tickets)
+                result.ticket?.takeIf {
+                    it.status == se.iloppis.app.domain.model.VisitorTicketStatus.NOT_SCANNED
+                }?.let { ticket ->
+                    AppButton(
+                        text = stringResource(R.string.scanner_button_mark_scanned),
+                        onClick = { onScan(ticket.id) },
+                        enabled = !isProcessing,
+                        modifier = Modifier.fillMaxWidth(),
+                        variant = AppButtonVariant.Success
+                    )
+                }
+
                 // Close button
                 AppButton(
                     text = stringResource(R.string.scanner_button_close),
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
-                    variant = AppButtonVariant.Primary
+                    variant = AppButtonVariant.Secondary
                 )
             }
         }

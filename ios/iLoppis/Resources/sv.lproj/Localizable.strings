@@ -111,14 +111,13 @@
 "scanner_title" = "Biljettskanner";
 "scanner_button_scan" = "Starta skanning";
 "scanner_button_pause" = "Pausa skanning";
-"scanner_button_manual_entry" = "Ange kod manuellt";
 "scanner_button_enable_camera" = "Aktivera kamera";
 "scanner_button_grant_permission" = "Ge kamerabehörighet";
 "scanner_permission_rationale" = "Kameran behövs för att skanna QR-koder på biljetter.";
 "scanner_permission_needed" = "Aktivera kameran för att skanna biljetter";
 "scanner_tap_to_scan" = "Tryck på knappen för att börja skanna";
 "scanner_scanning_active" = "Skannar…";
-"scanner_manual_hint" = "Kameran fungerar inte? Använd manuell inmatning.";
+"scanner_manual_hint" = "Kameran fungerar inte? Sök biljett manuellt.";
 "scanner_preview_placeholder" = "Kamerafönstret visas här när skannern är aktiv.";
 "scanner_preview_icon" = "📷";
 "scanner_button_close_result" = "Stäng";
@@ -149,4 +148,25 @@
 "scanner_manual_error_event" = "Biljetten hör inte till %@.";
 "scanner_manual_error_format" = "Koden kunde inte tolkas.";
 "scanner_manual_confirm" = "Verifiera";
-"scanner_camera_not_ready" = "Kameran är inte redo ännu. Använd manuell inmatning.";
+"scanner_ticket_details_title" = "Biljettinfo";
+"scanner_camera_not_ready" = "Kameran är inte redo ännu. Sök biljett manuellt.";
+
+/* Ticket search */
+"scanner_search_title" = "Sök biljett";
+"scanner_search_description" = "Sök på e-postadress eller biljettkod för att hitta biljetter.";
+"scanner_search_email_placeholder" = "E-postadress/kod...";
+"scanner_search_ticket_type_all" = "Alla biljettyper";
+"scanner_search_button" = "Sök";
+"scanner_search_no_results" = "Inga biljetter hittades.";
+"scanner_search_error" = "Sökningen misslyckades: %@";
+"scanner_button_search" = "Sök biljett manuellt";
+"scanner_search_result_not_scanned" = "Ej skannad";
+"scanner_search_result_scanned" = "Skannad";
+"scanner_status_unknown" = "Okänd";
+"scanner_button_mark_scanned" = "Markera som skannad";
+"scanner_field_status" = "Status:";
+"scanner_field_ticket_type_label" = "Biljettyp:";
+"scanner_field_email_label" = "E-post:";
+"scanner_field_scanned_at_label" = "Skannad:";
+"scanner_field_valid_window_label" = "Giltighet:";
+"scanner_field_ticket_id" = "Biljett-ID:";

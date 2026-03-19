@@ -171,9 +171,8 @@ class ScannerViewModel(
         se.iloppis.app.data.EventStoreManager.initializeForEvent(context, eventId)
 
         loadInitialData()
-        // Ticket type name resolution
-        viewModelScope.launch(Dispatchers.IO) {
-            se.iloppis.app.data.TicketTypeRepository.refresh(eventId, apiKey)
+        ticketTypesLoadJob = viewModelScope.launch(Dispatchers.IO) {
+            loadTicketTypeOptions(forceRefresh = true)
         }
     }
 
@@ -235,9 +234,7 @@ class ScannerViewModel(
             ticketTypes = emptyList()
         )
         ticketTypesLoadJob = viewModelScope.launch(Dispatchers.IO) {
-            se.iloppis.app.data.TicketTypeRepository.refresh(eventId, apiKey)
-            val types = se.iloppis.app.data.TicketTypeRepository.getAllTypes()
-                .map { TicketTypeOption(id = it.first, name = it.second) }
+            val types = loadTicketTypeOptions()
             withContext(Dispatchers.Main) {
                 if (_uiState.value.ticketSearchVisible) {
                     _uiState.value = _uiState.value.copy(ticketTypes = types)
@@ -257,10 +254,9 @@ class ScannerViewModel(
                 searchError = null
             )
             try {
-                // Resolve ticket type ID to name for the API filter
-                val ticketTypeName = ticketTypeId?.let {
-                    se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
-                }
+                val ticketTypeName = _uiState.value.ticketTypes
+                    .firstOrNull { it.id == ticketTypeId }
+                    ?.name
                 val filter = se.iloppis.app.network.visitor.VisitorTicketFilter(
                     freeText = query.trim(),
                     ticketType = ticketTypeName,
@@ -721,6 +717,15 @@ class ScannerViewModel(
             recentScanIds.removeFirst()
         }
         recentScanIds.addLast(ticketId)
+    }
+
+    private suspend fun loadTicketTypeOptions(forceRefresh: Boolean = false): List<TicketTypeOption> {
+        val repository = se.iloppis.app.data.TicketTypeRepository
+        if (forceRefresh || !repository.isInitialized()) {
+            repository.refresh(eventId, apiKey)
+        }
+        return repository.getAllTypes()
+            .map { TicketTypeOption(id = it.first, name = it.second) }
     }
 
     private suspend fun resolveTicketTypeName(ticket: VisitorTicket): VisitorTicket {

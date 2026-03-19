@@ -28,8 +28,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val svLocale = Locale.Builder().setLanguage("sv").setRegion("SE").build()
-private val dateTimeFormatter = DateTimeFormatter.ofPattern("d MMM HH:mm", svLocale)
+private val dateTimeFormatter = DateTimeFormatter.ofPattern("d MMM HH:mm", Locale.getDefault())
     .withZone(ZoneId.systemDefault())
 
 /**

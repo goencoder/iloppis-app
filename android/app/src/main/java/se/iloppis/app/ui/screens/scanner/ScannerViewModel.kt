@@ -326,7 +326,10 @@ class ScannerViewModel(
             trimmed.isEmpty() -> return
         }
 
-        val payload = decodePayload(trimmed) ?: return
+        val payload = decodePayload(trimmed) ?: run {
+            showResult(ScanResultHandler.Invalid(ticket = null, message = ""))
+            return
+        }
 
         if (!payload.eventId.isNullOrBlank() && payload.eventId != eventId) {
             return

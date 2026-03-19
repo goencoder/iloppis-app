@@ -22,6 +22,11 @@ final class ScannerViewModel: ObservableObject {
         self.state = ScannerState(eventName: eventName)
     }
 
+    deinit {
+        searchTask?.cancel()
+        ticketTypesTask?.cancel()
+    }
+
     func onAction(_ action: ScannerAction) {
         switch action {
         case .dismissResult:

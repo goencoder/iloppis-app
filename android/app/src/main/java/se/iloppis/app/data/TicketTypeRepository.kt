@@ -22,17 +22,18 @@ object TicketTypeRepository {
      * Initialize or refresh ticket types for a specific event.
      */
     suspend fun refresh(eventId: String, apiKey: String) {
-        mutex.withLock {
-            try {
-                val response = api.listTypes(
-                    authorization = "Bearer $apiKey",
-                    eventId = eventId
-                )
-                ticketTypeMap = response.types.associate { it.id to it.type }
-                Log.d(TAG, "Loaded ${ticketTypeMap.size} ticket types for event $eventId")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to load ticket types", e)
+        try {
+            val response = api.listTypes(
+                authorization = "Bearer $apiKey",
+                eventId = eventId
+            )
+            val refreshedMap = response.types.associate { it.id to it.type }
+            mutex.withLock {
+                ticketTypeMap = refreshedMap
             }
+            Log.d(TAG, "Loaded ${refreshedMap.size} ticket types for event $eventId")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load ticket types", e)
         }
     }
 

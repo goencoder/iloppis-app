@@ -23,6 +23,7 @@ import se.iloppis.app.domain.model.VisitorTicketStatus
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.network.ILoppisClient
 import se.iloppis.app.network.visitor.VisitorAPI
+import se.iloppis.app.R
 import java.io.IOException
 import java.time.Instant
 import java.util.ArrayDeque
@@ -276,7 +277,11 @@ class ScannerViewModel(
                         body = request
                     )
                 }
-                val tickets = response.tickets.map { it.toDomain() }.map { resolveTicketTypeName(it) }
+                val tickets = buildList {
+                    for (ticketDto in response.tickets) {
+                        add(resolveTicketTypeName(ticketDto.toDomain()))
+                    }
+                }
                 _uiState.value = _uiState.value.copy(
                     isSearching = false,
                     searchResults = tickets
@@ -323,15 +328,27 @@ class ScannerViewModel(
         val trimmed = rawCode.trim()
 
         when {
-            trimmed.isEmpty() -> return
+            trimmed.isEmpty() -> {
+                showInvalidScanResult(R.string.scanner_manual_error_empty)
+                return
+            }
         }
 
         val payload = decodePayload(trimmed) ?: run {
-            showResult(ScanResultHandler.Invalid(ticket = null, message = ""))
+            showInvalidScanResult(R.string.scanner_manual_error_format)
+            return
+        }
+
+        if (payload.ticketId.isBlank()) {
+            showInvalidScanResult(R.string.scanner_manual_error_format)
             return
         }
 
         if (!payload.eventId.isNullOrBlank() && payload.eventId != eventId) {
+            showInvalidScanResult(
+                R.string.scanner_manual_error_event,
+                _uiState.value.eventName
+            )
             return
         }
 
@@ -714,6 +731,11 @@ class ScannerViewModel(
             se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
         }
         return ticket.copy(ticketType = typeName)
+    }
+
+    private fun showInvalidScanResult(messageResId: Int, vararg formatArgs: Any) {
+        val message = se.iloppis.app.ILoppisAppHolder.appContext.getString(messageResId, *formatArgs)
+        showResult(ScanResultHandler.Invalid(ticket = null, message = message))
     }
 
     private fun extractErrorMessage(error: HttpException): String {

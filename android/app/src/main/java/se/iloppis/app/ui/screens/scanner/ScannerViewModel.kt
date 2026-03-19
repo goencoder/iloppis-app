@@ -313,10 +313,7 @@ class ScannerViewModel(
                 val ticket = performOnlineScan(TicketPayload(ticketId = ticketId, eventId = null))
                 handleSuccessfulScan(scanId, ticketId, now, ticket, wasOffline = false)
             } catch (e: HttpException) {
-                val message = extractErrorMessage(e)
-                val fetchedTicket = fetchTicketIfExists(ticketId)
-                val handler = ScanResultHandler.fromHttpCode(e.code(), message, fetchedTicket)
-                showResult(handler)
+                handleHttpError(e, TicketPayload(ticketId = ticketId, eventId = null))
             } catch (e: Exception) {
                 Log.e(TAG, "Scan from detail failed", e)
                 showResult(ScanResultHandler.Error(e.message ?: "Unknown error"))

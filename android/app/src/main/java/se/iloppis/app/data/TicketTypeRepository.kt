@@ -1,6 +1,7 @@
 package se.iloppis.app.data
 
 import android.util.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import se.iloppis.app.network.config.clientConfig
@@ -32,7 +33,12 @@ object TicketTypeRepository {
                 ticketTypeMap = refreshedMap
             }
             Log.d(TAG, "Loaded ${refreshedMap.size} ticket types for event $eventId")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
+            mutex.withLock {
+                ticketTypeMap = emptyMap()
+            }
             Log.e(TAG, "Failed to load ticket types", e)
         }
     }

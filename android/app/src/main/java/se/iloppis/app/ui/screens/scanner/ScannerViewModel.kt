@@ -316,7 +316,7 @@ class ScannerViewModel(
                 handleHttpError(e, TicketPayload(ticketId = ticketId, eventId = null))
             } catch (e: Exception) {
                 Log.e(TAG, "Scan from detail failed", e)
-                showResult(ScanResultHandler.Error(e.message ?: "Unknown error"))
+                showResult(ScanResultHandler.Error(e.message ?: unknownErrorMessage()))
             }
         }
     }
@@ -376,7 +376,7 @@ class ScannerViewModel(
                 handleOfflineScan(scanId, payload.ticketId, now)
             } catch (e: Throwable) {
                 Log.e(TAG, "Unexpected scan failure", e)
-                showResult(ScanResultHandler.Error(e.message ?: "Unknown error"))
+                showResult(ScanResultHandler.Error(e.message ?: unknownErrorMessage()))
             }
         }
     }
@@ -734,6 +734,9 @@ class ScannerViewModel(
         val message = se.iloppis.app.ILoppisAppHolder.appContext.getString(messageResId, *formatArgs)
         showResult(ScanResultHandler.Invalid(ticket = null, message = message))
     }
+
+    private fun unknownErrorMessage(): String =
+        se.iloppis.app.ILoppisAppHolder.appContext.getString(R.string.unknown_error)
 
     private fun extractErrorMessage(error: HttpException): String {
         return try {

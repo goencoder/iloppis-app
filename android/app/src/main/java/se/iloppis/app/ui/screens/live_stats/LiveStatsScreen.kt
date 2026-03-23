@@ -23,13 +23,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -80,11 +87,13 @@ private val svLocale = Locale.Builder().setLanguage("sv").setRegion("SE").build(
 private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", svLocale)
     .withZone(ZoneId.systemDefault())
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveStatsScreen(
     event: Event,
     apiKey: String,
-    isActivePage: Boolean = true
+    isActivePage: Boolean = true,
+    onBack: () -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel: LiveStatsViewModel = viewModel(
@@ -116,33 +125,64 @@ fun LiveStatsScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppColors.Background)
-    ) {
-        when {
-            uiState.isLoading && snapshot == null -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = AppColors.Primary
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(stringResource(R.string.stats_title))
+                        Text(
+                            text = event.name,
+                            fontSize = 12.sp,
+                            color = AppColors.DialogBackground.copy(alpha = 0.8f)
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.button_back)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = AppColors.ButtonSuccess,
+                    titleContentColor = AppColors.DialogBackground,
+                    navigationIconContentColor = AppColors.DialogBackground
                 )
-            }
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AppColors.Background)
+                .padding(padding)
+        ) {
+            when {
+                uiState.isLoading && snapshot == null -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = AppColors.Primary
+                    )
+                }
 
-            snapshot == null -> {
-                EmptyState(
-                    errorKey = uiState.errorKey,
-                    onRetry = viewModel::retry,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
+                snapshot == null -> {
+                    EmptyState(
+                        errorKey = uiState.errorKey,
+                        onRetry = viewModel::retry,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
-            else -> {
-                LiveStatsContent(
-                    event = event,
-                    snapshot = snapshot,
-                    errorKey = uiState.errorKey
-                )
+                else -> {
+                    LiveStatsContent(
+                        event = event,
+                        snapshot = snapshot,
+                        errorKey = uiState.errorKey
+                    )
+                }
             }
         }
     }

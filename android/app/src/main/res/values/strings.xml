@@ -21,6 +21,9 @@
     <string name="home_open_scanner">Öppna skanner</string>
     <string name="home_open_live_stats">Öppna live-statistik</string>
 
+    <!-- Stats page -->
+    <string name="stats_title">Stats</string>
+
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>
     <string name="filter_all">Alla</string>

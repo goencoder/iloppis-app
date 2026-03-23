@@ -21,6 +21,9 @@
     <string name="home_open_scanner">Open scanner</string>
     <string name="home_open_live_stats">Open live stats</string>
 
+    <!-- Stats page -->
+    <string name="stats_title">Stats</string>
+
     <!-- Event List Screen -->
     <string name="search_placeholder">Search flea market…</string>
     <string name="filter_saved">Saved</string>

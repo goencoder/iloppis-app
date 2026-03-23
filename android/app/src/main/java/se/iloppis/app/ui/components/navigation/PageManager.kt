@@ -84,7 +84,8 @@ fun PageManager() {
                     LiveStatsScreen(
                         event = page.event,
                         apiKey = page.apiKey,
-                        isActivePage = page == activePage
+                        isActivePage = page == activePage,
+                        onBack = { screen.popPage() }
                     )
                 }
             }

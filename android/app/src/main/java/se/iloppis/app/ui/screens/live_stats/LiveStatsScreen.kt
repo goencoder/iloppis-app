@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -470,14 +472,7 @@ private fun LiveMetaFlipCard(
     compactMode: Boolean,
     modifier: Modifier = Modifier
 ) {
-    var showBack by remember(eventId) { mutableStateOf(false) }
-
-    LaunchedEffect(eventId) {
-        while (isActive) {
-            delay(META_ROTATE_MS)
-            showBack = !showBack
-        }
-    }
+    var showBack by remember(eventId) { mutableStateOf(true) }
 
     val flipRotation by animateFloatAsState(
         targetValue = if (showBack) 180f else 0f,
@@ -486,37 +481,42 @@ private fun LiveMetaFlipCard(
     )
     val density = LocalDensity.current
 
-    Box(
+    TextButton(
         modifier = modifier
             .heightIn(min = if (compactMode) 72.dp else 96.dp)
-            .aspectRatio(if (compactMode) 2.7f else 2f)
+            .aspectRatio(if (compactMode) 2.7f else 2f),
+        shape = RoundedCornerShape(5.dp),
+        contentPadding = PaddingValues(0.dp),
+        onClick = { showBack = !showBack }
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    rotationY = flipRotation
-                    cameraDistance = 14f * density.density
-                    alpha = if (flipRotation <= 90f) 1f else 0f
-                },
-            shape = RoundedCornerShape(14.dp),
-            color = AppColors.CardBackground
-        ) {
-            MetaQrFace(url = visitUrl(eventId))
-        }
+        Box(modifier = Modifier) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        rotationY = flipRotation
+                        cameraDistance = 14f * density.density
+                        alpha = if (flipRotation <= 90f) 1f else 0f
+                    },
+                shape = RoundedCornerShape(14.dp),
+                color = AppColors.CardBackground
+            ) {
+                MetaQrFace(url = visitUrl(eventId))
+            }
 
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    rotationY = flipRotation + 180f
-                    cameraDistance = 14f * density.density
-                    alpha = if (flipRotation > 90f) 1f else 0f
-                },
-            shape = RoundedCornerShape(14.dp),
-            color = AppColors.CardBackground
-        ) {
-            MetaBrandFace()
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        rotationY = flipRotation + 180f
+                        cameraDistance = 14f * density.density
+                        alpha = if (flipRotation > 90f) 1f else 0f
+                    },
+                shape = RoundedCornerShape(14.dp),
+                color = AppColors.CardBackground
+            ) {
+                MetaBrandFace()
+            }
         }
     }
 }

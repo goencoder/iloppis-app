@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -61,7 +62,7 @@ fun CashierScreen(
     var showPendingInfoDialog by remember { mutableStateOf(false) }
     var showReviewScreen by remember { mutableStateOf(false) }
     var showDetailedReview by remember { mutableStateOf<String?>(null) }
-    
+
     // Show detailed purchase review if requested
     if (showDetailedReview != null) {
         val detailedViewModel: se.iloppis.app.ui.screens.review.DetailedPurchaseReviewViewModel = viewModel(
@@ -74,7 +75,7 @@ fun CashierScreen(
         )
         se.iloppis.app.ui.screens.review.DetailedPurchaseReviewScreen(
             viewModel = detailedViewModel,
-            onBack = { 
+            onBack = {
                 showDetailedReview = null
                 // Refresh rejected purchases list
                 viewModel.refreshRejectedPurchasesCount()
@@ -82,7 +83,7 @@ fun CashierScreen(
         )
         return
     }
-    
+
     // Show pending purchases screen if requested
     if (showReviewScreen) {
         PendingPurchasesScreen(
@@ -112,7 +113,7 @@ fun CashierScreen(
             }
         )
     }
-    
+
     // Server error dialog
     if (uiState.showServerErrorDialog) {
         ServerErrorDialog(
@@ -120,7 +121,7 @@ fun CashierScreen(
             onDismiss = { viewModel.onAction(CashierAction.DismissServerErrorDialog) }
         )
     }
-    
+
     // Invalid seller dialog
     val dialogData = uiState.invalidSellerDialogData
     if (uiState.showInvalidSellerDialog && dialogData != null) {
@@ -129,7 +130,7 @@ fun CashierScreen(
             timestamp = dialogData.timestamp,
             invalidSellers = dialogData.invalidSellers,
             onDismiss = { viewModel.onAction(CashierAction.DismissInvalidSellerDialog) },
-            onReviewNow = { 
+            onReviewNow = {
                 viewModel.onAction(CashierAction.DismissInvalidSellerDialog)
                 showReviewScreen = true
             }
@@ -139,13 +140,15 @@ fun CashierScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Column {
                         Text(stringResource(R.string.cashier_title))
                         Text(
                             text = event.name,
                             fontSize = 12.sp,
-                            color = AppColors.DialogBackground.copy(alpha = 0.8f)
+                            color = AppColors.DialogBackground.copy(alpha = 0.8f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 },
@@ -167,7 +170,7 @@ fun CashierScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                     }
-                    
+
                     if (uiState.pendingSoldItemsCount > 0) {
                         IconButton(onClick = { showPendingInfoDialog = true }) {
                             Icon(
@@ -266,7 +269,7 @@ fun CashierScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Input fields for seller number and price
                 InputSection(
                     sellerNumber = uiState.sellerNumber,

@@ -99,7 +99,7 @@ fun ScannerScreen(
         )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
+
     // Camera permission state
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     var isScanningActive by remember { mutableStateOf(true) } // Always active for continuous scanning
@@ -121,7 +121,9 @@ fun ScannerScreen(
                         Text(
                             text = event.name,
                             fontSize = 12.sp,
-                            color = AppColors.DialogBackground.copy(alpha = 0.8f)
+                            color = AppColors.DialogBackground.copy(alpha = 0.8f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 },
@@ -368,9 +370,9 @@ private fun ScannerPreview(
                     fontSize = 40.sp
                 )
                 Text(
-                    text = if (cameraPermissionGranted) 
+                    text = if (cameraPermissionGranted)
                         stringResource(R.string.scanner_tap_to_scan)
-                    else 
+                    else
                         stringResource(R.string.scanner_permission_needed),
                     color = AppColors.TextMuted,
                     textAlign = TextAlign.Center,
@@ -389,7 +391,7 @@ private fun ScannerPreview(
                 color = borderColor,
                 modifier = Modifier.fillMaxSize()
             )
-            
+
             // Show group position number in center
             if (result.status == ScanStatus.SUCCESS || result.status == ScanStatus.OFFLINE_SUCCESS) {
                 Box(
@@ -428,7 +430,7 @@ private fun BlinkingBorder(
     modifier: Modifier = Modifier
 ) {
     var isVisible by remember { mutableStateOf(true) }
-    
+
     LaunchedEffect(Unit) {
         // Blink 5 times: on-off-on-off-on-off-on-off-on-off (150ms each)
         repeat(5) {
@@ -438,7 +440,7 @@ private fun BlinkingBorder(
             delay(150)
         }
     }
-    
+
     if (isVisible) {
         Box(
             modifier = modifier
@@ -570,7 +572,7 @@ private fun ScanHistory(
                 style = MaterialTheme.typography.titleMedium,
                 color = AppColors.TextPrimary
             )
-            
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -621,7 +623,7 @@ private fun ScanHistory(
                         onItemClick = onItemClick
                     )
                 }
-                
+
                 // Load more button
                 if (hasMoreHistory) {
                     item {
@@ -657,7 +659,7 @@ private fun HistoryGroupRow(
     onItemClick: (ScanResult) -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -694,14 +696,14 @@ private fun HistoryGroupRow(
                 } else {
                     emailText
                 }
-                
+
                 // Show count breakdown if there are errors
                 val countText = if (hasErrors) {
                     "($successCount ok, $errorCount fel)"
                 } else {
                     "($count)"
                 }
-                
+
                 Text(
                     text = "$groupLabel $countText",
                     style = MaterialTheme.typography.bodyMedium,
@@ -716,14 +718,14 @@ private fun HistoryGroupRow(
                     color = AppColors.TextSecondary
                 )
             }
-            
+
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = null,
                 tint = AppColors.TextSecondary
             )
         }
-        
+
         // Expanded individual scans
         if (isExpanded) {
             Column(
@@ -1013,7 +1015,7 @@ private fun CurrentGroupCard(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    
+
                     // Show ticket type summary if available
                     val ticketTypeSummary = groupTickets
                         .mapNotNull { it.ticket?.ticketType }
@@ -1021,7 +1023,7 @@ private fun CurrentGroupCard(
                         .eachCount()
                         .entries
                         .joinToString(", ") { "${it.key} (${it.value})" }
-                    
+
                     if (ticketTypeSummary.isNotEmpty()) {
                         Text(
                             text = ticketTypeSummary,
@@ -1030,14 +1032,14 @@ private fun CurrentGroupCard(
                         )
                     }
                 }
-                
+
                 Text(
                     text = if (isExpanded) "▲" else "▼",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             // Expanded content
             if (isExpanded) {
                 Column(
@@ -1069,7 +1071,7 @@ private fun CurrentGroupCard(
                                     color = AppColors.DialogBackground.copy(alpha = 0.7f)
                                 )
                             }
-                            
+
                             // Remove button
                             IconButton(
                                 onClick = { result.ticket?.id?.let { onRemoveTicket(it) } },
@@ -1083,7 +1085,7 @@ private fun CurrentGroupCard(
                             }
                         }
                     }
-                    
+
                     // Commit button
                     AppButton(
                         text = stringResource(R.string.scanner_group_commit_button),

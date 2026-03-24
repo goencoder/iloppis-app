@@ -134,7 +134,9 @@ fun LiveStatsScreen(
                         Text(
                             text = event.name,
                             fontSize = 12.sp,
-                            color = AppColors.DialogBackground.copy(alpha = 0.8f)
+                            color = AppColors.DialogBackground.copy(alpha = 0.8f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 },
@@ -525,10 +527,11 @@ private fun LiveMetaFlipCard(
         modifier = modifier
             .heightIn(min = if (compactMode) 72.dp else 96.dp)
             .aspectRatio(if (compactMode) 2.7f else 2f),
-        shape = RoundedCornerShape(5.dp),
+        shape = RoundedCornerShape(14.dp),
         contentPadding = PaddingValues(0.dp),
         onClick = { showBack = !showBack }
     ) {
+        Text(modifier = Modifier.size(0.dp), text = stringResource(R.string.stats_switch_side_on_image))
         Box(modifier = Modifier) {
             Surface(
                 modifier = Modifier

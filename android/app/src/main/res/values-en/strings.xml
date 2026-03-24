@@ -22,7 +22,8 @@
     <string name="home_open_live_stats">Open live stats</string>
 
     <!-- Stats page -->
-    <string name="stats_title">Stats</string>
+    <string name="stats_title">Live-Stats</string>
+    <string name="stats_switch_side_on_image">Switch image side</string>
 
     <!-- Event List Screen -->
     <string name="search_placeholder">Search flea market…</string>

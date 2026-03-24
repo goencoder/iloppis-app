@@ -22,7 +22,8 @@
     <string name="home_open_live_stats">Öppna live-statistik</string>
 
     <!-- Stats page -->
-    <string name="stats_title">Stats</string>
+    <string name="stats_title">Realtidsstatisk</string>
+    <string name="stats_switch_side_on_image">Byt sida på bilden</string>
 
     <!-- Event List Screen -->
     <string name="search_placeholder">Sök loppis…</string>

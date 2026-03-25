@@ -13,7 +13,6 @@ import se.iloppis.app.ui.screens.live_stats.LiveStatsScreen
 import se.iloppis.app.ui.screens.scanner.ScannerScreen
 import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.screens.splash.SplashScreen
-import se.iloppis.app.ui.states.ScreenAction
 
 /**
  * Application Page Manager
@@ -67,7 +66,7 @@ fun PageManager() {
                     CashierScreen(
                         event = page.event,
                         apiKey = page.apiKey,
-                        onBack = { screen.onAction(ScreenAction.NavigateHome) }
+                        onBack = { screen.popPage() }
                     )
                 }
 
@@ -76,7 +75,7 @@ fun PageManager() {
                     ScannerScreen(
                         event = page.event,
                         apiKey = page.apiKey,
-                        onBack = { screen.onAction(ScreenAction.NavigateHome) }
+                        onBack = { screen.popPage() }
                     )
                 }
 
@@ -85,7 +84,8 @@ fun PageManager() {
                     LiveStatsScreen(
                         event = page.event,
                         apiKey = page.apiKey,
-                        isActivePage = page == activePage
+                        isActivePage = page == activePage,
+                        onBack = { screen.popPage() }
                     )
                 }
             }

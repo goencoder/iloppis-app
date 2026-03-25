@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -22,12 +23,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -78,11 +87,13 @@ private val svLocale = Locale.Builder().setLanguage("sv").setRegion("SE").build(
 private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", svLocale)
     .withZone(ZoneId.systemDefault())
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveStatsScreen(
     event: Event,
     apiKey: String,
-    isActivePage: Boolean = true
+    isActivePage: Boolean = true,
+    onBack: () -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val viewModel: LiveStatsViewModel = viewModel(
@@ -114,33 +125,66 @@ fun LiveStatsScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppColors.Background)
-    ) {
-        when {
-            uiState.isLoading && snapshot == null -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = AppColors.Primary
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(stringResource(R.string.stats_title))
+                        Text(
+                            text = event.name,
+                            fontSize = 12.sp,
+                            color = AppColors.DialogBackground.copy(alpha = 0.8f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.button_back)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = AppColors.ButtonSuccess,
+                    titleContentColor = AppColors.DialogBackground,
+                    navigationIconContentColor = AppColors.DialogBackground
                 )
-            }
+            )
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AppColors.Background)
+                .padding(padding)
+        ) {
+            when {
+                uiState.isLoading && snapshot == null -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = AppColors.Primary
+                    )
+                }
 
-            snapshot == null -> {
-                EmptyState(
-                    errorKey = uiState.errorKey,
-                    onRetry = viewModel::retry,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
+                snapshot == null -> {
+                    EmptyState(
+                        errorKey = uiState.errorKey,
+                        onRetry = viewModel::retry,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
-            else -> {
-                LiveStatsContent(
-                    event = event,
-                    snapshot = snapshot,
-                    errorKey = uiState.errorKey
-                )
+                else -> {
+                    LiveStatsContent(
+                        event = event,
+                        snapshot = snapshot,
+                        errorKey = uiState.errorKey
+                    )
+                }
             }
         }
     }
@@ -470,14 +514,7 @@ private fun LiveMetaFlipCard(
     compactMode: Boolean,
     modifier: Modifier = Modifier
 ) {
-    var showBack by remember(eventId) { mutableStateOf(false) }
-
-    LaunchedEffect(eventId) {
-        while (isActive) {
-            delay(META_ROTATE_MS)
-            showBack = !showBack
-        }
-    }
+    var showBack by remember(eventId) { mutableStateOf(true) }
 
     val flipRotation by animateFloatAsState(
         targetValue = if (showBack) 180f else 0f,
@@ -486,37 +523,43 @@ private fun LiveMetaFlipCard(
     )
     val density = LocalDensity.current
 
-    Box(
+    TextButton(
         modifier = modifier
             .heightIn(min = if (compactMode) 72.dp else 96.dp)
-            .aspectRatio(if (compactMode) 2.7f else 2f)
+            .aspectRatio(if (compactMode) 2.7f else 2f),
+        shape = RoundedCornerShape(14.dp),
+        contentPadding = PaddingValues(0.dp),
+        onClick = { showBack = !showBack }
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    rotationY = flipRotation
-                    cameraDistance = 14f * density.density
-                    alpha = if (flipRotation <= 90f) 1f else 0f
-                },
-            shape = RoundedCornerShape(14.dp),
-            color = AppColors.CardBackground
-        ) {
-            MetaQrFace(url = visitUrl(eventId))
-        }
+        Text(modifier = Modifier.size(0.dp), text = stringResource(R.string.stats_switch_side_on_image))
+        Box(modifier = Modifier) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        rotationY = flipRotation
+                        cameraDistance = 14f * density.density
+                        alpha = if (flipRotation <= 90f) 1f else 0f
+                    },
+                shape = RoundedCornerShape(14.dp),
+                color = AppColors.CardBackground
+            ) {
+                MetaQrFace(url = visitUrl(eventId))
+            }
 
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    rotationY = flipRotation + 180f
-                    cameraDistance = 14f * density.density
-                    alpha = if (flipRotation > 90f) 1f else 0f
-                },
-            shape = RoundedCornerShape(14.dp),
-            color = AppColors.CardBackground
-        ) {
-            MetaBrandFace()
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        rotationY = flipRotation + 180f
+                        cameraDistance = 14f * density.density
+                        alpha = if (flipRotation > 90f) 1f else 0f
+                    },
+                shape = RoundedCornerShape(14.dp),
+                color = AppColors.CardBackground
+            ) {
+                MetaBrandFace()
+            }
         }
     }
 }

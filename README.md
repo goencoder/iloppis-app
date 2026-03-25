@@ -5,6 +5,7 @@ Svensk loppis-app för köpare och säljare.
 <img src=".github/images/home.png" alt="Home page" width=150>
 <img src=".github/images/code input.png" alt="Code input" width=150>
 <img src=".github/images/details.png" alt="Details card" width=150>
+<img src=".github/images/stats.png" alt="Stats screen" width=150>
 
 ## 🚀 Snabbstart
 

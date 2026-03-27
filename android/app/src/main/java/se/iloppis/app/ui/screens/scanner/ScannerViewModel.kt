@@ -254,12 +254,9 @@ class ScannerViewModel(
                 searchError = null
             )
             try {
-                val ticketTypeName = _uiState.value.ticketTypes
-                    .firstOrNull { it.id == ticketTypeId }
-                    ?.name
                 val filter = se.iloppis.app.network.visitor.VisitorTicketFilter(
                     freeText = query.trim(),
-                    ticketType = ticketTypeName,
+                    ticketType = ticketTypeId,
                     status = null
                 )
                 val request = se.iloppis.app.network.visitor.FilterVisitorTicketsRequest(

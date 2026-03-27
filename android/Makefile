@@ -3,6 +3,9 @@
 
 # Environment Setup
 ENV ?= staging
+ifeq ($(ENV),prod)
+ENV := production
+endif
 FLAVOR_CAPITALIZED := $(shell echo $(ENV) | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
 ANDROID_HOME ?= /opt/homebrew/share/android-commandlinetools
 

@@ -1319,6 +1319,45 @@
         ]
       }
     },
+    "/v1/events/{eventId}/cashier-presence:heartbeat": {
+      "post": {
+        "summary": "Update cashier heartbeat for live operations dashboards.\nAuthorization: event API key with cashier role for the same event.",
+        "operationId": "StatsService_UpdateCashierPresence",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateCashierPresenceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StatsServiceUpdateCashierPresenceBody"
+            }
+          }
+        ],
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
     "/v1/events/{eventId}/sold-items": {
       "get": {
         "summary": "List sold items for an event.\nAuthorization: event owner, platform owner, or event API key for the event.",
@@ -1700,6 +1739,37 @@
         ],
         "tags": [
           "EventService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/stats:live": {
+      "get": {
+        "summary": "Retrieve live operational stats for one event.\nAuthorization: event API key (same event) or event owner/platform/delegate with stats:read.",
+        "operationId": "StatsService_GetEventLiveOpsStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetEventLiveOpsStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatsService"
         ]
       }
     },
@@ -2144,6 +2214,52 @@
         "tags": [
           "VendorService"
         ]
+      },
+      "patch": {
+        "summary": "Partially updates a vendor application using a field mask.\nOnly the fields specified in update_mask are modified.\nSupported fields: organizer_handled.\nThe update_mask is implicitly derived from the JSON body keys by gRPC-Gateway.\nAuthorization: platform owner, event owner, or delegate with vendors:update.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy naming retained\nbuf:lint:ignore RPC_RESPONSE_STANDARD_NAME",
+        "operationId": "VendorService_PatchVendor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1VendorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event containing the vendor",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vendorId",
+            "description": "Identifier of the vendor to patch",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "vendor",
+            "description": "Partial vendor data — only fields listed in update_mask are applied",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1Vendor"
+            }
+          }
+        ],
+        "tags": [
+          "VendorService"
+        ]
       }
     },
     "/v1/events/{eventId}/vendors:filter": {
@@ -2362,6 +2478,53 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/VisitorTicketServiceScanVisitorTicketBody"
+            }
+          }
+        ],
+        "tags": [
+          "VisitorTicketService"
+        ]
+      }
+    },
+    "/v1/events/{eventId}/visitor_tickets/{id}:resend_email": {
+      "post": {
+        "summary": "Resend the confirmation email for an existing ticket.\nA fresh PDF with QR code is generated and queued for delivery.\nAuthorization: event owner, platform admin, or delegate with tickets:update.",
+        "operationId": "VisitorTicketService_ResendTicketEmail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ResendTicketEmailResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "eventId",
+            "description": "Event that owns the ticket",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "description": "Ticket identifier",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VisitorTicketServiceResendTicketEmailBody"
             }
           }
         ],
@@ -3268,6 +3431,53 @@
         ]
       }
     },
+    "/v1/profiles/{email}/vendors": {
+      "get": {
+        "summary": "Lists all vendor applications for a profile (paginated).\nAuthorization: caller must be the profile owner or a platform admin/owner.",
+        "operationId": "ProfileService_ListProfileVendors",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListProfileVendorsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "email",
+            "description": "Required. Email of the profile whose vendors to list.\nMust match the authenticated caller's email unless the caller is platform admin/owner.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageSize",
+            "description": "Optional. Max vendors per page. Default 100, max 200.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "nextPageToken",
+            "description": "Optional. Continuation token from a previous response.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProfileService"
+        ]
+      }
+    },
     "/v1/profiles:filter": {
       "post": {
         "summary": "Filters profiles by email or other fields.\nAuthorization: platform owner only.\nbuf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE RPC_RESPONSE_STANDARD_NAME legacy naming retained",
@@ -3622,6 +3832,29 @@
         ]
       }
     },
+    "/v1/stats:ongoing": {
+      "get": {
+        "summary": "Retrieve statistics for ongoing events where the user is a vendor or market owner.\nAuthorization: authenticated user.",
+        "operationId": "StatsService_GetOngoingEventStats",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetOngoingEventStatsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "StatsService"
+        ]
+      }
+    },
     "/v1/stats:perEvent": {
       "get": {
         "summary": "Retrieve statistics broken down per event.\nAuthorization: authenticated user.",
@@ -3758,6 +3991,29 @@
         },
         "tags": [
           "LoginService"
+        ]
+      }
+    },
+    "/v1/vendors/messages/unread-count": {
+      "get": {
+        "summary": "Get the number of unread vendor chat conversations for the current user.\nAuthorization: authenticated user.",
+        "operationId": "ChatService_GetUnreadVendorMessagesCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUnreadVendorMessagesCountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "ChatService"
         ]
       }
     },
@@ -3953,6 +4209,17 @@
       },
       "title": "UpdateEventStateRequest is used to change the lifecycle state of an event.\nThe request includes the event's unique identifier and the desired new state.\nAllowed transitions are:\n  OPEN -\u003e CLOSED\n  CLOSED -\u003e FINALIZED"
     },
+    "LiveCashierStatusState": {
+      "type": "string",
+      "enum": [
+        "STATE_UNSPECIFIED",
+        "STATE_OPEN",
+        "STATE_PROCESSING",
+        "STATE_STALLED",
+        "STATE_OFFLINE"
+      ],
+      "default": "STATE_UNSPECIFIED"
+    },
     "MarketDelegationServiceCreateDelegationBody": {
       "type": "object",
       "properties": {
@@ -4076,6 +4343,24 @@
         }
       }
     },
+    "StatsServiceUpdateCashierPresenceBody": {
+      "type": "object",
+      "properties": {
+        "clientState": {
+          "$ref": "#/definitions/v1CashierClientState"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "pendingPurchasesCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "clientType": {
+          "$ref": "#/definitions/v1CashierClientType"
+        }
+      }
+    },
     "TicketTypeServiceBulkUpdateSaleStartBody": {
       "type": "object",
       "properties": {
@@ -4174,6 +4459,10 @@
         }
       },
       "title": "-----------------------------------\nBegäran om att beställa biljetter atomärt eller \"så många som finns\"\n-----------------------------------"
+    },
+    "VisitorTicketServiceResendTicketEmailBody": {
+      "type": "object",
+      "description": "Request to resend the confirmation email for a ticket.\nA new PDF with QR code is generated and queued for delivery."
     },
     "VisitorTicketServiceScanVisitorTicketBody": {
       "type": "object",
@@ -4417,10 +4706,11 @@
         "API_KEY_TYPE_UNSPECIFIED",
         "API_KEY_TYPE_WEB_CASHIER",
         "API_KEY_TYPE_SCANNER",
-        "API_KEY_TYPE_DESKTOP_CASHIER"
+        "API_KEY_TYPE_DESKTOP_CASHIER",
+        "API_KEY_TYPE_LIVE_STATS"
       ],
       "default": "API_KEY_TYPE_UNSPECIFIED",
-      "description": "- API_KEY_TYPE_WEB_CASHIER: Browser-based cashier (Webkassa)\n - API_KEY_TYPE_SCANNER: Ticket scanner (Biljettscanner)\n - API_KEY_TYPE_DESKTOP_CASHIER: Offline desktop cashier (OfflineKassa)",
+      "description": "- API_KEY_TYPE_WEB_CASHIER: Browser-based cashier (Webkassa)\n - API_KEY_TYPE_SCANNER: Ticket scanner (Biljettscanner)\n - API_KEY_TYPE_DESKTOP_CASHIER: Offline desktop cashier (OfflineKassa)\n - API_KEY_TYPE_LIVE_STATS: Read-only live stats dashboard",
       "title": "Enum defining the type of tool the API key is used for"
     },
     "v1ApiKeyUpdate": {
@@ -4432,6 +4722,10 @@
             "type": "string"
           },
           "title": "Optional. Tags for categorization"
+        },
+        "isActive": {
+          "type": "boolean",
+          "title": "Optional. Enables/disables the key"
         }
       },
       "title": "API key update information"
@@ -4559,6 +4853,27 @@
           "title": "Updated ticket types"
         }
       }
+    },
+    "v1CashierClientState": {
+      "type": "string",
+      "enum": [
+        "CASHIER_CLIENT_STATE_UNSPECIFIED",
+        "CASHIER_CLIENT_STATE_IDLE",
+        "CASHIER_CLIENT_STATE_ACTIVE_TRANSACTION",
+        "CASHIER_CLIENT_STATE_SUBMITTING"
+      ],
+      "default": "CASHIER_CLIENT_STATE_UNSPECIFIED"
+    },
+    "v1CashierClientType": {
+      "type": "string",
+      "enum": [
+        "CASHIER_CLIENT_TYPE_UNSPECIFIED",
+        "CASHIER_CLIENT_TYPE_WEB",
+        "CASHIER_CLIENT_TYPE_JAVA",
+        "CASHIER_CLIENT_TYPE_ANDROID",
+        "CASHIER_CLIENT_TYPE_IOS"
+      ],
+      "default": "CASHIER_CLIENT_TYPE_UNSPECIFIED"
     },
     "v1ChatMessage": {
       "type": "object",
@@ -5201,7 +5516,7 @@
         },
         "searchText": {
           "type": "string",
-          "title": "Free text search across event name, description, and address fields"
+          "description": "Free text search across event name, description, and address fields\nDeprecated: Use `query` + `search_mode=TEXT` instead.\nIf both `query` and `search_text` are set, `query` wins."
         },
         "marketId": {
           "type": "string",
@@ -5217,6 +5532,14 @@
         "sortByDistance": {
           "type": "boolean",
           "title": "When true, sort results by distance from latitude/longitude (requires lat/lng to be set)"
+        },
+        "query": {
+          "type": "string",
+          "description": "Unified search query used together with search_mode."
+        },
+        "searchMode": {
+          "$ref": "#/definitions/v1QuerySearchMode",
+          "description": "Requested interpretation for query.\nALL lets backend try multiple strategies in a defined order.\nTEXT forces free-text search only.\nPLACE forces place resolution + geo search only."
         }
       },
       "title": "Filter criteria for events"
@@ -5345,6 +5668,32 @@
         "total": {
           "type": "integer",
           "format": "int32"
+        },
+        "searchMode": {
+          "$ref": "#/definitions/v1SearchMode",
+          "description": "Which search strategy the backend actually used for this request."
+        },
+        "resolvedPlaceName": {
+          "type": "string",
+          "title": "Human-readable place name when search_mode is PLACE (from geocoder).\nExample: \"Forshaga, Forshaga kommun, Värmlands län, Sverige\""
+        },
+        "geoFallbackToText": {
+          "type": "boolean",
+          "description": "True only when backend actually returns text results after first attempting\nplace resolution. Not set for pure PLACE results, even if they are empty."
+        },
+        "positionFilterApplied": {
+          "type": "boolean",
+          "description": "True when explicit latitude/longitude constrained the result set."
+        },
+        "resolvedPlaceLatitude": {
+          "type": "number",
+          "format": "double",
+          "description": "Resolved latitude when search_mode is PLACE and the query could be geocoded."
+        },
+        "resolvedPlaceLongitude": {
+          "type": "number",
+          "format": "double",
+          "description": "Resolved longitude when search_mode is PLACE and the query could be geocoded."
         }
       },
       "title": "Response for filtering events"
@@ -5453,6 +5802,10 @@
           "type": "integer",
           "format": "int32",
           "title": "Total vendors matched ignoring pagination"
+        },
+        "statusCounts": {
+          "$ref": "#/definitions/v1VendorStatusCounts",
+          "title": "Status counts for current filter scope (excluding status filter itself)"
         }
       }
     },
@@ -5660,6 +6013,51 @@
       },
       "description": "GetEmailDeliveryStatusResponse is the response from checking delivery status of an email."
     },
+    "v1GetEventLiveOpsStatsResponse": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "eventName": {
+          "type": "string"
+        },
+        "cashiers": {
+          "$ref": "#/definitions/v1LiveCashierStats"
+        },
+        "tickets": {
+          "$ref": "#/definitions/v1LiveTicketStats"
+        },
+        "cashierStatuses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1LiveCashierStatus"
+          }
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "eventImageUrl": {
+          "type": "string"
+        },
+        "eventCity": {
+          "type": "string"
+        },
+        "eventStartTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "eventEndTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sales": {
+          "$ref": "#/definitions/v1LiveSalesStats"
+        }
+      }
+    },
     "v1GetEventResponse": {
       "type": "object",
       "properties": {
@@ -5676,6 +6074,22 @@
         "market": {
           "$ref": "#/definitions/v1Market",
           "title": "Market details"
+        }
+      }
+    },
+    "v1GetOngoingEventStatsResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1OngoingEventStats"
+          }
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -5710,6 +6124,23 @@
           }
         }
       }
+    },
+    "v1GetUnreadVendorMessagesCountResponse": {
+      "type": "object",
+      "properties": {
+        "unreadCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "unreadVendorConversations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1UnreadVendorConversation"
+          }
+        }
+      },
+      "title": "Response containing unread vendor chat conversation count"
     },
     "v1GetUserInfoResponse": {
       "type": "object",
@@ -5906,6 +6337,29 @@
         }
       }
     },
+    "v1ListProfileVendorsResponse": {
+      "type": "object",
+      "properties": {
+        "vendors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Vendor"
+          },
+          "description": "Vendor applications belonging to this profile."
+        },
+        "nextPageToken": {
+          "type": "string",
+          "description": "Empty when there are no more pages."
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total number of vendor applications for this profile."
+        }
+      },
+      "description": "Response for listing a profile's vendor applications."
+    },
     "v1ListProfilesResponse": {
       "type": "object",
       "properties": {
@@ -6006,6 +6460,83 @@
         "prevPageToken": {
           "type": "string",
           "title": "Token for the previous page"
+        }
+      }
+    },
+    "v1LiveCashierStats": {
+      "type": "object",
+      "properties": {
+        "openCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "processingCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "stalledCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1LiveCashierStatus": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/definitions/LiveCashierStatusState"
+        },
+        "lastHeartbeatAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastPurchaseAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "pendingPurchasesCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "clientType": {
+          "$ref": "#/definitions/v1CashierClientType"
+        }
+      }
+    },
+    "v1LiveSalesStats": {
+      "type": "object",
+      "properties": {
+        "purchasesTotal": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "itemsTotal": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "revenueTotalSek": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1LiveTicketStats": {
+      "type": "object",
+      "properties": {
+        "bookedCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "scannedCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "notScannedCount": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -6150,6 +6681,72 @@
         "message": {
           "type": "string",
           "title": "Success message"
+        }
+      }
+    },
+    "v1OngoingEventStats": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "eventName": {
+          "type": "string"
+        },
+        "marketId": {
+          "type": "string"
+        },
+        "isMarketOwner": {
+          "type": "boolean"
+        },
+        "isVendor": {
+          "type": "boolean"
+        },
+        "myStats": {
+          "$ref": "#/definitions/v1OngoingSellerStats",
+          "title": "Set only when is_vendor=true"
+        },
+        "marketStats": {
+          "$ref": "#/definitions/v1OngoingMarketStats",
+          "title": "Set only when is_market_owner=true"
+        }
+      }
+    },
+    "v1OngoingMarketStats": {
+      "type": "object",
+      "properties": {
+        "totalItemsSold": {
+          "type": "string",
+          "format": "int64"
+        },
+        "totalSold": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1OngoingSellerStats": {
+      "type": "object",
+      "properties": {
+        "salesCount": {
+          "type": "string",
+          "format": "int64",
+          "title": "number of purchases (distinct purchase_id values)"
+        },
+        "itemsSold": {
+          "type": "string",
+          "format": "int64",
+          "title": "number of items sold"
+        },
+        "totalSold": {
+          "type": "number",
+          "format": "double",
+          "title": "total sold in SEK"
+        },
+        "totalProfit": {
+          "type": "number",
+          "format": "double",
+          "title": "seller's share in SEK"
         }
       }
     },
@@ -6460,6 +7057,17 @@
       },
       "title": "Profile message"
     },
+    "v1QuerySearchMode": {
+      "type": "string",
+      "enum": [
+        "QUERY_SEARCH_MODE_UNSPECIFIED",
+        "QUERY_SEARCH_MODE_ALL",
+        "QUERY_SEARCH_MODE_PLACE",
+        "QUERY_SEARCH_MODE_TEXT"
+      ],
+      "default": "QUERY_SEARCH_MODE_UNSPECIFIED",
+      "description": "Requested interpretation of the query in the request."
+    },
     "v1ReceiveSendGridEventRequest": {
       "type": "object",
       "properties": {
@@ -6567,6 +7175,9 @@
         }
       }
     },
+    "v1ResendTicketEmailResponse": {
+      "type": "object"
+    },
     "v1ResourceType": {
       "type": "string",
       "enum": [
@@ -6657,6 +7268,18 @@
       },
       "title": "Response containing search results for chat messages"
     },
+    "v1SearchMode": {
+      "type": "string",
+      "enum": [
+        "SEARCH_MODE_UNSPECIFIED",
+        "SEARCH_MODE_ALL",
+        "SEARCH_MODE_PLACE",
+        "SEARCH_MODE_TEXT",
+        "SEARCH_MODE_POSITION"
+      ],
+      "default": "SEARCH_MODE_UNSPECIFIED",
+      "description": "Indicates which search strategy the backend actually used for the response.\n\n - SEARCH_MODE_ALL: No search filter was applied (empty query, browsing).\n - SEARCH_MODE_PLACE: Backend resolved the query to a place name and used geo-search.\n - SEARCH_MODE_TEXT: Backend treated the query as free-text (fuzzy/regex).\n - SEARCH_MODE_POSITION: Response was driven only by explicit latitude/longitude without query."
+    },
     "v1SellerLetter": {
       "type": "object",
       "properties": {
@@ -6717,7 +7340,7 @@
           "description": "SendGrid's unique message ID for this email."
         },
         "timestamp": {
-          "type": "integer",
+          "type": "string",
           "format": "int64",
           "description": "Unix timestamp of the event."
         },
@@ -7052,6 +7675,18 @@
         }
       }
     },
+    "v1UnreadVendorConversation": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string"
+        },
+        "vendorId": {
+          "type": "string"
+        }
+      },
+      "title": "Reference to a vendor conversation with unread messages"
+    },
     "v1UpdateApiKeyResponse": {
       "type": "object",
       "properties": {
@@ -7060,6 +7695,22 @@
         }
       },
       "description": "Response containing the updated API key metadata."
+    },
+    "v1UpdateCashierPresenceResponse": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "lastHeartbeatAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
     },
     "v1UpdateDelegationResponse": {
       "type": "object",
@@ -7192,6 +7843,27 @@
         },
         "createdByUserId": {
           "type": "string"
+        },
+        "organizerHandled": {
+          "type": "boolean",
+          "description": "Global handled flag for organizers.\nReset to false when a new vendor-originated chat message arrives."
+        },
+        "organizerHandledAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When organizer_handled was last set to true.",
+          "readOnly": true
+        },
+        "lastChatMessageBy": {
+          "type": "string",
+          "description": "Email of sender for the most recent vendor chat message.",
+          "readOnly": true
+        },
+        "lastChatMessageAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the most recent vendor chat message.",
+          "readOnly": true
         }
       },
       "title": "Vendor message"
@@ -7260,6 +7932,10 @@
         "searchText": {
           "type": "string",
           "title": "Fuzzy search across vendor metadata"
+        },
+        "organizerHandled": {
+          "type": "boolean",
+          "description": "Filter by organizer handled status."
         }
       }
     },
@@ -7294,6 +7970,27 @@
         "VENDOR_SORT_ORDER_DESC"
       ],
       "default": "VENDOR_SORT_ORDER_UNSPECIFIED"
+    },
+    "v1VendorStatusCounts": {
+      "type": "object",
+      "properties": {
+        "all": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pending": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "approved": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "denied": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
     },
     "v1VendorUnpaidInfo": {
       "type": "object",

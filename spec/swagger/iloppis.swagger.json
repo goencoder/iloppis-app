@@ -4565,7 +4565,7 @@
         },
         "ticketType": {
           "type": "string",
-          "title": "Filter by ticket type"
+          "title": "Filter by ticket type ID (TicketType.id), not display name"
         }
       },
       "title": "Admin filter for searching tickets across all events"
@@ -8024,7 +8024,7 @@
         },
         "ticketType": {
           "type": "string",
-          "title": "refererar till TicketType.type"
+          "title": "refererar till TicketType.id (inte visningsnamn)"
         },
         "email": {
           "type": "string",
@@ -8063,7 +8063,7 @@
         },
         "ticketType": {
           "type": "string",
-          "title": "Filter by ticket type"
+          "title": "Filter by ticket type ID (TicketType.id), not display name"
         },
         "status": {
           "$ref": "#/definitions/v1TicketStatus",

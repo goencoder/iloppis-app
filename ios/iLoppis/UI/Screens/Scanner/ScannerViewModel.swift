@@ -186,13 +186,9 @@ final class ScannerViewModel: ObservableObject {
         searchTask = Task {
             defer { if !Task.isCancelled { state.isSearching = false } }
             do {
-                // Resolve ticket type ID to name for the API filter
-                let ticketTypeName: String? = ticketTypeId.flatMap { id in
-                    state.ticketTypes.first(where: { $0.id == id })?.name
-                }
                 let filter = VisitorTicketFilterDto(
                     email: nil,
-                    ticketType: ticketTypeName,
+                    ticketType: ticketTypeId,
                     status: nil,
                     freeText: query.trimmingCharacters(in: .whitespacesAndNewlines)
                 )

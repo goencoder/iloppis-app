@@ -185,6 +185,16 @@ enum class CashierClientType {
 }
 
 /**
+ * Register lifecycle event types for cashier session tracking (ILP-003-08).
+ */
+enum class RegisterLifecycleEventType {
+    REGISTER_LIFECYCLE_OPEN,
+    REGISTER_LIFECYCLE_SYNC,
+    REGISTER_LIFECYCLE_CLOSE_REQUESTED,
+    REGISTER_LIFECYCLE_CLOSE_CONFIRMED
+}
+
+/**
  * Presence heartbeat request body.
  */
 data class CashierPresenceHeartbeatRequest(
@@ -195,7 +205,16 @@ data class CashierPresenceHeartbeatRequest(
     @SerializedName("client_type")
     val clientType: CashierClientType,
     @SerializedName("display_name")
-    val displayName: String? = null
+    val displayName: String? = null,
+    /** ILP-003: lifecycle event to deliver in this heartbeat tick, or null for routine ticks. */
+    @SerializedName("lifecycle_event_type")
+    val lifecycleEventType: RegisterLifecycleEventType? = null,
+    /** ILP-003: register identifier for session tracking. */
+    @SerializedName("register_id")
+    val registerId: String? = null,
+    /** ILP-003: session id assigned when the session was opened. */
+    @SerializedName("session_id")
+    val sessionId: String? = null
 )
 
 /**

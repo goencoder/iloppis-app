@@ -15,6 +15,7 @@ import se.iloppis.app.R
 import se.iloppis.app.data.BackgroundSyncManager
 import se.iloppis.app.data.PendingItemsStore
 import se.iloppis.app.data.RejectedPurchaseStore
+import se.iloppis.app.data.RegisterSessionManager
 import se.iloppis.app.data.VendorRepository
 import se.iloppis.app.data.models.PendingItem
 import se.iloppis.app.data.models.SerializableSoldItemErrorCode
@@ -170,6 +171,7 @@ class CashierViewModel(
     private val _uiState = MutableStateFlow(CashierUiState(eventName = eventName))
     val uiState: StateFlow<CashierUiState> = _uiState.asStateFlow()
     private val cashierApi: CashierAPI = ILoppisClient(clientConfig()).create()
+    private val registerSessionManager = RegisterSessionManager.getInstance(ILoppisAppHolder.appContext)
     private var rawPendingPurchasesCount: Int = 0
     private val heartbeatCoordinator = CashierHeartbeatCoordinator(
         scope = viewModelScope,
@@ -189,7 +191,8 @@ class CashierViewModel(
         },
         onHeartbeatFailure = { throwable ->
             Log.w(TAG, "Cashier heartbeat failed", throwable)
-        }
+        },
+        sessionManager = registerSessionManager
     )
 
     // Rejected purchase popup management
@@ -199,6 +202,8 @@ class CashierViewModel(
     private var lastHandledAuthErrorCode: Int? = null
 
     init {
+        ensureRegisterSessionInitialized()
+
         // Start BackgroundSyncManager (single sync loop, like LoppisKassan)
         val context = ILoppisAppHolder.appContext
         BackgroundSyncManager.start(context, eventId, apiKey)
@@ -590,12 +595,31 @@ class CashierViewModel(
             rawPendingPurchasesCount = rawPendingPurchasesCount
         )
 
-        return CashierPresenceHeartbeatRequest(
-            clientState = snapshot.clientState,
-            pendingPurchasesCount = snapshot.pendingPurchasesCount,
+        return snapshot.toHeartbeatRequest(
             clientType = CashierClientType.CASHIER_CLIENT_TYPE_ANDROID,
-            displayName = snapshot.displayName
+            sessionManager = registerSessionManager
         )
+    }
+
+    private fun ensureRegisterSessionInitialized() {
+        val current = registerSessionManager.getCurrent()
+        val canReuse = current != null &&
+            current.eventId == eventId &&
+            current.state != RegisterSessionManager.State.CLOSED &&
+            current.state != RegisterSessionManager.State.FORCED_CLOSED
+        if (canReuse) {
+            return
+        }
+
+        registerSessionManager.openSession(
+            eventId = eventId,
+            registerId = deriveRegisterId()
+        )
+    }
+
+    private fun deriveRegisterId(): String {
+        val suffix = if (apiKey.length > 8) apiKey.takeLast(8) else apiKey
+        return "android-$suffix"
     }
 
     /**

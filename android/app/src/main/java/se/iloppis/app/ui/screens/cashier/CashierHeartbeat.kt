@@ -78,10 +78,15 @@ internal class CashierHeartbeatCoordinator(
                 }
 
                 try {
-                    val response = sendHeartbeat(requestFactory())
+                    val request = requestFactory()
+                    val response = sendHeartbeat(request)
                     onHeartbeatResponse(response)
-                    // ILP-003-08: clear the one-shot lifecycle event only after a confirmed successful send.
-                    sessionManager?.clearPendingLifecycleEvent()
+                    // ILP-003-08: clear only if the sent request still matches
+                    // the current pending lifecycle state.
+                    sessionManager?.clearPendingLifecycleEvent(
+                        expectedLifecycleEvent = request.lifecycleEventType,
+                        expectedSessionId = request.sessionId
+                    )
                 } catch (cancellationException: CancellationException) {
                     throw cancellationException
                 } catch (t: Throwable) {

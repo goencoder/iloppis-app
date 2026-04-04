@@ -86,10 +86,22 @@ class RegisterSessionManager private constructor(private val appContext: Context
         return true
     }
 
-    /** Called after the pending lifecycle event has been successfully sent in a heartbeat tick. */
+    /**
+     * Called after a lifecycle event has been successfully sent in a heartbeat tick.
+     *
+     * Clears only when the in-flight request matches the current session + pending
+     * lifecycle event to avoid dropping a newer transition set while the request was
+     * in flight.
+     */
     @Synchronized
-    fun clearPendingLifecycleEvent() {
+    fun clearPendingLifecycleEvent(
+        expectedLifecycleEvent: RegisterLifecycleEventType?,
+        expectedSessionId: String?
+    ) {
         val s = current ?: return
+        if (expectedLifecycleEvent == null || expectedSessionId.isNullOrBlank()) return
+        if (s.sessionId != expectedSessionId) return
+        if (s.pendingLifecycleEvent != expectedLifecycleEvent) return
         current = s.copy(pendingLifecycleEvent = null)
         persist(current!!)
     }

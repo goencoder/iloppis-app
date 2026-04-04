@@ -26,6 +26,7 @@ import se.iloppis.app.network.cashier.CashierPresenceHeartbeatRequest
 import se.iloppis.app.network.cashier.PaymentMethod
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.ui.util.UiText
+import java.security.MessageDigest
 import kotlin.math.ceil
 
 private const val TAG = "CashierViewModel"
@@ -618,8 +619,50 @@ class CashierViewModel(
     }
 
     private fun deriveRegisterId(): String {
-        val suffix = if (apiKey.length > 8) apiKey.takeLast(8) else apiKey
-        return "android-$suffix"
+        return try {
+            val digest = MessageDigest.getInstance("SHA-256")
+                .digest(apiKey.toByteArray(Charsets.UTF_8))
+            val hashedSuffix = digest.joinToString(separator = "") { byte ->
+                "%02x".format(byte)
+            }.take(16)
+            "android-$hashedSuffix"
+        } catch (t: Throwable) {
+            val suffix = if (apiKey.length > 8) apiKey.takeLast(8) else apiKey
+            "android-$suffix"
+        }
+    }
+
+    fun requestCloseAndStop() {
+        heartbeatCoordinator.stop()
+        if (!registerSessionManager.requestClose()) {
+            return
+        }
+        viewModelScope.launch {
+            sendHeartbeatOnce()
+            if (registerSessionManager.confirmClose()) {
+                sendHeartbeatOnce()
+            }
+        }
+    }
+
+    private suspend fun sendHeartbeatOnce() {
+        if (eventId.isBlank() || apiKey.isBlank()) return
+        val request = buildHeartbeatRequest()
+        try {
+            withContext(Dispatchers.IO) {
+                cashierApi.updateCashierPresence(
+                    authorization = "Bearer $apiKey",
+                    eventId = eventId,
+                    request = request
+                )
+            }
+            registerSessionManager.clearPendingLifecycleEvent(
+                expectedLifecycleEvent = request.lifecycleEventType,
+                expectedSessionId = request.sessionId
+            )
+        } catch (t: Throwable) {
+            Log.w(TAG, "Cashier heartbeat flush failed", t)
+        }
     }
 
     /**

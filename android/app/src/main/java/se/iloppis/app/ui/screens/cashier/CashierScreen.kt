@@ -189,7 +189,10 @@ fun CashierScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        viewModel.requestCloseAndStop()
+                        onBack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.button_back)

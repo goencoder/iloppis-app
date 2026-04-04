@@ -1,8 +1,8 @@
 package se.iloppis.app.data
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.SharedPreferences
-import android.test.mock.MockContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -118,7 +118,7 @@ class RegisterSessionManagerTest {
         instanceField.set(null, null)
     }
 
-    private class FakeContext : MockContext() {
+    private class FakeContext : ContextWrapper(null) {
         private val prefs = mutableMapOf<String, FakeSharedPreferences>()
 
         override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences {

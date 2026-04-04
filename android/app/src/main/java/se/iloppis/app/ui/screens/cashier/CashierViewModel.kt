@@ -1,5 +1,6 @@
 package se.iloppis.app.ui.screens.cashier
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,6 +27,7 @@ import se.iloppis.app.network.cashier.CashierPresenceHeartbeatRequest
 import se.iloppis.app.network.cashier.PaymentMethod
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.ui.util.UiText
+import java.util.UUID
 import java.security.MessageDigest
 import kotlin.math.ceil
 
@@ -623,26 +625,35 @@ class CashierViewModel(
             val digest = MessageDigest.getInstance("SHA-256")
                 .digest(apiKey.toByteArray(Charsets.UTF_8))
             val hashedSuffix = digest.joinToString(separator = "") { byte ->
-                "%02x".format(byte)
+                "%02x".format(byte.toInt() and 0xff)
             }.take(16)
             "android-$hashedSuffix"
         } catch (t: Throwable) {
-            val suffix = if (apiKey.length > 8) apiKey.takeLast(8) else apiKey
-            "android-$suffix"
+            "android-${getOrCreateRegisterIdSeed()}"
         }
     }
 
-    fun requestCloseAndStop() {
+    private fun getOrCreateRegisterIdSeed(): String {
+        val prefs = ILoppisAppHolder.appContext.getSharedPreferences("register_id", Context.MODE_PRIVATE)
+        val existing = prefs.getString("seed", null)
+        if (!existing.isNullOrBlank()) {
+            return existing
+        }
+        val seed = UUID.randomUUID().toString().replace("-", "").take(16)
+        prefs.edit().putString("seed", seed).apply()
+        return seed
+    }
+
+    suspend fun requestCloseAndFlush(): Boolean {
         heartbeatCoordinator.stop()
         if (!registerSessionManager.requestClose()) {
-            return
+            return false
         }
-        viewModelScope.launch {
+        sendHeartbeatOnce()
+        if (registerSessionManager.confirmClose()) {
             sendHeartbeatOnce()
-            if (registerSessionManager.confirmClose()) {
-                sendHeartbeatOnce()
-            }
         }
+        return true
     }
 
     private suspend fun sendHeartbeatOnce() {

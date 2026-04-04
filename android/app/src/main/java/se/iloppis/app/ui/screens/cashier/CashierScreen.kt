@@ -12,7 +12,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +64,19 @@ fun CashierScreen(
     var showPendingInfoDialog by remember { mutableStateOf(false) }
     var showReviewScreen by remember { mutableStateOf(false) }
     var showDetailedReview by remember { mutableStateOf<String?>(null) }
+    var closeRequested by remember { mutableStateOf(false) }
+
+    LaunchedEffect(closeRequested) {
+        if (!closeRequested) return@LaunchedEffect
+        viewModel.requestCloseAndFlush()
+        onBack()
+    }
+
+    BackHandler {
+        if (!closeRequested) {
+            closeRequested = true
+        }
+    }
 
     // Show detailed purchase review if requested
     if (showDetailedReview != null) {
@@ -190,8 +205,9 @@ fun CashierScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        viewModel.requestCloseAndStop()
-                        onBack()
+                        if (!closeRequested) {
+                            closeRequested = true
+                        }
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,

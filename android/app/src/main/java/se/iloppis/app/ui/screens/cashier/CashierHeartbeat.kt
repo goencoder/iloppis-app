@@ -80,13 +80,13 @@ internal class CashierHeartbeatCoordinator(
                 try {
                     val request = requestFactory()
                     val response = sendHeartbeat(request)
-                    onHeartbeatResponse(response)
                     // ILP-003-08: clear only if the sent request still matches
                     // the current pending lifecycle state.
                     sessionManager?.clearPendingLifecycleEvent(
                         expectedLifecycleEvent = request.lifecycleEventType,
                         expectedSessionId = request.sessionId
                     )
+                    onHeartbeatResponse(response)
                 } catch (cancellationException: CancellationException) {
                     throw cancellationException
                 } catch (t: Throwable) {

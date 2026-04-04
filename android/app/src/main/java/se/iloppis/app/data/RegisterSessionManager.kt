@@ -18,7 +18,8 @@ import java.util.UUID
  *
  * CLOSED and FORCED_CLOSED are terminal; call [openSession] to start a fresh session.
  *
- * Thread-safety: all public methods are [Synchronized] via the companion object lock.
+ * Thread-safety: public methods annotated with [Synchronized] are synchronized on this
+ * [RegisterSessionManager] instance monitor.
  */
 class RegisterSessionManager private constructor(private val appContext: Context) {
 
@@ -110,6 +111,7 @@ class RegisterSessionManager private constructor(private val appContext: Context
     fun recordSync() {
         val s = current ?: return
         if (s.state == State.CLOSED || s.state == State.FORCED_CLOSED) return
+        if (s.pendingLifecycleEvent != null) return
         val updated = s.copy(
             pendingLifecycleEvent = RegisterLifecycleEventType.REGISTER_LIFECYCLE_SYNC
         )

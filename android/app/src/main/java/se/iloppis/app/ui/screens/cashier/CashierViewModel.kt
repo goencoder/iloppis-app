@@ -668,21 +668,29 @@ class CashierViewModel(
                 return false
             }
 
-            if (pending != RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED &&
-                current.state != RegisterSessionManager.State.CLOSED &&
-                current.state != RegisterSessionManager.State.FORCED_CLOSED
+            val updated = registerSessionManager.getCurrent()
+            val updatedPending = updated?.pendingLifecycleEvent
+            val updatedState = updated?.state
+
+            if (updatedPending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED) {
+                if (!sendHeartbeatOnce()) {
+                    return false
+                }
+            } else if (
+                updatedState != RegisterSessionManager.State.CLOSED &&
+                updatedState != RegisterSessionManager.State.FORCED_CLOSED
             ) {
                 if (!sendHeartbeatOnce()) {
                     return false
                 }
             }
 
-            val updated = registerSessionManager.getCurrent()
-            val confirmPending = updated?.pendingLifecycleEvent
+            val refreshed = registerSessionManager.getCurrent()
+            val confirmPending = refreshed?.pendingLifecycleEvent
             val closeConfirmedReady = when {
                 confirmPending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED -> true
-                updated?.state == RegisterSessionManager.State.CLOSED ||
-                    updated?.state == RegisterSessionManager.State.FORCED_CLOSED -> true
+                refreshed?.state == RegisterSessionManager.State.CLOSED ||
+                    refreshed?.state == RegisterSessionManager.State.FORCED_CLOSED -> true
                 else -> registerSessionManager.confirmClose()
             }
             if (!closeConfirmedReady) {

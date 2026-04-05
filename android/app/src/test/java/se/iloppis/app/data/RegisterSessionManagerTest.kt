@@ -140,7 +140,8 @@ class RegisterSessionManagerTest {
     private class FakeSharedPreferences : SharedPreferences {
         private val values = mutableMapOf<String, String?>()
 
-        override fun getString(key: String?, defValue: String?): String? = values[key] ?: defValue
+        override fun getString(key: String?, defValue: String?): String? =
+            if (key == null) defValue else values[key] ?: defValue
 
         override fun edit(): SharedPreferences.Editor = Editor(values)
 

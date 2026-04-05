@@ -143,6 +143,10 @@ fun CashierScreen(
     }
 
     BackHandler {
+        if (showClosePendingDialog) {
+            showClosePendingDialog = false
+            return@BackHandler
+        }
         if (closeRequested) {
             return@BackHandler
         }

@@ -46,11 +46,19 @@ class RegisterSessionManagerTest {
         assertTrue(manager.confirmClose())
         val afterConfirm = manager.getCurrent()
         assertNotNull(afterConfirm)
-        assertEquals(RegisterSessionManager.State.CLOSED, afterConfirm!!.state)
+        assertEquals(RegisterSessionManager.State.CLOSE_REQUESTED, afterConfirm!!.state)
         assertEquals(
             RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED,
             afterConfirm.pendingLifecycleEvent,
         )
+
+        manager.clearPendingLifecycleEvent(
+            expectedLifecycleEvent = RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED,
+            expectedSessionId = afterConfirm.sessionId,
+        )
+        val afterClear = manager.getCurrent()
+        assertNotNull(afterClear)
+        assertEquals(RegisterSessionManager.State.CLOSED, afterClear!!.state)
     }
 
     @Test

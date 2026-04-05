@@ -25,6 +25,7 @@ import se.iloppis.app.network.cashier.CashierAPI
 import se.iloppis.app.network.cashier.CashierClientType
 import se.iloppis.app.network.cashier.CashierPresenceHeartbeatRequest
 import se.iloppis.app.network.cashier.PaymentMethod
+import se.iloppis.app.network.cashier.RegisterLifecycleEventType
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.ui.util.UiText
 import java.util.UUID
@@ -646,18 +647,62 @@ class CashierViewModel(
 
     suspend fun requestCloseAndFlush(): Boolean {
         heartbeatCoordinator.stop()
-        if (!registerSessionManager.requestClose()) {
-            return false
+        var closeCompleted = false
+        try {
+            val current = registerSessionManager.getCurrent() ?: return false
+            val pending = current.pendingLifecycleEvent
+
+            if (pending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED) {
+                closeCompleted = sendHeartbeatOnce()
+                return closeCompleted
+            }
+
+            val closeRequestedReady = when {
+                pending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED -> true
+                current.state == RegisterSessionManager.State.CLOSE_REQUESTED -> true
+                current.state == RegisterSessionManager.State.CLOSED ||
+                    current.state == RegisterSessionManager.State.FORCED_CLOSED -> true
+                else -> registerSessionManager.requestClose()
+            }
+            if (!closeRequestedReady) {
+                return false
+            }
+
+            if (pending != RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED &&
+                current.state != RegisterSessionManager.State.CLOSED &&
+                current.state != RegisterSessionManager.State.FORCED_CLOSED
+            ) {
+                if (!sendHeartbeatOnce()) {
+                    return false
+                }
+            }
+
+            val updated = registerSessionManager.getCurrent()
+            val confirmPending = updated?.pendingLifecycleEvent
+            val closeConfirmedReady = when {
+                confirmPending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED -> true
+                updated?.state == RegisterSessionManager.State.CLOSED ||
+                    updated?.state == RegisterSessionManager.State.FORCED_CLOSED -> true
+                else -> registerSessionManager.confirmClose()
+            }
+            if (!closeConfirmedReady) {
+                return false
+            }
+
+            val finalPending = registerSessionManager.getCurrent()?.pendingLifecycleEvent
+            if (finalPending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED) {
+                if (!sendHeartbeatOnce()) {
+                    return false
+                }
+            }
+
+            closeCompleted = true
+            return true
+        } finally {
+            if (!closeCompleted) {
+                heartbeatCoordinator.start()
+            }
         }
-        val closeRequestedSent = sendHeartbeatOnce()
-        if (!closeRequestedSent) {
-            return false
-        }
-        if (!registerSessionManager.confirmClose()) {
-            return false
-        }
-        val closeConfirmedSent = sendHeartbeatOnce()
-        return closeConfirmedSent
     }
 
     private suspend fun sendHeartbeatOnce(): Boolean {

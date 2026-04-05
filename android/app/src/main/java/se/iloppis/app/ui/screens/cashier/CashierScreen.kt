@@ -68,17 +68,29 @@ fun CashierScreen(
     var showReviewScreen by remember { mutableStateOf(false) }
     var showDetailedReview by remember { mutableStateOf<String?>(null) }
     var closeRequested by remember { mutableStateOf(false) }
-    val requestClose: () -> Unit = {
-        if (showClosePendingDialog) {
-            showClosePendingDialog = false
-        } else if (!closeRequested) {
-            if (uiState.pendingSoldItemsCount > 0) {
-                showClosePendingDialog = true
-            } else {
-                closeRequested = true
-            }
+
+    fun requestCloseFromUi() {
+        if (closeRequested) {
+            return
+        }
+        if (uiState.pendingSoldItemsCount > 0) {
+            showClosePendingDialog = true
+        } else {
+            closeRequested = true
         }
     }
+
+    LaunchedEffect(closeRequested) {
+        if (!closeRequested) return@LaunchedEffect
+        val closeSucceeded = viewModel.requestCloseAndFlush()
+        if (closeSucceeded) {
+            onBack()
+        } else {
+            closeRequested = false
+        }
+    }
+
+    BackHandler(onBack = ::requestCloseFromUi)
 
     if (showClosePendingDialog) {
         AlertDialog(
@@ -143,20 +155,6 @@ fun CashierScreen(
             onNavigateBack = { showReviewScreen = false }
         )
         return
-    }
-
-    LaunchedEffect(closeRequested) {
-        if (!closeRequested) return@LaunchedEffect
-        val closeSucceeded = viewModel.requestCloseAndFlush()
-        if (closeSucceeded) {
-            onBack()
-        } else {
-            closeRequested = false
-        }
-    }
-
-    BackHandler {
-        requestClose()
     }
 
     if (showPendingInfoDialog) {
@@ -264,7 +262,7 @@ fun CashierScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { requestClose() }) {
+                    IconButton(onClick = ::requestCloseFromUi) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.button_back)

@@ -657,66 +657,52 @@ class CashierViewModel(
 
     suspend fun requestCloseAndFlush(): Boolean {
         heartbeatCoordinator.stop()
-        var closeCompleted = false
-        try {
-            val current = registerSessionManager.getCurrent() ?: return false
-            val pending = current.pendingLifecycleEvent
-
-            if (pending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED) {
-                closeCompleted = sendHeartbeatOnce()
-                return closeCompleted
-            }
-
-            val closeRequestedReady = when {
-                pending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED -> true
-                current.state == RegisterSessionManager.State.CLOSE_REQUESTED -> true
-                current.state == RegisterSessionManager.State.CLOSED -> true
-                else -> registerSessionManager.requestClose()
-            }
-            if (!closeRequestedReady) {
-                return false
-            }
-
-            val updated = registerSessionManager.getCurrent()
-            val updatedPending = updated?.pendingLifecycleEvent
-            val updatedState = updated?.state
-
-            if (updatedPending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED) {
-                if (!sendHeartbeatOnce()) {
-                    return false
-                }
-            } else if (
-                updatedState != RegisterSessionManager.State.CLOSED
-            ) {
-                if (!sendHeartbeatOnce()) {
-                    return false
+        val closeSucceeded = when (registerSessionManager.getCurrent()?.state) {
+            RegisterSessionManager.State.OPEN -> {
+                if (!registerSessionManager.requestClose()) {
+                    false
+                } else {
+                    flushRequestedClose()
                 }
             }
+            RegisterSessionManager.State.CLOSE_REQUESTED -> flushRequestedClose()
+            RegisterSessionManager.State.CLOSED -> flushConfirmedClose()
+            else -> false
+        }
 
-            val refreshed = registerSessionManager.getCurrent()
-            val confirmPending = refreshed?.pendingLifecycleEvent
-            val closeConfirmedReady = when {
-                confirmPending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED -> true
-                refreshed?.state == RegisterSessionManager.State.CLOSED -> true
-                else -> registerSessionManager.confirmClose()
-            }
-            if (!closeConfirmedReady) {
-                return false
-            }
+        if (!closeSucceeded) {
+            heartbeatCoordinator.start()
+        }
 
-            val finalPending = registerSessionManager.getCurrent()?.pendingLifecycleEvent
-            if (finalPending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED) {
-                if (!sendHeartbeatOnce()) {
-                    return false
-                }
-            }
+        return closeSucceeded
+    }
 
-            closeCompleted = true
-            return true
-        } finally {
-            if (!closeCompleted) {
-                heartbeatCoordinator.start()
-            }
+    private suspend fun flushRequestedClose(): Boolean {
+        val current = registerSessionManager.getCurrent() ?: return false
+        if (current.state != RegisterSessionManager.State.CLOSE_REQUESTED) {
+            return false
+        }
+        if (
+            current.pendingLifecycleEvent == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED &&
+            !sendHeartbeatOnce()
+        ) {
+            return false
+        }
+        if (!registerSessionManager.confirmClose()) {
+            return false
+        }
+        return flushConfirmedClose()
+    }
+
+    private suspend fun flushConfirmedClose(): Boolean {
+        val current = registerSessionManager.getCurrent() ?: return false
+        if (current.state != RegisterSessionManager.State.CLOSED) {
+            return false
+        }
+        return when (current.pendingLifecycleEvent) {
+            null -> true
+            RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED -> sendHeartbeatOnce()
+            else -> false
         }
     }
 

@@ -649,15 +649,15 @@ class CashierViewModel(
         if (!registerSessionManager.requestClose()) {
             return false
         }
-        sendHeartbeatOnce()
-        if (registerSessionManager.confirmClose()) {
+        val closeRequestedSent = sendHeartbeatOnce()
+        if (closeRequestedSent && registerSessionManager.confirmClose()) {
             sendHeartbeatOnce()
         }
-        return true
+        return closeRequestedSent
     }
 
-    private suspend fun sendHeartbeatOnce() {
-        if (eventId.isBlank() || apiKey.isBlank()) return
+    private suspend fun sendHeartbeatOnce(): Boolean {
+        if (eventId.isBlank() || apiKey.isBlank()) return false
         val request = buildHeartbeatRequest()
         try {
             withContext(Dispatchers.IO) {
@@ -671,8 +671,10 @@ class CashierViewModel(
                 expectedLifecycleEvent = request.lifecycleEventType,
                 expectedSessionId = request.sessionId
             )
+            return true
         } catch (t: Throwable) {
             Log.w(TAG, "Cashier heartbeat flush failed", t)
+            return false
         }
     }
 

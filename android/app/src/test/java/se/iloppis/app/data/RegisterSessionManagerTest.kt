@@ -121,6 +121,8 @@ class RegisterSessionManagerTest {
     private class FakeContext : ContextWrapper(null) {
         private val prefs = mutableMapOf<String, FakeSharedPreferences>()
 
+        override fun getApplicationContext(): Context = this
+
         override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences {
             val key = name ?: "default"
             return prefs.getOrPut(key) { FakeSharedPreferences() }

@@ -67,27 +67,6 @@ fun CashierScreen(
     var showDetailedReview by remember { mutableStateOf<String?>(null) }
     var closeRequested by remember { mutableStateOf(false) }
 
-    LaunchedEffect(closeRequested) {
-        if (!closeRequested) return@LaunchedEffect
-        val closeSucceeded = viewModel.requestCloseAndFlush()
-        if (closeSucceeded) {
-            onBack()
-        } else {
-            closeRequested = false
-        }
-    }
-
-    BackHandler {
-        if (closeRequested) {
-            return@BackHandler
-        }
-        if (uiState.pendingSoldItemsCount > 0) {
-            showClosePendingDialog = true
-        } else {
-            closeRequested = true
-        }
-    }
-
     if (showClosePendingDialog) {
         AlertDialog(
             onDismissRequest = { showClosePendingDialog = false },
@@ -151,6 +130,27 @@ fun CashierScreen(
             onNavigateBack = { showReviewScreen = false }
         )
         return
+    }
+
+    LaunchedEffect(closeRequested) {
+        if (!closeRequested) return@LaunchedEffect
+        val closeSucceeded = viewModel.requestCloseAndFlush()
+        if (closeSucceeded) {
+            onBack()
+        } else {
+            closeRequested = false
+        }
+    }
+
+    BackHandler {
+        if (closeRequested) {
+            return@BackHandler
+        }
+        if (uiState.pendingSoldItemsCount > 0) {
+            showClosePendingDialog = true
+        } else {
+            closeRequested = true
+        }
     }
 
     if (showPendingInfoDialog) {

@@ -30,7 +30,11 @@ class RegisterSessionManager private constructor(private val appContext: Context
         val eventId: String,
         val registerId: String,
         val state: State,
-        /** The lifecycle event type that should be sent on the NEXT heartbeat tick after a transition. */
+        /**
+         * The lifecycle event type that should be sent on the NEXT heartbeat tick after a
+         * transition. When no transition is pending, [recordSync] can set SYNC to report
+         * liveness once per successful heartbeat cycle.
+         */
         val pendingLifecycleEvent: RegisterLifecycleEventType?
     )
 
@@ -79,7 +83,6 @@ class RegisterSessionManager private constructor(private val appContext: Context
         val s = current ?: return false
         if (s.state != State.CLOSE_REQUESTED) return false
         val updated = s.copy(
-            state = State.CLOSED,
             pendingLifecycleEvent = RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED
         )
         current = updated
@@ -103,7 +106,15 @@ class RegisterSessionManager private constructor(private val appContext: Context
         if (expectedLifecycleEvent == null || expectedSessionId.isNullOrBlank()) return
         if (s.sessionId != expectedSessionId) return
         if (s.pendingLifecycleEvent != expectedLifecycleEvent) return
-        current = s.copy(pendingLifecycleEvent = null)
+        val nextState = if (
+            expectedLifecycleEvent == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED &&
+            s.state == State.CLOSE_REQUESTED
+        ) {
+            State.CLOSED
+        } else {
+            s.state
+        }
+        current = s.copy(state = nextState, pendingLifecycleEvent = null)
         persist(current!!)
     }
 
@@ -131,7 +142,7 @@ class RegisterSessionManager private constructor(private val appContext: Context
     // ─────────────────────────────────────────────────────────── persistence
 
     private fun persist(s: Session) {
-        prefs.edit {
+        prefs.edit(commit = true) {
             putString("session_id", s.sessionId)
             putString("event_id", s.eventId)
             putString("register_id", s.registerId)

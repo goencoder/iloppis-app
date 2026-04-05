@@ -650,10 +650,14 @@ class CashierViewModel(
             return false
         }
         val closeRequestedSent = sendHeartbeatOnce()
-        if (closeRequestedSent && registerSessionManager.confirmClose()) {
-            sendHeartbeatOnce()
+        if (!closeRequestedSent) {
+            return false
         }
-        return closeRequestedSent
+        if (!registerSessionManager.confirmClose()) {
+            return false
+        }
+        val closeConfirmedSent = sendHeartbeatOnce()
+        return closeConfirmedSent
     }
 
     private suspend fun sendHeartbeatOnce(): Boolean {

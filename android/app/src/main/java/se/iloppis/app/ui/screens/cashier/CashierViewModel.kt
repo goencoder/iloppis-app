@@ -628,7 +628,7 @@ class CashierViewModel(
                 "%02x".format(byte.toInt() and 0xff)
             }.take(16)
             "android-$hashedSuffix"
-        } catch (t: Throwable) {
+        } catch (e: Exception) {
             "android-${getOrCreateRegisterIdSeed()}"
         }
     }

@@ -68,8 +68,12 @@ fun CashierScreen(
 
     LaunchedEffect(closeRequested) {
         if (!closeRequested) return@LaunchedEffect
-        viewModel.requestCloseAndFlush()
-        onBack()
+        val closeSucceeded = viewModel.requestCloseAndFlush()
+        if (closeSucceeded) {
+            onBack()
+        } else {
+            closeRequested = false
+        }
     }
 
     BackHandler {

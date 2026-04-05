@@ -146,6 +146,7 @@
     <string name="cashier_price_label">Priser</string>
     <string name="cashier_items_title">Varor</string>
     <string name="cashier_no_items">Inga varor tillagda</string>
+    <string name="cashier_register_name">Kassa: %1$s</string>
     <string name="cashier_clear_all">Rensa alla</string>
     <string name="cashier_remove_item">Ta bort</string>
     <string name="cashier_seller_header">Säljare</string>

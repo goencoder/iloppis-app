@@ -160,19 +160,25 @@ sealed class CashierAction {
 class CashierViewModel(
     private val eventId: String,
     private val eventName: String,
-    private val apiKey: String
+    private val apiKey: String,
+    private val cashierAlias: String? = null
 ) : ViewModel() {
 
     companion object {
-        fun factory(eventId: String, eventName: String, apiKey: String) =
+        fun factory(eventId: String, eventName: String, apiKey: String, cashierAlias: String? = null) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    CashierViewModel(eventId, eventName, apiKey) as T
+                    CashierViewModel(eventId, eventName, apiKey, cashierAlias) as T
             }
     }
 
-    private val _uiState = MutableStateFlow(CashierUiState(eventName = eventName))
+    private val _uiState = MutableStateFlow(
+        CashierUiState(
+            eventName = eventName,
+            heartbeatDisplayName = cashierAlias?.takeIf { it.isNotBlank() }
+        )
+    )
     val uiState: StateFlow<CashierUiState> = _uiState.asStateFlow()
     private val cashierApi: CashierAPI = ILoppisClient(clientConfig()).create()
     private val registerSessionManager = RegisterSessionManager.getInstance(ILoppisAppHolder.appContext)
@@ -191,7 +197,10 @@ class CashierViewModel(
             }
         },
         onHeartbeatResponse = { response ->
-            _uiState.value = _uiState.value.copy(heartbeatDisplayName = response.displayName)
+            val responseName = response.displayName
+            if (!responseName.isNullOrBlank()) {
+                _uiState.value = _uiState.value.copy(heartbeatDisplayName = responseName)
+            }
         },
         onHeartbeatFailure = { throwable ->
             Log.w(TAG, "Cashier heartbeat failed", throwable)

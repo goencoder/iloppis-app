@@ -103,7 +103,12 @@ sealed class ScreenPage {
         /**
          * API key
          */
-        val apiKey: String
+        val apiKey: String,
+
+        /**
+         * Cashier display name (alias)
+         */
+        val alias: String? = null
     ) : ScreenPage()
 
     /**

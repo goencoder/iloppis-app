@@ -49,6 +49,7 @@ import se.iloppis.app.ui.theme.AppColors
 fun CashierScreen(
     event: Event,
     apiKey: String,
+    cashierAlias: String? = null,
     onBack: () -> Unit
 ) {
     val viewModel: CashierViewModel = viewModel(
@@ -56,7 +57,8 @@ fun CashierScreen(
         factory = CashierViewModel.factory(
             eventId = event.id,
             eventName = event.name,
-            apiKey = apiKey
+            apiKey = apiKey,
+            cashierAlias = cashierAlias
         )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -213,6 +215,16 @@ fun CashierScreen(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                        val registerName = uiState.heartbeatDisplayName
+                        if (!registerName.isNullOrBlank()) {
+                            Text(
+                                text = stringResource(R.string.cashier_register_name, registerName),
+                                fontSize = 12.sp,
+                                color = AppColors.DialogBackground.copy(alpha = 0.8f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -364,7 +376,8 @@ fun CashierScreen(
                 TransactionList(
                     transactions = uiState.transactions,
                     onRemoveItem = { viewModel.onAction(CashierAction.RemoveItem(it)) },
-                    onClearAll = { viewModel.onAction(CashierAction.ClearAllItems) }
+                    onClearAll = { viewModel.onAction(CashierAction.ClearAllItems) },
+                    registerName = uiState.heartbeatDisplayName
                 )
 
                 // Payment section

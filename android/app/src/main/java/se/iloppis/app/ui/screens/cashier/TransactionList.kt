@@ -31,6 +31,7 @@ fun TransactionList(
     transactions: List<TransactionItem>,
     onRemoveItem: (String) -> Unit,
     onClearAll: () -> Unit,
+    registerName: String? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -71,12 +72,21 @@ fun TransactionList(
             Spacer(modifier = Modifier.height(8.dp))
 
             if (transactions.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.cashier_no_items),
-                    fontSize = 14.sp,
-                    color = AppColors.TextMuted,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
+                Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                    Text(
+                        text = stringResource(R.string.cashier_no_items),
+                        fontSize = 14.sp,
+                        color = AppColors.TextMuted
+                    )
+                    if (!registerName.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.cashier_register_name, registerName),
+                            fontSize = 12.sp,
+                            color = AppColors.TextMuted
+                        )
+                    }
+                }
             } else {
                 // Table header
                 Row(

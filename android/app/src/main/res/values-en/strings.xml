@@ -137,6 +137,7 @@
     <string name="cashier_price_label">Prices</string>
     <string name="cashier_items_title">Items</string>
     <string name="cashier_no_items">No items added</string>
+    <string name="cashier_register_name">Cashier: %1$s</string>
     <string name="cashier_clear_all">Clear all</string>
     <string name="cashier_remove_item">Remove</string>
     <string name="cashier_seller_header">Seller</string>

@@ -13,17 +13,16 @@ import java.util.UUID
  *
  * ```
  * OPEN ──► CLOSE_REQUESTED ──► CLOSED
- *   └─────────────────────────────► FORCED_CLOSED
  * ```
  *
- * CLOSED and FORCED_CLOSED are terminal; call [openSession] to start a fresh session.
+ * CLOSED is terminal; call [openSession] to start a fresh session.
  *
  * Thread-safety: public methods annotated with [Synchronized] are synchronized on this
  * [RegisterSessionManager] instance monitor.
  */
 class RegisterSessionManager private constructor(private val appContext: Context) {
 
-    enum class State { OPEN, CLOSE_REQUESTED, CLOSED, FORCED_CLOSED }
+    enum class State { OPEN, CLOSE_REQUESTED, CLOSED }
 
     data class Session(
         val sessionId: String,
@@ -121,7 +120,7 @@ class RegisterSessionManager private constructor(private val appContext: Context
     @Synchronized
     fun recordSync() {
         val s = current ?: return
-        if (s.state == State.CLOSED || s.state == State.FORCED_CLOSED) return
+        if (s.state == State.CLOSED) return
         if (s.pendingLifecycleEvent != null) return
         val updated = s.copy(
             pendingLifecycleEvent = RegisterLifecycleEventType.REGISTER_LIFECYCLE_SYNC
@@ -142,7 +141,8 @@ class RegisterSessionManager private constructor(private val appContext: Context
     // ─────────────────────────────────────────────────────────── persistence
 
     private fun persist(s: Session) {
-        prefs.edit(commit = true) {
+        val commitNow = s.state == State.CLOSED
+        prefs.edit(commit = commitNow) {
             putString("session_id", s.sessionId)
             putString("event_id", s.eventId)
             putString("register_id", s.registerId)

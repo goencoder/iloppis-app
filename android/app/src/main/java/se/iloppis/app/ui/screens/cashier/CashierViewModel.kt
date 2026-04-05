@@ -616,17 +616,18 @@ class CashierViewModel(
 
     private fun ensureRegisterSessionInitialized() {
         val current = registerSessionManager.getCurrent()
+        val expectedRegisterId = deriveRegisterId()
         val canReuse = current != null &&
             current.eventId == eventId &&
-            current.state != RegisterSessionManager.State.CLOSED &&
-            current.state != RegisterSessionManager.State.FORCED_CLOSED
+            current.registerId == expectedRegisterId &&
+            current.state != RegisterSessionManager.State.CLOSED
         if (canReuse) {
             return
         }
 
         registerSessionManager.openSession(
             eventId = eventId,
-            registerId = deriveRegisterId()
+            registerId = expectedRegisterId
         )
     }
 
@@ -669,8 +670,7 @@ class CashierViewModel(
             val closeRequestedReady = when {
                 pending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED -> true
                 current.state == RegisterSessionManager.State.CLOSE_REQUESTED -> true
-                current.state == RegisterSessionManager.State.CLOSED ||
-                    current.state == RegisterSessionManager.State.FORCED_CLOSED -> true
+                current.state == RegisterSessionManager.State.CLOSED -> true
                 else -> registerSessionManager.requestClose()
             }
             if (!closeRequestedReady) {
@@ -686,8 +686,7 @@ class CashierViewModel(
                     return false
                 }
             } else if (
-                updatedState != RegisterSessionManager.State.CLOSED &&
-                updatedState != RegisterSessionManager.State.FORCED_CLOSED
+                updatedState != RegisterSessionManager.State.CLOSED
             ) {
                 if (!sendHeartbeatOnce()) {
                     return false
@@ -698,8 +697,7 @@ class CashierViewModel(
             val confirmPending = refreshed?.pendingLifecycleEvent
             val closeConfirmedReady = when {
                 confirmPending == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED -> true
-                refreshed?.state == RegisterSessionManager.State.CLOSED ||
-                    refreshed?.state == RegisterSessionManager.State.FORCED_CLOSED -> true
+                refreshed?.state == RegisterSessionManager.State.CLOSED -> true
                 else -> registerSessionManager.confirmClose()
             }
             if (!closeConfirmedReady) {

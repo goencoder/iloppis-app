@@ -86,9 +86,7 @@ internal class CashierHeartbeatCoordinator(
                         expectedLifecycleEvent = request.lifecycleEventType,
                         expectedSessionId = request.sessionId
                     )
-                    if (request.lifecycleEventType == null) {
-                        sessionManager?.recordSync()
-                    }
+                    sessionManager?.recordSync()
                     onHeartbeatResponse(response)
                 } catch (cancellationException: CancellationException) {
                     throw cancellationException

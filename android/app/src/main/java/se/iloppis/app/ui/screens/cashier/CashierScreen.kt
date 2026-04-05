@@ -53,7 +53,7 @@ fun CashierScreen(
     onBack: () -> Unit
 ) {
     val viewModel: CashierViewModel = viewModel(
-        key = "cashier-${event.id}",
+        key = "cashier-${event.id}-${apiKey.hashCode()}-${cashierAlias ?: "default"}",
         factory = CashierViewModel.factory(
             eventId = event.id,
             eventName = event.name,
@@ -68,6 +68,17 @@ fun CashierScreen(
     var showReviewScreen by remember { mutableStateOf(false) }
     var showDetailedReview by remember { mutableStateOf<String?>(null) }
     var closeRequested by remember { mutableStateOf(false) }
+    val requestClose: () -> Unit = {
+        if (showClosePendingDialog) {
+            showClosePendingDialog = false
+        } else if (!closeRequested) {
+            if (uiState.pendingSoldItemsCount > 0) {
+                showClosePendingDialog = true
+            } else {
+                closeRequested = true
+            }
+        }
+    }
 
     if (showClosePendingDialog) {
         AlertDialog(
@@ -145,18 +156,7 @@ fun CashierScreen(
     }
 
     BackHandler {
-        if (showClosePendingDialog) {
-            showClosePendingDialog = false
-            return@BackHandler
-        }
-        if (closeRequested) {
-            return@BackHandler
-        }
-        if (uiState.pendingSoldItemsCount > 0) {
-            showClosePendingDialog = true
-        } else {
-            closeRequested = true
-        }
+        requestClose()
     }
 
     if (showPendingInfoDialog) {
@@ -264,16 +264,7 @@ fun CashierScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        if (closeRequested) {
-                            return@IconButton
-                        }
-                        if (uiState.pendingSoldItemsCount > 0) {
-                            showClosePendingDialog = true
-                        } else {
-                            closeRequested = true
-                        }
-                    }) {
+                    IconButton(onClick = { requestClose() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.button_back)

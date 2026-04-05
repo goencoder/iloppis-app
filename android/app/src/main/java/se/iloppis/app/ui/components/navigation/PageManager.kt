@@ -66,6 +66,7 @@ fun PageManager() {
                     CashierScreen(
                         event = page.event,
                         apiKey = page.apiKey,
+                        cashierAlias = page.alias,
                         onBack = { screen.popPage() }
                     )
                 }

@@ -146,6 +146,7 @@
     <string name="cashier_price_label">Priser</string>
     <string name="cashier_items_title">Varor</string>
     <string name="cashier_no_items">Inga varor tillagda</string>
+    <string name="cashier_register_name">Kassa: %1$s</string>
     <string name="cashier_clear_all">Rensa alla</string>
     <string name="cashier_remove_item">Ta bort</string>
     <string name="cashier_seller_header">Säljare</string>
@@ -320,6 +321,9 @@
     <!-- Cashier Screen - Additional -->
     <string name="cashier_pending_info_title">Utestående köp</string>
     <string name="cashier_pending_info_message">Siffran visar hur många köp som är sparade lokalt och ännu inte har bekräftats uppladdade till servern. Den ska gå ner när synk lyckas.</string>
+    <string name="cashier_close_pending_title">Utestående köp måste bekräftas</string>
+    <string name="cashier_close_pending_message">Kassan har %1$d köp som ännu inte är uppladdade till iLoppis. Om du stänger nu kan dessa saknas i rapporten. Vill du fortsätta stänga?</string>
+    <string name="cashier_close_pending_confirm">Stäng ändå</string>
 
     <!-- Swipe to dismiss box -->
     <string name="swipe_box_remove">Ta bort</string>

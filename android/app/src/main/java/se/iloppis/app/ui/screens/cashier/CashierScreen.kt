@@ -70,6 +70,10 @@ fun CashierScreen(
     var closeRequested by remember { mutableStateOf(false) }
 
     fun requestCloseFromUi() {
+        if (showClosePendingDialog) {
+            showClosePendingDialog = false
+            return
+        }
         if (closeRequested) {
             return
         }

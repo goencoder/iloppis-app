@@ -39,9 +39,9 @@ internal fun CashierUiState.toCashierPresenceSnapshot(rawPendingPurchasesCount: 
  */
 internal fun CashierPresenceSnapshot.toHeartbeatRequest(
     clientType: se.iloppis.app.network.cashier.CashierClientType,
-    sessionManager: RegisterSessionManager? = null
+    sessionManager: RegisterSessionManager
 ): CashierPresenceHeartbeatRequest {
-    val session = sessionManager?.getCurrent()
+    val session = sessionManager.getCurrent()
     return CashierPresenceHeartbeatRequest(
         clientState = clientState,
         pendingPurchasesCount = pendingPurchasesCount,
@@ -86,7 +86,9 @@ internal class CashierHeartbeatCoordinator(
                         expectedLifecycleEvent = request.lifecycleEventType,
                         expectedSessionId = request.sessionId
                     )
-                    sessionManager?.recordSync()
+                    if (request.lifecycleEventType == null) {
+                        sessionManager?.recordSync()
+                    }
                     onHeartbeatResponse(response)
                 } catch (cancellationException: CancellationException) {
                     throw cancellationException

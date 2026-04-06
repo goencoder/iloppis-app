@@ -106,7 +106,7 @@ fun CashierScreen(
                         showClosePendingDialog = false
                         closeRequested = true
                     },
-                    variant = AppButtonVariant.Warning,
+                    variant = AppButtonVariant.Danger,
                     size = AppButtonSize.Small
                 )
             },

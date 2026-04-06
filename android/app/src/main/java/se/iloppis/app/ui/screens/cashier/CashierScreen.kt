@@ -54,7 +54,7 @@ fun CashierScreen(
     onBack: () -> Unit
 ) {
     val viewModel: CashierViewModel = viewModel(
-        key = "cashier-${event.id}-${apiKey.hashCode()}-${cashierAlias ?: "default"}",
+        key = CashierViewModel.buildViewModelKey(event.id, apiKey, cashierAlias),
         factory = CashierViewModel.factory(
             eventId = event.id,
             eventName = event.name,

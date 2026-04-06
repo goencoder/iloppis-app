@@ -167,6 +167,18 @@ class CashierViewModel(
 
     companion object {
         private val KASSA_CODE_REGEX = Regex("^[A-Z0-9]{3}-[A-Z0-9]{3}$")
+        fun buildViewModelKey(eventId: String, apiKey: String, cashierAlias: String?): String {
+            val keySuffix = try {
+                val digest = MessageDigest.getInstance("SHA-256")
+                    .digest(apiKey.toByteArray(Charsets.UTF_8))
+                digest.joinToString(separator = "") { byte ->
+                    "%02x".format(byte.toInt() and 0xff)
+                }.take(16)
+            } catch (e: Exception) {
+                UUID.nameUUIDFromBytes(apiKey.toByteArray(Charsets.UTF_8)).toString()
+            }
+            return "cashier-$eventId-$keySuffix-${cashierAlias ?: "default"}"
+        }
         fun factory(eventId: String, eventName: String, apiKey: String, cashierAlias: String? = null) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")

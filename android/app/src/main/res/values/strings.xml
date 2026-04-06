@@ -32,6 +32,7 @@
     <string name="filter_upcoming">Kommande</string>
     <string name="filter_ongoing">Pågående</string>
     <string name="filter_past">Förflutna</string>
+    <string name="filter_saved">Sparade</string>
     <string name="error_prefix">Fel: %1$s</string>
     <string name="no_events_found">Inga loppisar hittades</string>
     <string name="location_not_specified">Plats ej angiven</string>

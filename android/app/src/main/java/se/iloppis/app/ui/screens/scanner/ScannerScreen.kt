@@ -73,6 +73,7 @@ import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.dialogs.TicketDetailSheet
 import se.iloppis.app.ui.dialogs.TicketSearchDialog
 import se.iloppis.app.ui.theme.AppColors
+import se.iloppis.app.ui.utils.formatValidTimeOrUnknown
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -533,11 +534,19 @@ private fun ResultSheet(
                     },
                     stringResource(
                         R.string.scanner_field_valid_from,
-                        formatValidTimeOrUnknown(ticket.validFrom, stringResource(R.string.scanner_field_unknown_value))
+                        formatValidTimeOrUnknown(
+                            ticket.validFrom,
+                            stringResource(R.string.scanner_field_unknown_value),
+                            windowFormatter
+                        )
                     ),
                     stringResource(
                         R.string.scanner_field_valid_until,
-                        formatValidTimeOrUnknown(ticket.validUntil, stringResource(R.string.scanner_field_unknown_value))
+                        formatValidTimeOrUnknown(
+                            ticket.validUntil,
+                            stringResource(R.string.scanner_field_unknown_value),
+                            windowFormatter
+                        )
                     ),
                     stringResource(R.string.scanner_field_event, eventName)
                 )
@@ -815,10 +824,6 @@ private fun HistoryRow(
     }
 }
 
-private fun formatValidTimeOrUnknown(value: java.time.Instant?, fallback: String): String {
-    return value?.let { windowFormatter.format(it) } ?: fallback
-}
-
 @Composable
 private fun TicketDetailsDialog(
     result: ScanResult,
@@ -899,12 +904,12 @@ private fun TicketDetailsDialog(
                     val unknownValue = stringResource(R.string.scanner_field_unknown_value)
                     DetailRow(
                         label = stringResource(R.string.scanner_field_valid_from_label),
-                        value = formatValidTimeOrUnknown(ticket.validFrom, unknownValue)
+                        value = formatValidTimeOrUnknown(ticket.validFrom, unknownValue, windowFormatter)
                     )
 
                     DetailRow(
                         label = stringResource(R.string.scanner_field_valid_until_label),
-                        value = formatValidTimeOrUnknown(ticket.validUntil, unknownValue)
+                        value = formatValidTimeOrUnknown(ticket.validUntil, unknownValue, windowFormatter)
                     )
 
                     // Event

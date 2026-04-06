@@ -24,6 +24,7 @@ import se.iloppis.app.domain.model.VisitorTicketStatus
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
+import se.iloppis.app.ui.utils.formatValidTimeOrUnknown
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -109,11 +110,11 @@ fun TicketDetailSheet(
             val unknownValue = stringResource(R.string.scanner_field_unknown_value)
             DetailField(
                 label = stringResource(R.string.scanner_field_valid_from_label),
-                value = formatValidTimeOrUnknown(ticket.validFrom, unknownValue)
+                value = formatValidTimeOrUnknown(ticket.validFrom, unknownValue, dateTimeFormatter)
             )
             DetailField(
                 label = stringResource(R.string.scanner_field_valid_until_label),
-                value = formatValidTimeOrUnknown(ticket.validUntil, unknownValue)
+                value = formatValidTimeOrUnknown(ticket.validUntil, unknownValue, dateTimeFormatter)
             )
 
             // Ticket ID
@@ -172,8 +173,4 @@ private fun DetailField(
             )
         }
     }
-}
-
-private fun formatValidTimeOrUnknown(value: java.time.Instant?, fallback: String): String {
-    return value?.let { dateTimeFormatter.format(it) } ?: fallback
 }

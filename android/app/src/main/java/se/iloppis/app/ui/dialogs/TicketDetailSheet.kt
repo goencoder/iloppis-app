@@ -106,14 +106,15 @@ fun TicketDetailSheet(
                 )
             }
 
-            // Valid window
-            val validWindow = buildValidWindowString(ticket)
-            if (validWindow != null) {
-                DetailField(
-                    label = stringResource(R.string.scanner_field_valid_window_label),
-                    value = validWindow
-                )
-            }
+            val unknownValue = stringResource(R.string.scanner_field_unknown_value)
+            DetailField(
+                label = stringResource(R.string.scanner_field_valid_from_label),
+                value = formatValidTimeOrUnknown(ticket.validFrom, unknownValue)
+            )
+            DetailField(
+                label = stringResource(R.string.scanner_field_valid_until_label),
+                value = formatValidTimeOrUnknown(ticket.validUntil, unknownValue)
+            )
 
             // Ticket ID
             DetailField(
@@ -173,13 +174,6 @@ private fun DetailField(
     }
 }
 
-private fun buildValidWindowString(ticket: VisitorTicket): String? {
-    val from = ticket.validFrom?.let { dateTimeFormatter.format(it) }
-    val until = ticket.validUntil?.let { dateTimeFormatter.format(it) }
-    return when {
-        from != null && until != null -> "$from – $until"
-        from != null -> from
-        until != null -> until
-        else -> null
-    }
+private fun formatValidTimeOrUnknown(value: java.time.Instant?, fallback: String): String {
+    return value?.let { dateTimeFormatter.format(it) } ?: fallback
 }

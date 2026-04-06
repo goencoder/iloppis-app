@@ -531,9 +531,14 @@ private fun ResultSheet(
                     ticket.scannedAt?.let { scanned ->
                         stringResource(R.string.scanner_field_scanned_at, timeFormatter.format(scanned))
                     },
-                    formatValidWindow(ticket)?.let { window ->
-                        stringResource(R.string.scanner_field_valid_window, window)
-                    },
+                    stringResource(
+                        R.string.scanner_field_valid_from,
+                        formatValidTimeOrUnknown(ticket.validFrom, stringResource(R.string.scanner_field_unknown_value))
+                    ),
+                    stringResource(
+                        R.string.scanner_field_valid_until,
+                        formatValidTimeOrUnknown(ticket.validUntil, stringResource(R.string.scanner_field_unknown_value))
+                    ),
                     stringResource(R.string.scanner_field_event, eventName)
                 )
                 if (details.isNotEmpty()) {
@@ -810,15 +815,8 @@ private fun HistoryRow(
     }
 }
 
-private fun formatValidWindow(ticket: se.iloppis.app.domain.model.VisitorTicket): String? {
-    val start = ticket.validFrom?.let { windowFormatter.format(it) }
-    val end = ticket.validUntil?.let { windowFormatter.format(it) }
-    return when {
-        start != null && end != null -> "$start – $end"
-        start != null -> start
-        end != null -> end
-        else -> null
-    }
+private fun formatValidTimeOrUnknown(value: java.time.Instant?, fallback: String): String {
+    return value?.let { windowFormatter.format(it) } ?: fallback
 }
 
 @Composable
@@ -898,13 +896,16 @@ private fun TicketDetailsDialog(
                         )
                     }
 
-                    // Valid window
-                    formatValidWindow(ticket)?.let { window ->
-                        DetailRow(
-                            label = stringResource(R.string.scanner_field_valid_window_label),
-                            value = window
-                        )
-                    }
+                    val unknownValue = stringResource(R.string.scanner_field_unknown_value)
+                    DetailRow(
+                        label = stringResource(R.string.scanner_field_valid_from_label),
+                        value = formatValidTimeOrUnknown(ticket.validFrom, unknownValue)
+                    )
+
+                    DetailRow(
+                        label = stringResource(R.string.scanner_field_valid_until_label),
+                        value = formatValidTimeOrUnknown(ticket.validUntil, unknownValue)
+                    )
 
                     // Event
                     DetailRow(

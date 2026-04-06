@@ -202,8 +202,10 @@
     <string name="scanner_field_ticket_type">Biljettyp: %1$s</string>
     <string name="scanner_field_email">E-post: %1$s</string>
     <string name="scanner_field_scanned_at">Skannad: %1$s</string>
-    <string name="scanner_field_valid_window">Giltighet: %1$s</string>
+    <string name="scanner_field_valid_from">Giltig från: %1$s</string>
+    <string name="scanner_field_valid_until">Giltig till: %1$s</string>
     <string name="scanner_field_event">Event: %1$s</string>
+    <string name="scanner_field_unknown_value">Okänd</string>
 
     <!-- Ticket details dialog -->
     <string name="scanner_ticket_details_title">Biljettinfo</string>
@@ -211,7 +213,8 @@
     <string name="scanner_field_email_label">Innehavare</string>
     <string name="scanner_field_status_label">Status</string>
     <string name="scanner_field_scanned_at_label">Skannad</string>
-    <string name="scanner_field_valid_window_label">Giltig från–till</string>
+    <string name="scanner_field_valid_from_label">Giltig från</string>
+    <string name="scanner_field_valid_until_label">Giltig till</string>
     <string name="scanner_field_event_label">Event</string>
     <string name="scanner_field_ticket_id_label">Biljett-ID</string>
     <string name="scanner_button_close">Stäng</string>

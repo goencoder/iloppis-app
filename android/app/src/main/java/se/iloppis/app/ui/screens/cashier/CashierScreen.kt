@@ -378,7 +378,8 @@ fun CashierScreen(
                     onRemoveItem = { viewModel.onAction(CashierAction.RemoveItem(it)) },
                     onClearAll = { viewModel.onAction(CashierAction.ClearAllItems) },
                     registerName = uiState.heartbeatDisplayName,
-                    showOfflineWarning = uiState.isIdle && uiState.isOffline
+                    showOfflineWarning =
+                        uiState.isIdle && uiState.isOffline && uiState.pendingSoldItemsCount > 0
                 )
 
                 // Payment section

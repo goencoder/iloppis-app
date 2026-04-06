@@ -199,12 +199,11 @@ class CashierViewModel(
         },
         onHeartbeatResponse = { response ->
             val responseName = response.displayName
-            if (!responseName.isNullOrBlank()) {
-                _uiState.value = _uiState.value.copy(
-                    heartbeatDisplayName = responseName,
-                    isOffline = false
-                )
-            }
+            _uiState.value = _uiState.value.copy(
+                heartbeatDisplayName = responseName?.takeIf { it.isNotBlank() }
+                    ?: _uiState.value.heartbeatDisplayName,
+                isOffline = false
+            )
         },
         onHeartbeatFailure = { throwable ->
             Log.w(TAG, "Cashier heartbeat failed", throwable)
@@ -719,14 +718,28 @@ class CashierViewModel(
 
     private suspend fun flushConfirmedClose(): Boolean {
         val current = registerSessionManager.getCurrent() ?: return false
-        if (current.state != RegisterSessionManager.State.CLOSED) {
+        if (
+            current.state != RegisterSessionManager.State.CLOSED &&
+            current.state != RegisterSessionManager.State.CLOSE_REQUESTED
+        ) {
             return false
         }
-        return when (current.pendingLifecycleEvent) {
-            null -> true
-            RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED -> sendHeartbeatOnce()
-            else -> false
+        if (
+            current.pendingLifecycleEvent != null &&
+            current.pendingLifecycleEvent != RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED
+        ) {
+            return false
         }
+        if (
+            current.pendingLifecycleEvent ==
+            RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED &&
+            !sendHeartbeatOnce()
+        ) {
+            return false
+        }
+        val updated = registerSessionManager.getCurrent() ?: return false
+        return updated.state == RegisterSessionManager.State.CLOSED &&
+            updated.pendingLifecycleEvent == null
     }
 
     private suspend fun sendHeartbeatOnce(): Boolean {

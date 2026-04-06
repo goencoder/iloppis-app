@@ -685,6 +685,21 @@ class CashierViewModel(
         return closeSucceeded
     }
 
+    fun requestCloseIfIdle() {
+        if (_uiState.value.pendingSoldItemsCount > 0) {
+            return
+        }
+        val state = registerSessionManager.getCurrent()?.state ?: return
+        if (state != RegisterSessionManager.State.OPEN &&
+            state != RegisterSessionManager.State.CLOSE_REQUESTED
+        ) {
+            return
+        }
+        viewModelScope.launch {
+            requestCloseAndFlush()
+        }
+    }
+
     private suspend fun flushRequestedClose(): Boolean {
         val current = registerSessionManager.getCurrent() ?: return false
         if (current.state != RegisterSessionManager.State.CLOSE_REQUESTED) {

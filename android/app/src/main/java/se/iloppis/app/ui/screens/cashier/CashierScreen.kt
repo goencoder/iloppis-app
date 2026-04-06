@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +63,12 @@ fun CashierScreen(
         )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.requestCloseIfIdle()
+        }
+    }
 
     var showPendingInfoDialog by remember { mutableStateOf(false) }
     var showClosePendingDialog by remember { mutableStateOf(false) }

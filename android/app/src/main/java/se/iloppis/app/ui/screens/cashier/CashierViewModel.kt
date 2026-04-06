@@ -166,6 +166,7 @@ class CashierViewModel(
 ) : ViewModel() {
 
     companion object {
+        private val KASSA_CODE_REGEX = Regex("^[A-Z0-9]{3}-[A-Z0-9]{3}$")
         fun factory(eventId: String, eventName: String, apiKey: String, cashierAlias: String? = null) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -614,8 +615,11 @@ class CashierViewModel(
         val snapshot = _uiState.value.toCashierPresenceSnapshot(
             rawPendingPurchasesCount = rawPendingPurchasesCount
         )
+        val sanitizedSnapshot = snapshot.copy(
+            displayName = sanitizeHeartbeatDisplayName(snapshot.displayName)
+        )
 
-        return snapshot.toHeartbeatRequest(
+        return sanitizedSnapshot.toHeartbeatRequest(
             clientType = CashierClientType.CASHIER_CLIENT_TYPE_ANDROID,
             sessionManager = registerSessionManager
         )
@@ -649,6 +653,17 @@ class CashierViewModel(
         } catch (e: Exception) {
             "android-${getOrCreateRegisterIdSeed()}"
         }
+    }
+
+    private fun sanitizeHeartbeatDisplayName(displayName: String?): String? {
+        val trimmed = displayName?.trim().orEmpty()
+        if (trimmed.isBlank()) {
+            return null
+        }
+        if (KASSA_CODE_REGEX.matches(trimmed.uppercase())) {
+            return null
+        }
+        return trimmed
     }
 
     private fun getOrCreateRegisterIdSeed(): String {

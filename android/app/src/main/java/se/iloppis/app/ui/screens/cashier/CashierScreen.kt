@@ -370,7 +370,8 @@ fun CashierScreen(
                     transactions = uiState.transactions,
                     onRemoveItem = { viewModel.onAction(CashierAction.RemoveItem(it)) },
                     onClearAll = { viewModel.onAction(CashierAction.ClearAllItems) },
-                    registerName = uiState.heartbeatDisplayName
+                    registerName = uiState.heartbeatDisplayName,
+                    showOfflineWarning = uiState.isIdle && uiState.isOffline
                 )
 
                 // Payment section

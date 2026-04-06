@@ -98,6 +98,7 @@ data class CashierUiState(
     // Offline sync state
     val pendingSoldItemsCount: Int = 0,
     val lastCheckoutQueuedOffline: Boolean = false,
+    val isOffline: Boolean = false,
 
     // Rejected purchase state (for badge and popups)
     val rejectedPurchasesCount: Int = 0,
@@ -199,11 +200,18 @@ class CashierViewModel(
         onHeartbeatResponse = { response ->
             val responseName = response.displayName
             if (!responseName.isNullOrBlank()) {
-                _uiState.value = _uiState.value.copy(heartbeatDisplayName = responseName)
+                _uiState.value = _uiState.value.copy(
+                    heartbeatDisplayName = responseName,
+                    isOffline = false
+                )
             }
         },
         onHeartbeatFailure = { throwable ->
             Log.w(TAG, "Cashier heartbeat failed", throwable)
+            val isAuthError = (throwable as? retrofit2.HttpException)?.code() in listOf(401, 403)
+            if (!isAuthError) {
+                _uiState.value = _uiState.value.copy(isOffline = true)
+            }
         },
         sessionManager = registerSessionManager
     )

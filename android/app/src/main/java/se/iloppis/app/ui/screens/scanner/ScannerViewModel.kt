@@ -180,7 +180,7 @@ class ScannerViewModel(
         when (action) {
             is ScannerAction.SubmitCode -> handleCodeSubmission(action.code)
             is ScannerAction.DismissResult -> _uiState.value = _uiState.value.copy(activeResult = null)
-            is ScannerAction.ShowTicketDetails -> _uiState.value = _uiState.value.copy(ticketDetailsResult = action.result)
+            is ScannerAction.ShowTicketDetails -> showTicketDetails(action.result)
             is ScannerAction.DismissTicketDetails -> _uiState.value = _uiState.value.copy(ticketDetailsResult = null)
             is ScannerAction.CommitCurrentGroup -> viewModelScope.launch { commitCurrentGroup() }
             is ScannerAction.ToggleGroupExpanded -> _uiState.value = _uiState.value.copy(
@@ -595,38 +595,38 @@ class ScannerViewModel(
         }
     }
 
+    private fun showTicketDetails(result: ScanResult) {
+        _uiState.value = _uiState.value.copy(ticketDetailsResult = result)
+
+        // History entries may only contain summary fields. Fetch full ticket details on demand.
+        if (!result.needsTicketDetailsFetch()) {
+            return
+        }
+
+        val ticketId = result.ticket?.id ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            val detailedTicket = fetchTicketIfExists(ticketId) ?: return@launch
+            val current = _uiState.value.ticketDetailsResult
+            val shouldUpdate = current?.ticket?.id == ticketId
+            if (shouldUpdate) {
+                withContext(Dispatchers.Main) {
+                    _uiState.value = _uiState.value.copy(
+                        ticketDetailsResult = current.copy(ticket = detailedTicket)
+                    )
+                }
+            }
+        }
+    }
+
+    private fun ScanResult.needsTicketDetailsFetch(): Boolean {
+        val ticket = ticket ?: return false
+        return ticket.validFrom == null || ticket.validUntil == null
+    }
+
     private suspend fun loadScanHistory() = withContext(Dispatchers.IO) {
         val scans = CommittedScansStore.getRecentScansForEvent(eventId, HISTORY_PAGE_SIZE)
         val history = scans.map { scan ->
-            val ticketType = scan.ticketType?.let {
-                se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
-            }
-            val ticket = if (scan.ticketType != null || scan.email != null) {
-                VisitorTicket(
-                    id = scan.ticketId,
-                    eventId = scan.eventId,
-                    ticketType = ticketType,
-                    email = scan.email,
-                    status = VisitorTicketStatus.SCANNED,
-                    issuedAt = null,
-                    validFrom = null,
-                    validUntil = null,
-                    scannedAt = Instant.parse(scan.scannedAt)
-                )
-            } else null
-
-            val status = try {
-                ScanStatus.valueOf(scan.status)
-            } catch (e: Exception) {
-                if (scan.wasOffline) ScanStatus.OFFLINE_SUCCESS else ScanStatus.SUCCESS
-            }
-
-            ScanResult(
-                ticket = ticket,
-                status = status,
-                timestamp = Instant.parse(scan.scannedAt),
-                message = scan.errorMessage
-            )
+            mapCommittedScanToScanResult(scan)
         }
 
         val totalCount = CommittedScansStore.countScansForEvent(eventId)
@@ -652,35 +652,7 @@ class ScannerViewModel(
             val currentSize = _uiState.value.history.size
             val scans = CommittedScansStore.getRecentScansForEvent(eventId, currentSize + HISTORY_PAGE_SIZE)
             val history = scans.map { scan ->
-                val ticketType = scan.ticketType?.let {
-                    se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
-                }
-                val ticket = if (scan.ticketType != null || scan.email != null) {
-                    VisitorTicket(
-                        id = scan.ticketId,
-                        eventId = scan.eventId,
-                        ticketType = ticketType,
-                        email = scan.email,
-                        status = VisitorTicketStatus.SCANNED,
-                        issuedAt = null,
-                        validFrom = null,
-                        validUntil = null,
-                        scannedAt = Instant.parse(scan.scannedAt)
-                    )
-                } else null
-
-                val status = try {
-                    ScanStatus.valueOf(scan.status)
-                } catch (e: Exception) {
-                    if (scan.wasOffline) ScanStatus.OFFLINE_SUCCESS else ScanStatus.SUCCESS
-                }
-
-                ScanResult(
-                    ticket = ticket,
-                    status = status,
-                    timestamp = Instant.parse(scan.scannedAt),
-                    message = scan.errorMessage
-                )
+                mapCommittedScanToScanResult(scan)
             }
 
             val totalCount = CommittedScansStore.countScansForEvent(eventId)
@@ -720,6 +692,36 @@ class ScannerViewModel(
             recentScanIds.removeFirst()
         }
         recentScanIds.addLast(ticketId)
+    }
+
+    private suspend fun mapCommittedScanToScanResult(scan: se.iloppis.app.data.models.CommittedScan): ScanResult {
+        val ticketType = scan.ticketType?.let {
+            se.iloppis.app.data.TicketTypeRepository.resolveTypeName(it)
+        }
+        val ticket = VisitorTicket(
+            id = scan.ticketId,
+            eventId = scan.eventId,
+            ticketType = ticketType,
+            email = scan.email,
+            status = VisitorTicketStatus.SCANNED,
+            issuedAt = null,
+            validFrom = null,
+            validUntil = null,
+            scannedAt = runCatching { Instant.parse(scan.scannedAt) }.getOrNull()
+        )
+
+        val status = try {
+            ScanStatus.valueOf(scan.status)
+        } catch (e: Exception) {
+            if (scan.wasOffline) ScanStatus.OFFLINE_SUCCESS else ScanStatus.SUCCESS
+        }
+
+        return ScanResult(
+            ticket = ticket,
+            status = status,
+            timestamp = runCatching { Instant.parse(scan.scannedAt) }.getOrElse { Instant.now() },
+            message = scan.errorMessage
+        )
     }
 
     private suspend fun loadTicketTypeOptions(forceRefresh: Boolean = false): List<TicketTypeOption> {

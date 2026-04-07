@@ -161,36 +161,29 @@ sealed class CashierAction {
 class CashierViewModel(
     private val eventId: String,
     private val eventName: String,
-    private val apiKey: String,
-    private val cashierAlias: String? = null
+    private val apiKey: String
 ) : ViewModel() {
 
     companion object {
         private val KASSA_CODE_REGEX = Regex("^[A-Z0-9]{3}-[A-Z0-9]{3}$")
-        fun buildViewModelKey(eventId: String, apiKey: String, cashierAlias: String?): String {
-            val keySuffix = try {
-                val digest = MessageDigest.getInstance("SHA-256")
-                    .digest(apiKey.toByteArray(Charsets.UTF_8))
-                digest.joinToString(separator = "") { byte ->
-                    "%02x".format(byte.toInt() and 0xff)
-                }.take(16)
-            } catch (e: Exception) {
-                UUID.nameUUIDFromBytes(apiKey.toByteArray(Charsets.UTF_8)).toString()
-            }
-            return "cashier-$eventId-$keySuffix-${cashierAlias ?: "default"}"
-        }
-        fun factory(eventId: String, eventName: String, apiKey: String, cashierAlias: String? = null) =
+        private const val CASHIER_PRESENCE_PREFS = "cashier_presence"
+        private const val HEARTBEAT_DISPLAY_NAME_KEY_PREFIX = "heartbeat_display_name_"
+        private const val HEARTBEAT_DISPLAY_NAME_VERIFIED_KEY_PREFIX = "heartbeat_display_name_verified_"
+
+        fun factory(eventId: String, eventName: String, apiKey: String) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    CashierViewModel(eventId, eventName, apiKey, cashierAlias) as T
+                    CashierViewModel(eventId, eventName, apiKey) as T
             }
     }
+
+    private val registerId: String = deriveRegisterId()
 
     private val _uiState = MutableStateFlow(
         CashierUiState(
             eventName = eventName,
-            heartbeatDisplayName = cashierAlias?.takeIf { it.isNotBlank() }
+            heartbeatDisplayName = readPersistedHeartbeatDisplayName(registerId)
         )
     )
     val uiState: StateFlow<CashierUiState> = _uiState.asStateFlow()
@@ -212,11 +205,15 @@ class CashierViewModel(
         },
         onHeartbeatResponse = { response ->
             val responseName = response.displayName
+            val normalized = responseName?.trim().orEmpty()
             _uiState.value = _uiState.value.copy(
-                heartbeatDisplayName = responseName?.takeIf { it.isNotBlank() }
+                heartbeatDisplayName = normalized.takeIf { it.isNotEmpty() }
                     ?: _uiState.value.heartbeatDisplayName,
                 isOffline = false
             )
+            if (normalized.isNotEmpty()) {
+                persistHeartbeatDisplayName(registerId, normalized)
+            }
         },
         onHeartbeatFailure = { throwable ->
             Log.w(TAG, "Cashier heartbeat failed", throwable)
@@ -639,7 +636,7 @@ class CashierViewModel(
 
     private fun ensureRegisterSessionInitialized() {
         val current = registerSessionManager.getCurrent()
-        val expectedRegisterId = deriveRegisterId()
+        val expectedRegisterId = registerId
         val canReuse = current != null &&
             current.eventId == eventId &&
             current.registerId == expectedRegisterId &&
@@ -652,6 +649,39 @@ class CashierViewModel(
             eventId = eventId,
             registerId = expectedRegisterId
         )
+    }
+
+    private fun readPersistedHeartbeatDisplayName(registerId: String): String? {
+        val prefs = ILoppisAppHolder.appContext.getSharedPreferences(CASHIER_PRESENCE_PREFS, Context.MODE_PRIVATE)
+        val nameKey = HEARTBEAT_DISPLAY_NAME_KEY_PREFIX + registerId
+        val verifiedKey = HEARTBEAT_DISPLAY_NAME_VERIFIED_KEY_PREFIX + registerId
+        val persisted = prefs.getString(nameKey, null)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: return null
+        val isVerified = prefs.getBoolean(verifiedKey, false)
+
+        if (!isVerified && isUnsafeRegisterDisplayName(persisted)) {
+            prefs.edit().remove(nameKey).remove(verifiedKey).apply()
+            return null
+        }
+
+        return persisted
+    }
+
+    private fun persistHeartbeatDisplayName(registerId: String, displayName: String) {
+        val nameKey = HEARTBEAT_DISPLAY_NAME_KEY_PREFIX + registerId
+        val verifiedKey = HEARTBEAT_DISPLAY_NAME_VERIFIED_KEY_PREFIX + registerId
+        ILoppisAppHolder.appContext
+            .getSharedPreferences(CASHIER_PRESENCE_PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(nameKey, displayName)
+            .putBoolean(verifiedKey, true)
+            .apply()
+    }
+
+    private fun isUnsafeRegisterDisplayName(displayName: String): Boolean {
+        return KASSA_CODE_REGEX.matches(displayName.trim().uppercase())
     }
 
     private fun deriveRegisterId(): String {

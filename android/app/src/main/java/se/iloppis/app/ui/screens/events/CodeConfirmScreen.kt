@@ -156,7 +156,7 @@ fun CodeConfirmScreen(
                 onClick = {
                     val toolPage = when (mode) {
                         CodeEntryMode.TOOL -> ScreenPage.EventList
-                        CodeEntryMode.CASHIER -> ScreenPage.Cashier(event, apiKey, _alias)
+                        CodeEntryMode.CASHIER -> ScreenPage.Cashier(event, apiKey)
                         CodeEntryMode.SCANNER -> ScreenPage.Scanner(event, apiKey)
                         CodeEntryMode.LIVE_STATS -> ScreenPage.LiveStats(event, apiKey)
                     }

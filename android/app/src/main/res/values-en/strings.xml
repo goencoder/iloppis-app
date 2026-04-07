@@ -188,6 +188,8 @@
     <string name="scanner_result_message_invalid">We could not find the ticket. Check that it belongs to this event.</string>
     <string name="scanner_result_message_offline">No connection – scan is queued and will sync automatically later.</string>
     <string name="scanner_result_message_error">Something went wrong. Try again or check your connection.</string>
+    <string name="scanner_warning_not_yet_valid">Warning: Ticket is valid from %1$s.</string>
+    <string name="scanner_warning_expired">Warning: Ticket expired at %1$s.</string>
     <string name="scanner_field_ticket_type">Ticket type: %1$s</string>
     <string name="scanner_field_email">Email: %1$s</string>
     <string name="scanner_field_scanned_at">Scanned: %1$s</string>

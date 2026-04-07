@@ -26,6 +26,8 @@ import se.iloppis.app.network.visitor.VisitorAPI
 import se.iloppis.app.R
 import java.io.IOException
 import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.ArrayDeque
 import java.util.UUID
 
@@ -34,6 +36,7 @@ private const val MAX_HISTORY = 20
 private const val HISTORY_PAGE_SIZE = 30
 private const val RECENT_SCAN_BUFFER = 10
 private const val SCAN_TIMEOUT_MS = 5000L
+private val WARNING_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
 /**
  * Sealed actions that the scanner screen can trigger.
@@ -546,11 +549,22 @@ class ScannerViewModel(
 
     private fun showResult(handler: ScanResultHandler) {
         val result = ScanResultHandler.toScanResult(handler)
-        val updatedHistory = (listOf(result) + _uiState.value.history).take(MAX_HISTORY)
+        val warning = buildValidityWarning(result.ticket)
+        val message = when {
+            warning.isNullOrBlank() -> result.message
+            result.message.isNullOrBlank() -> warning
+            else -> "${result.message}\n$warning"
+        }
+        val effectiveResult = if (message == result.message) {
+            result
+        } else {
+            result.copy(message = message)
+        }
+        val updatedHistory = (listOf(effectiveResult) + _uiState.value.history).take(MAX_HISTORY)
 
         _uiState.value = _uiState.value.copy(
             isProcessing = false,
-            activeResult = result,
+            activeResult = effectiveResult,
             history = updatedHistory
         )
     }
@@ -784,6 +798,23 @@ class ScannerViewModel(
 
     private fun unknownErrorMessage(): String =
         se.iloppis.app.ILoppisAppHolder.appContext.getString(R.string.unknown_error)
+
+    private fun buildValidityWarning(ticket: VisitorTicket?): String? {
+        if (ticket == null) return null
+        val now = Instant.now()
+        val context = se.iloppis.app.ILoppisAppHolder.appContext
+        val validFrom = ticket.validFrom
+        if (validFrom != null && now.isBefore(validFrom)) {
+            val formatted = WARNING_TIME_FORMATTER.withZone(ZoneId.systemDefault()).format(validFrom)
+            return context.getString(R.string.scanner_warning_not_yet_valid, formatted)
+        }
+        val validUntil = ticket.validUntil
+        if (validUntil != null && now.isAfter(validUntil)) {
+            val formatted = WARNING_TIME_FORMATTER.withZone(ZoneId.systemDefault()).format(validUntil)
+            return context.getString(R.string.scanner_warning_expired, formatted)
+        }
+        return null
+    }
 
     private fun extractErrorMessage(error: HttpException): String {
         return try {

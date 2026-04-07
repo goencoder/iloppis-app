@@ -200,6 +200,8 @@
     <string name="scanner_result_message_invalid">Vi kunde inte hitta biljetten. Kontrollera att den hör till detta event.</string>
     <string name="scanner_result_message_offline">Ingen uppkoppling – skanningen köas och synkas automatiskt senare.</string>
     <string name="scanner_result_message_error">Något gick fel. Försök igen eller kontrollera uppkopplingen.</string>
+    <string name="scanner_warning_not_yet_valid">Varning: Biljetten gäller från %1$s.</string>
+    <string name="scanner_warning_expired">Varning: Biljetten slutade gälla %1$s.</string>
     <string name="scanner_field_ticket_type">Biljettyp: %1$s</string>
     <string name="scanner_field_email">E-post: %1$s</string>
     <string name="scanner_field_scanned_at">Skannad: %1$s</string>

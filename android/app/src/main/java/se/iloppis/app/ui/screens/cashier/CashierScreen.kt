@@ -50,16 +50,14 @@ import se.iloppis.app.ui.theme.AppColors
 fun CashierScreen(
     event: Event,
     apiKey: String,
-    cashierAlias: String? = null,
     onBack: () -> Unit
 ) {
     val viewModel: CashierViewModel = viewModel(
-        key = CashierViewModel.buildViewModelKey(event.id, apiKey, cashierAlias),
+        key = "cashier-${event.id}-${apiKey.hashCode()}",
         factory = CashierViewModel.factory(
             eventId = event.id,
             eventName = event.name,
-            apiKey = apiKey,
-            cashierAlias = cashierAlias
+            apiKey = apiKey
         )
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

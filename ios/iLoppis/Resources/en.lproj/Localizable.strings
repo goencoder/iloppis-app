@@ -135,6 +135,8 @@
 "scanner_result_message_invalid" = "We could not find this ticket. Make sure it belongs to this event.";
 "scanner_result_message_offline" = "No network connection – the scan is queued and will sync automatically.";
 "scanner_result_message_error" = "Something went wrong. Try again or check your connection.";
+"scanner_warning_not_yet_valid" = "Warning: Ticket is valid from %@.";
+"scanner_warning_expired" = "Warning: Ticket expired at %@.";
 "scanner_field_ticket_type" = "Ticket type: %@";
 "scanner_field_email" = "Email: %@";
 "scanner_field_scanned_at" = "Scanned: %@";

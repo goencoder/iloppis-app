@@ -11,6 +11,18 @@ final class ScannerViewModel: ObservableObject {
     private let maxHistory = 20
     private let recentScanBuffer = 50
     private var recentScanIds: [String] = []
+    private let warningDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter
+    }()
+    private let isoFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
     private var searchTask: Task<Void, Never>?
     private var ticketTypesTask: Task<Void, Never>?
     private var shouldReopenSearchAfterDetailDismiss = false
@@ -143,8 +155,27 @@ final class ScannerViewModel: ObservableObject {
     }
 
     private func registerResult(_ result: ScanResult) {
-        state.history = ([result] + state.history).prefix(maxHistory).map { $0 }
-        state.activeResult = result
+        let warning = buildValidityWarning(ticket: result.ticket)
+        let message = if let warning = warning, !warning.isEmpty {
+            if let existing = result.message, !existing.isEmpty {
+                "\(existing)\n\(warning)"
+            } else {
+                warning
+            }
+        } else {
+            result.message
+        }
+        let effectiveResult = message == result.message ? result : ScanResult(
+            id: result.id,
+            ticket: result.ticket,
+            status: result.status,
+            timestamp: result.timestamp,
+            message: message,
+            offline: result.offline
+        )
+
+        state.history = ([effectiveResult] + state.history).prefix(maxHistory).map { $0 }
+        state.activeResult = effectiveResult
     }
 
     private func registerOffline(ticketId: String, message: String?) {
@@ -162,6 +193,28 @@ final class ScannerViewModel: ObservableObject {
             recentScanIds.removeFirst()
         }
         recentScanIds.append(ticketId)
+    }
+
+    private func buildValidityWarning(ticket: VisitorTicket?) -> String? {
+        guard let ticket = ticket else { return nil }
+        let now = Date()
+        if let validFrom = parseIsoDate(ticket.validFrom), now < validFrom {
+            let formatted = warningDateFormatter.string(from: validFrom)
+            return String(format: NSLocalizedString("scanner_warning_not_yet_valid", comment: ""), formatted)
+        }
+        if let validUntil = parseIsoDate(ticket.validUntil), now > validUntil {
+            let formatted = warningDateFormatter.string(from: validUntil)
+            return String(format: NSLocalizedString("scanner_warning_expired", comment: ""), formatted)
+        }
+        return nil
+    }
+
+    private func parseIsoDate(_ raw: String?) -> Date? {
+        guard let raw = raw, !raw.isEmpty else { return nil }
+        if let date = isoFormatter.date(from: raw) { return date }
+        let fallback = ISO8601DateFormatter()
+        fallback.formatOptions = [.withInternetDateTime]
+        return fallback.date(from: raw)
     }
 
     // MARK: - Ticket Search

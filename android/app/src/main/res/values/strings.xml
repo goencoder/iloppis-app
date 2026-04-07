@@ -32,6 +32,7 @@
     <string name="filter_upcoming">Kommande</string>
     <string name="filter_ongoing">Pågående</string>
     <string name="filter_past">Förflutna</string>
+    <string name="filter_saved">Sparade</string>
     <string name="error_prefix">Fel: %1$s</string>
     <string name="no_events_found">Inga loppisar hittades</string>
     <string name="location_not_specified">Plats ej angiven</string>
@@ -146,6 +147,9 @@
     <string name="cashier_price_label">Priser</string>
     <string name="cashier_items_title">Varor</string>
     <string name="cashier_no_items">Inga varor tillagda</string>
+    <string name="cashier_offline_title">Offline</string>
+    <string name="cashier_offline_message">Gå online så att köp registreras i iLoppis.</string>
+    <string name="cashier_register_name">Kassa: %1$s</string>
     <string name="cashier_clear_all">Rensa alla</string>
     <string name="cashier_remove_item">Ta bort</string>
     <string name="cashier_seller_header">Säljare</string>
@@ -196,11 +200,15 @@
     <string name="scanner_result_message_invalid">Vi kunde inte hitta biljetten. Kontrollera att den hör till detta event.</string>
     <string name="scanner_result_message_offline">Ingen uppkoppling – skanningen köas och synkas automatiskt senare.</string>
     <string name="scanner_result_message_error">Något gick fel. Försök igen eller kontrollera uppkopplingen.</string>
+    <string name="scanner_warning_not_yet_valid">Varning: Biljetten gäller från %1$s.</string>
+    <string name="scanner_warning_expired">Varning: Biljetten slutade gälla %1$s.</string>
     <string name="scanner_field_ticket_type">Biljettyp: %1$s</string>
     <string name="scanner_field_email">E-post: %1$s</string>
     <string name="scanner_field_scanned_at">Skannad: %1$s</string>
-    <string name="scanner_field_valid_window">Giltighet: %1$s</string>
+    <string name="scanner_field_valid_from">Giltig från: %1$s</string>
+    <string name="scanner_field_valid_until">Giltig till: %1$s</string>
     <string name="scanner_field_event">Event: %1$s</string>
+    <string name="scanner_field_unknown_value">Okänd</string>
 
     <!-- Ticket details dialog -->
     <string name="scanner_ticket_details_title">Biljettinfo</string>
@@ -208,7 +216,8 @@
     <string name="scanner_field_email_label">Innehavare</string>
     <string name="scanner_field_status_label">Status</string>
     <string name="scanner_field_scanned_at_label">Skannad</string>
-    <string name="scanner_field_valid_window_label">Giltig från–till</string>
+    <string name="scanner_field_valid_from_label">Giltig från</string>
+    <string name="scanner_field_valid_until_label">Giltig till</string>
     <string name="scanner_field_event_label">Event</string>
     <string name="scanner_field_ticket_id_label">Biljett-ID</string>
     <string name="scanner_button_close">Stäng</string>
@@ -320,6 +329,9 @@
     <!-- Cashier Screen - Additional -->
     <string name="cashier_pending_info_title">Utestående köp</string>
     <string name="cashier_pending_info_message">Siffran visar hur många köp som är sparade lokalt och ännu inte har bekräftats uppladdade till servern. Den ska gå ner när synk lyckas.</string>
+    <string name="cashier_close_pending_title">Utestående köp måste bekräftas</string>
+    <string name="cashier_close_pending_message">Kassan har %1$d köp som ännu inte är uppladdade till iLoppis. Om du stänger nu kan dessa saknas i rapporten. Gå online så att utestående köp kan laddas upp innan du stänger.</string>
+    <string name="cashier_close_pending_confirm">Stäng ändå</string>
 
     <!-- Swipe to dismiss box -->
     <string name="swipe_box_remove">Ta bort</string>

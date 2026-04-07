@@ -12,7 +12,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +53,7 @@ fun CashierScreen(
     onBack: () -> Unit
 ) {
     val viewModel: CashierViewModel = viewModel(
-        key = "cashier-${event.id}",
+        key = "cashier-${event.id}-${apiKey.hashCode()}",
         factory = CashierViewModel.factory(
             eventId = event.id,
             eventName = event.name,
@@ -59,9 +62,78 @@ fun CashierScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.requestCloseIfIdle()
+        }
+    }
+
     var showPendingInfoDialog by remember { mutableStateOf(false) }
+    var showClosePendingDialog by remember { mutableStateOf(false) }
     var showReviewScreen by remember { mutableStateOf(false) }
     var showDetailedReview by remember { mutableStateOf<String?>(null) }
+    var closeRequested by remember { mutableStateOf(false) }
+
+    fun requestCloseFromUi() {
+        if (showClosePendingDialog) {
+            showClosePendingDialog = false
+            return
+        }
+        if (closeRequested) {
+            return
+        }
+        if (uiState.pendingSoldItemsCount > 0) {
+            showClosePendingDialog = true
+        } else {
+            closeRequested = true
+        }
+    }
+
+    LaunchedEffect(closeRequested) {
+        if (!closeRequested) return@LaunchedEffect
+        val closeSucceeded = viewModel.requestCloseAndFlush()
+        if (closeSucceeded) {
+            onBack()
+        } else {
+            closeRequested = false
+        }
+    }
+
+    BackHandler(onBack = ::requestCloseFromUi)
+
+    if (showClosePendingDialog) {
+        AlertDialog(
+            onDismissRequest = { showClosePendingDialog = false },
+            confirmButton = {
+                AppButton(
+                    text = stringResource(R.string.cashier_close_pending_confirm),
+                    onClick = {
+                        showClosePendingDialog = false
+                        closeRequested = true
+                    },
+                    variant = AppButtonVariant.Danger,
+                    size = AppButtonSize.Small
+                )
+            },
+            dismissButton = {
+                AppButton(
+                    text = stringResource(R.string.button_cancel),
+                    onClick = { showClosePendingDialog = false },
+                    variant = AppButtonVariant.Text,
+                    size = AppButtonSize.Small
+                )
+            },
+            title = { Text(stringResource(R.string.cashier_close_pending_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.cashier_close_pending_message,
+                        uiState.pendingSoldItemsCount,
+                    )
+                )
+            }
+        )
+    }
 
     // Show detailed purchase review if requested
     if (showDetailedReview != null) {
@@ -150,6 +222,16 @@ fun CashierScreen(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                        val registerName = uiState.heartbeatDisplayName
+                        if (!registerName.isNullOrBlank()) {
+                            Text(
+                                text = stringResource(R.string.cashier_register_name, registerName),
+                                fontSize = 12.sp,
+                                color = AppColors.DialogBackground.copy(alpha = 0.8f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -189,7 +271,7 @@ fun CashierScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = ::requestCloseFromUi) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.button_back)
@@ -292,7 +374,10 @@ fun CashierScreen(
                 TransactionList(
                     transactions = uiState.transactions,
                     onRemoveItem = { viewModel.onAction(CashierAction.RemoveItem(it)) },
-                    onClearAll = { viewModel.onAction(CashierAction.ClearAllItems) }
+                    onClearAll = { viewModel.onAction(CashierAction.ClearAllItems) },
+                    registerName = uiState.heartbeatDisplayName,
+                    showOfflineWarning =
+                        uiState.isIdle && uiState.isOffline && uiState.pendingSoldItemsCount > 0
                 )
 
                 // Payment section

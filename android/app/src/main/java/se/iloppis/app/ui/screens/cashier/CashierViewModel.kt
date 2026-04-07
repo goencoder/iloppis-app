@@ -1,5 +1,6 @@
 package se.iloppis.app.ui.screens.cashier
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,6 +16,7 @@ import se.iloppis.app.R
 import se.iloppis.app.data.BackgroundSyncManager
 import se.iloppis.app.data.PendingItemsStore
 import se.iloppis.app.data.RejectedPurchaseStore
+import se.iloppis.app.data.RegisterSessionManager
 import se.iloppis.app.data.VendorRepository
 import se.iloppis.app.data.models.PendingItem
 import se.iloppis.app.data.models.SerializableSoldItemErrorCode
@@ -23,8 +25,11 @@ import se.iloppis.app.network.cashier.CashierAPI
 import se.iloppis.app.network.cashier.CashierClientType
 import se.iloppis.app.network.cashier.CashierPresenceHeartbeatRequest
 import se.iloppis.app.network.cashier.PaymentMethod
+import se.iloppis.app.network.cashier.RegisterLifecycleEventType
 import se.iloppis.app.network.config.clientConfig
 import se.iloppis.app.ui.util.UiText
+import java.util.UUID
+import java.security.MessageDigest
 import kotlin.math.ceil
 
 private const val TAG = "CashierViewModel"
@@ -93,6 +98,7 @@ data class CashierUiState(
     // Offline sync state
     val pendingSoldItemsCount: Int = 0,
     val lastCheckoutQueuedOffline: Boolean = false,
+    val isOffline: Boolean = false,
 
     // Rejected purchase state (for badge and popups)
     val rejectedPurchasesCount: Int = 0,
@@ -159,6 +165,11 @@ class CashierViewModel(
 ) : ViewModel() {
 
     companion object {
+        private val KASSA_CODE_REGEX = Regex("^[A-Z0-9]{3}-[A-Z0-9]{3}$")
+        private const val CASHIER_PRESENCE_PREFS = "cashier_presence"
+        private const val HEARTBEAT_DISPLAY_NAME_KEY_PREFIX = "heartbeat_display_name_"
+        private const val HEARTBEAT_DISPLAY_NAME_VERIFIED_KEY_PREFIX = "heartbeat_display_name_verified_"
+
         fun factory(eventId: String, eventName: String, apiKey: String) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -167,9 +178,17 @@ class CashierViewModel(
             }
     }
 
-    private val _uiState = MutableStateFlow(CashierUiState(eventName = eventName))
+    private val registerId: String = deriveRegisterId()
+
+    private val _uiState = MutableStateFlow(
+        CashierUiState(
+            eventName = eventName,
+            heartbeatDisplayName = readPersistedHeartbeatDisplayName(registerId)
+        )
+    )
     val uiState: StateFlow<CashierUiState> = _uiState.asStateFlow()
     private val cashierApi: CashierAPI = ILoppisClient(clientConfig()).create()
+    private val registerSessionManager = RegisterSessionManager.getInstance(ILoppisAppHolder.appContext)
     private var rawPendingPurchasesCount: Int = 0
     private val heartbeatCoordinator = CashierHeartbeatCoordinator(
         scope = viewModelScope,
@@ -185,11 +204,25 @@ class CashierViewModel(
             }
         },
         onHeartbeatResponse = { response ->
-            _uiState.value = _uiState.value.copy(heartbeatDisplayName = response.displayName)
+            val responseName = response.displayName
+            val normalized = responseName?.trim().orEmpty()
+            _uiState.value = _uiState.value.copy(
+                heartbeatDisplayName = normalized.takeIf { it.isNotEmpty() }
+                    ?: _uiState.value.heartbeatDisplayName,
+                isOffline = false
+            )
+            if (normalized.isNotEmpty()) {
+                persistHeartbeatDisplayName(registerId, normalized)
+            }
         },
         onHeartbeatFailure = { throwable ->
             Log.w(TAG, "Cashier heartbeat failed", throwable)
-        }
+            val isAuthError = (throwable as? retrofit2.HttpException)?.code() in listOf(401, 403)
+            if (!isAuthError) {
+                _uiState.value = _uiState.value.copy(isOffline = true)
+            }
+        },
+        sessionManager = registerSessionManager
     )
 
     // Rejected purchase popup management
@@ -199,6 +232,8 @@ class CashierViewModel(
     private var lastHandledAuthErrorCode: Int? = null
 
     init {
+        ensureRegisterSessionInitialized()
+
         // Start BackgroundSyncManager (single sync loop, like LoppisKassan)
         val context = ILoppisAppHolder.appContext
         BackgroundSyncManager.start(context, eventId, apiKey)
@@ -589,13 +624,201 @@ class CashierViewModel(
         val snapshot = _uiState.value.toCashierPresenceSnapshot(
             rawPendingPurchasesCount = rawPendingPurchasesCount
         )
-
-        return CashierPresenceHeartbeatRequest(
-            clientState = snapshot.clientState,
-            pendingPurchasesCount = snapshot.pendingPurchasesCount,
-            clientType = CashierClientType.CASHIER_CLIENT_TYPE_ANDROID,
-            displayName = snapshot.displayName
+        val sanitizedSnapshot = snapshot.copy(
+            displayName = sanitizeHeartbeatDisplayName(snapshot.displayName)
         )
+
+        return sanitizedSnapshot.toHeartbeatRequest(
+            clientType = CashierClientType.CASHIER_CLIENT_TYPE_ANDROID,
+            sessionManager = registerSessionManager
+        )
+    }
+
+    private fun ensureRegisterSessionInitialized() {
+        val current = registerSessionManager.getCurrent()
+        val expectedRegisterId = registerId
+        val canReuse = current != null &&
+            current.eventId == eventId &&
+            current.registerId == expectedRegisterId &&
+            current.state != RegisterSessionManager.State.CLOSED
+        if (canReuse) {
+            return
+        }
+
+        registerSessionManager.openSession(
+            eventId = eventId,
+            registerId = expectedRegisterId
+        )
+    }
+
+    private fun readPersistedHeartbeatDisplayName(registerId: String): String? {
+        val prefs = ILoppisAppHolder.appContext.getSharedPreferences(CASHIER_PRESENCE_PREFS, Context.MODE_PRIVATE)
+        val nameKey = HEARTBEAT_DISPLAY_NAME_KEY_PREFIX + registerId
+        val verifiedKey = HEARTBEAT_DISPLAY_NAME_VERIFIED_KEY_PREFIX + registerId
+        val persisted = prefs.getString(nameKey, null)
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?: return null
+        val isVerified = prefs.getBoolean(verifiedKey, false)
+
+        if (!isVerified && isUnsafeRegisterDisplayName(persisted)) {
+            prefs.edit().remove(nameKey).remove(verifiedKey).apply()
+            return null
+        }
+
+        return persisted
+    }
+
+    private fun persistHeartbeatDisplayName(registerId: String, displayName: String) {
+        val nameKey = HEARTBEAT_DISPLAY_NAME_KEY_PREFIX + registerId
+        val verifiedKey = HEARTBEAT_DISPLAY_NAME_VERIFIED_KEY_PREFIX + registerId
+        ILoppisAppHolder.appContext
+            .getSharedPreferences(CASHIER_PRESENCE_PREFS, Context.MODE_PRIVATE)
+            .edit()
+            .putString(nameKey, displayName)
+            .putBoolean(verifiedKey, true)
+            .apply()
+    }
+
+    private fun isUnsafeRegisterDisplayName(displayName: String): Boolean {
+        return KASSA_CODE_REGEX.matches(displayName.trim().uppercase())
+    }
+
+    private fun deriveRegisterId(): String {
+        return try {
+            val digest = MessageDigest.getInstance("SHA-256")
+                .digest(apiKey.toByteArray(Charsets.UTF_8))
+            val hashedSuffix = digest.joinToString(separator = "") { byte ->
+                "%02x".format(byte.toInt() and 0xff)
+            }.take(16)
+            "android-$hashedSuffix"
+        } catch (e: Exception) {
+            "android-${getOrCreateRegisterIdSeed()}"
+        }
+    }
+
+    private fun sanitizeHeartbeatDisplayName(displayName: String?): String? {
+        val trimmed = displayName?.trim().orEmpty()
+        if (trimmed.isBlank()) {
+            return null
+        }
+        if (KASSA_CODE_REGEX.matches(trimmed.uppercase())) {
+            return null
+        }
+        return trimmed
+    }
+
+    private fun getOrCreateRegisterIdSeed(): String {
+        val prefs = ILoppisAppHolder.appContext.getSharedPreferences("register_id", Context.MODE_PRIVATE)
+        val existing = prefs.getString("seed", null)
+        if (!existing.isNullOrBlank()) {
+            return existing
+        }
+        val seed = UUID.randomUUID().toString().replace("-", "").take(16)
+        prefs.edit().putString("seed", seed).apply()
+        return seed
+    }
+
+    suspend fun requestCloseAndFlush(): Boolean {
+        heartbeatCoordinator.stop()
+        val closeSucceeded = when (registerSessionManager.getCurrent()?.state) {
+            RegisterSessionManager.State.OPEN -> {
+                if (!registerSessionManager.requestClose()) {
+                    false
+                } else {
+                    flushRequestedClose()
+                }
+            }
+            RegisterSessionManager.State.CLOSE_REQUESTED -> flushRequestedClose()
+            RegisterSessionManager.State.CLOSED -> flushConfirmedClose()
+            else -> false
+        }
+
+        if (!closeSucceeded) {
+            heartbeatCoordinator.start()
+        }
+
+        return closeSucceeded
+    }
+
+    fun requestCloseIfIdle() {
+        if (_uiState.value.pendingSoldItemsCount > 0) {
+            return
+        }
+        val state = registerSessionManager.getCurrent()?.state ?: return
+        if (state != RegisterSessionManager.State.OPEN &&
+            state != RegisterSessionManager.State.CLOSE_REQUESTED
+        ) {
+            return
+        }
+        viewModelScope.launch {
+            requestCloseAndFlush()
+        }
+    }
+
+    private suspend fun flushRequestedClose(): Boolean {
+        val current = registerSessionManager.getCurrent() ?: return false
+        if (current.state != RegisterSessionManager.State.CLOSE_REQUESTED) {
+            return false
+        }
+        if (
+            current.pendingLifecycleEvent == RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_REQUESTED &&
+            !sendHeartbeatOnce()
+        ) {
+            return false
+        }
+        if (!registerSessionManager.confirmClose()) {
+            return false
+        }
+        return flushConfirmedClose()
+    }
+
+    private suspend fun flushConfirmedClose(): Boolean {
+        val current = registerSessionManager.getCurrent() ?: return false
+        if (
+            current.state != RegisterSessionManager.State.CLOSED &&
+            current.state != RegisterSessionManager.State.CLOSE_REQUESTED
+        ) {
+            return false
+        }
+        if (
+            current.pendingLifecycleEvent != null &&
+            current.pendingLifecycleEvent != RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED
+        ) {
+            return false
+        }
+        if (
+            current.pendingLifecycleEvent ==
+            RegisterLifecycleEventType.REGISTER_LIFECYCLE_CLOSE_CONFIRMED &&
+            !sendHeartbeatOnce()
+        ) {
+            return false
+        }
+        val updated = registerSessionManager.getCurrent() ?: return false
+        return updated.state == RegisterSessionManager.State.CLOSED &&
+            updated.pendingLifecycleEvent == null
+    }
+
+    private suspend fun sendHeartbeatOnce(): Boolean {
+        if (eventId.isBlank() || apiKey.isBlank()) return false
+        val request = buildHeartbeatRequest()
+        try {
+            withContext(Dispatchers.IO) {
+                cashierApi.updateCashierPresence(
+                    authorization = "Bearer $apiKey",
+                    eventId = eventId,
+                    request = request
+                )
+            }
+            registerSessionManager.clearPendingLifecycleEvent(
+                expectedLifecycleEvent = request.lifecycleEventType,
+                expectedSessionId = request.sessionId
+            )
+            return true
+        } catch (t: Throwable) {
+            Log.w(TAG, "Cashier heartbeat flush failed", t)
+            return false
+        }
     }
 
     /**

@@ -4,6 +4,9 @@ import se.iloppis.app.domain.model.VisitorTicket
 import se.iloppis.app.domain.model.VisitorTicketStatus
 import se.iloppis.app.network.visitor.ApiVisitorTicket
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 /**
  * Maps visitor ticket DTOs to domain models.
@@ -32,5 +35,7 @@ object VisitorTicketMapper {
 
     private fun String?.toInstantOrNull(): Instant? = this?.let { value ->
         runCatching { Instant.parse(value) }.getOrNull()
+            ?: runCatching { OffsetDateTime.parse(value).toInstant() }.getOrNull()
+            ?: runCatching { LocalDateTime.parse(value).toInstant(ZoneOffset.UTC) }.getOrNull()
     }
 }

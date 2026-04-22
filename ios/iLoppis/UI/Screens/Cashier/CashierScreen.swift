@@ -4,6 +4,7 @@ struct CashierScreen: View {
     let event: Event
     let apiKey: String
     let onBack: () -> Void
+    @Environment(\.scenePhase) private var scenePhase
 
     @StateObject private var viewModel: CashierViewModel
 
@@ -79,11 +80,28 @@ struct CashierScreen: View {
                 }
             }
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .inactive || newPhase == .background {
+                Task {
+                    _ = await viewModel.requestCloseAndFlush(
+                        showWarnings: false,
+                        restartHeartbeatOnFailure: false
+                    )
+                }
+            }
+        }
     }
 
     private var header: some View {
         HStack {
-            Button(action: onBack) {
+            Button(action: {
+                Task {
+                    let closeSucceeded = await viewModel.requestCloseAndFlush()
+                    if closeSucceeded {
+                        onBack()
+                    }
+                }
+            }) {
                 Image(systemName: "chevron.backward")
                     .foregroundColor(AppColors.textPrimary)
             }

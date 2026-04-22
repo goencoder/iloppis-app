@@ -633,25 +633,45 @@ enum CashierClientType: String, Codable {
     case ios = "CASHIER_CLIENT_TYPE_IOS"
 }
 
+enum RegisterLifecycleEventType: String, Codable {
+    case unspecified = "REGISTER_LIFECYCLE_EVENT_TYPE_UNSPECIFIED"
+    case open = "REGISTER_LIFECYCLE_EVENT_TYPE_OPEN"
+    case sync = "REGISTER_LIFECYCLE_EVENT_TYPE_SYNC"
+    case closeRequested = "REGISTER_LIFECYCLE_EVENT_TYPE_CLOSE_REQUESTED"
+    case closeConfirmed = "REGISTER_LIFECYCLE_EVENT_TYPE_CLOSE_CONFIRMED"
+}
+
 struct CashierPresenceHeartbeatRequest: Codable {
     let clientState: CashierClientState
     let pendingPurchasesCount: Int
     let clientType: CashierClientType
     let displayName: String?
+    let sessionId: String?
+    let registerId: String?
+    let lifecycleEventType: RegisterLifecycleEventType?
 
     enum CodingKeys: String, CodingKey {
         case clientState = "client_state"
         case pendingPurchasesCount = "pending_purchases_count"
         case clientType = "client_type"
         case displayName = "display_name"
+        case sessionId = "session_id"
+        case registerId = "register_id"
+        case lifecycleEventType = "lifecycle_event_type"
     }
 }
 
 struct CashierPresenceHeartbeatResponse: Codable {
     let displayName: String?
+    let sessionId: String?
+    let registerId: String?
+    let lifecycleEventType: RegisterLifecycleEventType?
 
     enum CodingKeys: String, CodingKey {
         case displayName = "display_name"
+        case sessionId = "session_id"
+        case registerId = "register_id"
+        case lifecycleEventType = "lifecycle_event_type"
     }
 }
 

@@ -189,7 +189,7 @@ final class EventListViewModel: ObservableObject {
                 city: nil,
                 dateFrom: String(today),
                 dateTo: nil,
-                searchText: nil,
+                query: nil,
                 lifecycleStates: ["OPEN"]
             )
             let dtos = try await apiClient.filterEvents(filter: filter)

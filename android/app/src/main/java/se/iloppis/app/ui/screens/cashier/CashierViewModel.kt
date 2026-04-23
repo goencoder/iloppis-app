@@ -473,7 +473,7 @@ class CashierViewModel(
         val newItems = mutableListOf<TransactionItem>()
         for (priceStr in priceStrings) {
             val price = priceStr.toIntOrNull()
-            if (price == null || price <= 0) {
+            if (price == null || price < 0) {
                 _uiState.value = _uiState.value.copy(warningMessage = UiText.StringResource(R.string.cashier_warning_invalid_price, listOf(priceStr)))
                 return
             }

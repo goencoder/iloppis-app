@@ -527,14 +527,14 @@ struct EventFilter: Codable {
     let city: String?
     let dateFrom: String?
     let dateTo: String?
-    let searchText: String?
+    let query: String?
     let lifecycleStates: [String]?
 
     enum CodingKeys: String, CodingKey {
         case city
         case dateFrom = "date_from"
         case dateTo = "date_to"
-        case searchText = "search_text"
+        case query
         case lifecycleStates = "lifecycle_states"
     }
 }

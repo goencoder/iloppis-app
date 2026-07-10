@@ -31,6 +31,8 @@ fun TransactionList(
     transactions: List<TransactionItem>,
     onRemoveItem: (String) -> Unit,
     onClearAll: () -> Unit,
+    registerName: String? = null,
+    showOfflineWarning: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -71,12 +73,45 @@ fun TransactionList(
             Spacer(modifier = Modifier.height(8.dp))
 
             if (transactions.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.cashier_no_items),
-                    fontSize = 14.sp,
-                    color = AppColors.TextMuted,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
+                Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                    Text(
+                        text = stringResource(R.string.cashier_no_items),
+                        fontSize = 14.sp,
+                        color = AppColors.TextMuted
+                    )
+                    if (showOfflineWarning) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = AppColors.Warning.copy(alpha = 0.15f)
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = stringResource(R.string.cashier_offline_title),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = AppColors.TextPrimary
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = stringResource(R.string.cashier_offline_message),
+                                    fontSize = 12.sp,
+                                    color = AppColors.TextSecondary
+                                )
+                            }
+                        }
+                    }
+                    if (!registerName.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.cashier_register_name, registerName),
+                            fontSize = 12.sp,
+                            color = AppColors.TextMuted
+                        )
+                    }
+                }
             } else {
                 // Table header
                 Row(

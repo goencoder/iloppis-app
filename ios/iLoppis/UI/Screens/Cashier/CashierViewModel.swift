@@ -11,6 +11,8 @@ final class CashierViewModel: ObservableObject {
     private let eventId: String
     private let apiKey: String
     private let apiClient: ApiClient
+    private let registerSessionManager = RegisterSessionManager()
+    private var closeHandshakeInProgress = false
     private lazy var heartbeatCoordinator = CashierHeartbeatCoordinator(
         shouldRun: { [eventId, apiKey] in
             !eventId.isEmpty && !apiKey.isEmpty
@@ -31,7 +33,8 @@ final class CashierViewModel: ObservableObject {
         },
         onHeartbeatFailure: { error in
             logger.warning("Cashier heartbeat failed: \(error.localizedDescription, privacy: .public)")
-        }
+        },
+        sessionManager: registerSessionManager
     )
 
     init(eventId: String, eventName: String, apiKey: String, apiClient: ApiClient = ApiClient()) {
@@ -39,6 +42,8 @@ final class CashierViewModel: ObservableObject {
         self.apiKey = apiKey
         self.apiClient = apiClient
         self.state = CashierState(eventName: eventName)
+
+        ensureRegisterSessionInitialized()
 
         heartbeatCoordinator.start()
         Task { await loadVendors() }
@@ -70,6 +75,106 @@ final class CashierViewModel: ObservableObject {
             state.warningMessage = nil
         case .dismissError:
             state.errorMessage = nil
+        }
+    }
+
+    func requestCloseAndFlush(
+        showWarnings: Bool = true,
+        restartHeartbeatOnFailure: Bool = true
+    ) async -> Bool {
+        if closeHandshakeInProgress {
+            return false
+        }
+        closeHandshakeInProgress = true
+        defer {
+            closeHandshakeInProgress = false
+        }
+
+        let snapshot = state.heartbeatSnapshot()
+        if state.isProcessingPayment || snapshot.pendingPurchasesCount > 0 {
+            if showWarnings {
+                state.warningMessage = "Pending purchases must be uploaded before closing the cashier"
+            }
+            return false
+        }
+
+        heartbeatCoordinator.stop()
+        var closeSucceeded = false
+        defer {
+            if !closeSucceeded && restartHeartbeatOnFailure {
+                heartbeatCoordinator.start()
+            }
+        }
+
+        if registerSessionManager.getCurrent() == nil {
+            ensureRegisterSessionInitialized()
+        }
+        if registerSessionManager.getCurrent()?.state == .open {
+            _ = registerSessionManager.requestClose()
+        }
+
+        guard let requestCloseSession = registerSessionManager.getCurrent(),
+              requestCloseSession.state == .closeRequested,
+              requestCloseSession.pendingLifecycleEvent == .closeRequested else {
+            if showWarnings {
+                state.warningMessage = "Could not prepare register close handshake"
+            }
+            return false
+        }
+
+        do {
+            _ = try await apiClient.updateCashierPresence(
+                eventId: eventId,
+                apiKey: apiKey,
+                requestBody: CashierPresenceHeartbeatRequest(
+                    clientState: .idle,
+                    pendingPurchasesCount: 0,
+                    clientType: .ios,
+                    displayName: state.heartbeatDisplayName,
+                    sessionId: requestCloseSession.sessionId,
+                    registerId: requestCloseSession.registerId,
+                    lifecycleEventType: .closeRequested
+                )
+            )
+            registerSessionManager.clearPendingLifecycleEvent(
+                expectedLifecycleEvent: .closeRequested,
+                expectedSessionId: requestCloseSession.sessionId
+            )
+
+            guard registerSessionManager.confirmClose(),
+                  let confirmCloseSession = registerSessionManager.getCurrent(),
+                  confirmCloseSession.pendingLifecycleEvent == .closeConfirmed else {
+                if showWarnings {
+                    state.warningMessage = "Could not confirm register close"
+                }
+                return false
+            }
+
+            _ = try await apiClient.updateCashierPresence(
+                eventId: eventId,
+                apiKey: apiKey,
+                requestBody: CashierPresenceHeartbeatRequest(
+                    clientState: .idle,
+                    pendingPurchasesCount: 0,
+                    clientType: .ios,
+                    displayName: state.heartbeatDisplayName,
+                    sessionId: confirmCloseSession.sessionId,
+                    registerId: confirmCloseSession.registerId,
+                    lifecycleEventType: .closeConfirmed
+                )
+            )
+            registerSessionManager.clearPendingLifecycleEvent(
+                expectedLifecycleEvent: .closeConfirmed,
+                expectedSessionId: confirmCloseSession.sessionId
+            )
+
+            closeSucceeded = true
+            return true
+        } catch {
+            if showWarnings {
+                state.warningMessage = "Could not close register on server. Try again when online."
+            }
+            return false
         }
     }
 
@@ -196,7 +301,7 @@ final class CashierViewModel: ObservableObject {
 
         var newItems: [TransactionItem] = []
         for part in priceParts {
-            guard let price = Int(part), price > 0 else {
+            guard let price = Int(part), price >= 0 else {
                 state.warningMessage = "Invalid price: \(part)"
                 return
             }
@@ -304,11 +409,15 @@ final class CashierViewModel: ObservableObject {
 
     private func makeHeartbeatRequest() -> CashierPresenceHeartbeatRequest {
         let snapshot = state.heartbeatSnapshot()
+        let session = registerSessionManager.getCurrent()
         return CashierPresenceHeartbeatRequest(
             clientState: snapshot.clientState,
             pendingPurchasesCount: snapshot.pendingPurchasesCount,
             clientType: .ios,
-            displayName: snapshot.displayName
+            displayName: snapshot.displayName,
+            sessionId: session?.sessionId,
+            registerId: session?.registerId,
+            lifecycleEventType: session?.pendingLifecycleEvent
         )
     }
 
@@ -318,6 +427,17 @@ final class CashierViewModel: ObservableObject {
 
     private func applyHeartbeatResponse(_ response: CashierPresenceHeartbeatResponse) {
         state.heartbeatDisplayName = response.displayName
+    }
+
+    private func ensureRegisterSessionInitialized() {
+        if let current = registerSessionManager.getCurrent(),
+           current.eventId == eventId,
+           current.state != .closed {
+            return
+        }
+
+        let registerId = "ios-\(UUID().uuidString.prefix(8))"
+        _ = registerSessionManager.openSession(eventId: eventId, registerId: registerId)
     }
 }
 

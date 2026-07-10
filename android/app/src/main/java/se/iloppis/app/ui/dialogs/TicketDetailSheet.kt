@@ -24,6 +24,7 @@ import se.iloppis.app.domain.model.VisitorTicketStatus
 import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
+import se.iloppis.app.ui.utils.formatValidTimeOrUnknown
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -106,14 +107,15 @@ fun TicketDetailSheet(
                 )
             }
 
-            // Valid window
-            val validWindow = buildValidWindowString(ticket)
-            if (validWindow != null) {
-                DetailField(
-                    label = stringResource(R.string.scanner_field_valid_window_label),
-                    value = validWindow
-                )
-            }
+            val unknownValue = stringResource(R.string.scanner_field_unknown_value)
+            DetailField(
+                label = stringResource(R.string.scanner_field_valid_from_label),
+                value = formatValidTimeOrUnknown(ticket.validFrom, unknownValue, dateTimeFormatter)
+            )
+            DetailField(
+                label = stringResource(R.string.scanner_field_valid_until_label),
+                value = formatValidTimeOrUnknown(ticket.validUntil, unknownValue, dateTimeFormatter)
+            )
 
             // Ticket ID
             DetailField(
@@ -170,16 +172,5 @@ private fun DetailField(
                 fontWeight = FontWeight.Medium
             )
         }
-    }
-}
-
-private fun buildValidWindowString(ticket: VisitorTicket): String? {
-    val from = ticket.validFrom?.let { dateTimeFormatter.format(it) }
-    val until = ticket.validUntil?.let { dateTimeFormatter.format(it) }
-    return when {
-        from != null && until != null -> "$from – $until"
-        from != null -> from
-        until != null -> until
-        else -> null
     }
 }

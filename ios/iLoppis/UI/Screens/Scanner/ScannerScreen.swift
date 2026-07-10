@@ -550,7 +550,10 @@ struct ScannerScreen: View {
                 .font(.title3.weight(.bold))
                 .foregroundColor(AppColors.textPrimary)
 
-            Text(statusMessage(result.status))
+            let message = (result.message?.isEmpty == false)
+                ? result.message!
+                : statusMessage(result.status)
+            Text(message)
                 .foregroundColor(AppColors.textSecondary)
 
             if let ticket = result.ticket {

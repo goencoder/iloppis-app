@@ -39,6 +39,7 @@ final class CashierHeartbeatCoordinator {
     private let sendHeartbeat: HeartbeatSender
     private let onHeartbeatResponse: ResponseHandler
     private let onHeartbeatFailure: ErrorHandler
+    private let sessionManager: RegisterSessionManager?
 
     private var task: Task<Void, Never>?
 
@@ -48,7 +49,8 @@ final class CashierHeartbeatCoordinator {
         requestFactory: @escaping RequestFactory,
         sendHeartbeat: @escaping HeartbeatSender,
         onHeartbeatResponse: @escaping ResponseHandler,
-        onHeartbeatFailure: @escaping ErrorHandler
+        onHeartbeatFailure: @escaping ErrorHandler,
+        sessionManager: RegisterSessionManager? = nil
     ) {
         self.intervalNanoseconds = intervalNanoseconds
         self.shouldRun = shouldRun
@@ -56,6 +58,7 @@ final class CashierHeartbeatCoordinator {
         self.sendHeartbeat = sendHeartbeat
         self.onHeartbeatResponse = onHeartbeatResponse
         self.onHeartbeatFailure = onHeartbeatFailure
+        self.sessionManager = sessionManager
     }
 
     deinit {
@@ -73,6 +76,7 @@ final class CashierHeartbeatCoordinator {
         let onHeartbeatResponse = self.onHeartbeatResponse
         let onHeartbeatFailure = self.onHeartbeatFailure
         let intervalNanoseconds = self.intervalNanoseconds
+        let sessionManager = self.sessionManager
 
         task = Task { [weak self] in
             defer { self?.task = nil }
@@ -84,6 +88,15 @@ final class CashierHeartbeatCoordinator {
 
                 do {
                     let response = try await sendHeartbeat(request)
+                    await MainActor.run {
+                        sessionManager?.clearPendingLifecycleEvent(
+                            expectedLifecycleEvent: request.lifecycleEventType,
+                            expectedSessionId: request.sessionId
+                        )
+                        if request.lifecycleEventType == nil {
+                            sessionManager?.recordSync()
+                        }
+                    }
                     await onHeartbeatResponse(response)
                 } catch is CancellationError {
                     break

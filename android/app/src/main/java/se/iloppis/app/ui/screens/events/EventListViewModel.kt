@@ -110,20 +110,20 @@ class EventListViewModel : ViewModel() {
 
         val filter = when (uiState.activeFilter) {
             EventFilterChip.ALL -> EventFilter(
-                searchText = uiState.searchQuery.takeIf { it.length >= 2 }
+                query = uiState.searchQuery.takeIf { it.length >= 2 }
             )
             EventFilterChip.UPCOMING -> EventFilter(
                 lifecycleStates = listOf(EventLifecycle.OPEN),
                 dateFrom = now,
-                searchText = uiState.searchQuery.takeIf { it.length >= 2 }
+                query = uiState.searchQuery.takeIf { it.length >= 2 }
             )
             EventFilterChip.ONGOING -> EventFilter(
                 lifecycleStates = listOf(EventLifecycle.OPEN),
-                searchText = uiState.searchQuery.takeIf { it.length >= 2 }
+                query = uiState.searchQuery.takeIf { it.length >= 2 }
             )
             EventFilterChip.PAST -> EventFilter(
                 lifecycleStates = listOf(EventLifecycle.CLOSED, EventLifecycle.FINALIZED),
-                searchText = uiState.searchQuery.takeIf { it.length >= 2 }
+                query = uiState.searchQuery.takeIf { it.length >= 2 }
             )
         }
 

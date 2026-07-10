@@ -137,6 +137,7 @@
     <string name="cashier_price_label">Prices</string>
     <string name="cashier_items_title">Items</string>
     <string name="cashier_no_items">No items added</string>
+    <string name="cashier_register_name">Cashier: %1$s</string>
     <string name="cashier_clear_all">Clear all</string>
     <string name="cashier_remove_item">Remove</string>
     <string name="cashier_seller_header">Seller</string>
@@ -187,11 +188,15 @@
     <string name="scanner_result_message_invalid">We could not find the ticket. Check that it belongs to this event.</string>
     <string name="scanner_result_message_offline">No connection – scan is queued and will sync automatically later.</string>
     <string name="scanner_result_message_error">Something went wrong. Try again or check your connection.</string>
+    <string name="scanner_warning_not_yet_valid">Warning: Ticket is valid from %1$s.</string>
+    <string name="scanner_warning_expired">Warning: Ticket expired at %1$s.</string>
     <string name="scanner_field_ticket_type">Ticket type: %1$s</string>
     <string name="scanner_field_email">Email: %1$s</string>
     <string name="scanner_field_scanned_at">Scanned: %1$s</string>
-    <string name="scanner_field_valid_window">Validity: %1$s</string>
+    <string name="scanner_field_valid_from">Valid from: %1$s</string>
+    <string name="scanner_field_valid_until">Valid until: %1$s</string>
     <string name="scanner_field_event">Event: %1$s</string>
+    <string name="scanner_field_unknown_value">Unknown</string>
 
     <!-- Ticket details dialog -->
     <string name="scanner_ticket_details_title">Ticket info</string>
@@ -199,7 +204,8 @@
     <string name="scanner_field_email_label">Holder</string>
     <string name="scanner_field_status_label">Status</string>
     <string name="scanner_field_scanned_at_label">Scanned</string>
-    <string name="scanner_field_valid_window_label">Valid from–to</string>
+    <string name="scanner_field_valid_from_label">Valid from</string>
+    <string name="scanner_field_valid_until_label">Valid until</string>
     <string name="scanner_field_event_label">Event</string>
     <string name="scanner_field_ticket_id_label">Ticket ID</string>
     <string name="scanner_button_close">Close</string>
@@ -311,6 +317,11 @@
     <!-- Cashier Screen - Additional -->
     <string name="cashier_pending_info_title">Outstanding purchases</string>
     <string name="cashier_pending_info_message">The number shows how many purchases are saved locally and have not yet been confirmed uploaded to the server. It should decrease when sync succeeds.</string>
+    <string name="cashier_close_pending_title">Pending purchases must be confirmed</string>
+    <string name="cashier_close_pending_message">This cashier has %1$d purchases that have not yet been uploaded to iLoppis. If you close now, they may be missing from reports. Go online so pending purchases can be uploaded before you close.</string>
+    <string name="cashier_offline_title">Offline</string>
+    <string name="cashier_offline_message">Go online so purchases are registered in iLoppis.</string>
+    <string name="cashier_close_pending_confirm">Close anyway</string>
 
     <!-- Swipe to dismiss box -->
     <string name="swipe_box_remove">Remove</string>

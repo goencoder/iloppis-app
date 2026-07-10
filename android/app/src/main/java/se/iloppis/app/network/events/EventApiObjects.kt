@@ -68,9 +68,9 @@ data class EventFilter(
     val dateTo: String? = null,
 
     /**
-     * Filter events to contain a search term
+     * Unified search query for event search.
      */
-    val searchText: String? = null,
+    val query: String? = null,
 
     /**
      * Filter after events lifecycle state

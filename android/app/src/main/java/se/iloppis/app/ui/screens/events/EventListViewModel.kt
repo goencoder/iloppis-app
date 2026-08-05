@@ -1,6 +1,6 @@
 package se.iloppis.app.ui.screens.events
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf

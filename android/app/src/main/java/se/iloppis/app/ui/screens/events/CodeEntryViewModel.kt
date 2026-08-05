@@ -1,6 +1,6 @@
 package se.iloppis.app.ui.screens.events
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText

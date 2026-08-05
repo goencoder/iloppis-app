@@ -1,6 +1,6 @@
 package se.iloppis.app.ui.screens.scanner
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException

@@ -1,7 +1,7 @@
 package se.iloppis.app.ui.screens.cashier
 
 import android.content.Context
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers

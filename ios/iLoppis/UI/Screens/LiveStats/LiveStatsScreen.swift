@@ -348,7 +348,7 @@ private final class LiveStatsViewModel: ObservableObject {
             state.isLoading = false
             state.errorKey = nil
         } catch let error as ApiError {
-            DebugLogStore.shared.append("[LiveStats] request failed: \(error.localizedDescription)")
+            DebugLogStore.appendIfEnabled("[LiveStats] request failed: \(error.localizedDescription)")
             state.isLoading = false
             switch error {
             case .http(let statusCode, _, let retryAfter):
@@ -366,7 +366,7 @@ private final class LiveStatsViewModel: ObservableObject {
                 nextPollDelayNs = pollDelayNs(retryAfter: nil, failureCount: consecutiveFailures)
             }
         } catch {
-            DebugLogStore.shared.append("[LiveStats] request failed: \(error.localizedDescription)")
+            DebugLogStore.appendIfEnabled("[LiveStats] request failed: \(error.localizedDescription)")
             state.isLoading = false
             consecutiveFailures += 1
             state.errorKey = "network"

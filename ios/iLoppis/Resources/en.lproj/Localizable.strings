@@ -172,3 +172,11 @@
 "scanner_field_scanned_at_label" = "Scanned at:";
 "scanner_field_valid_window_label" = "Valid window:";
 "scanner_field_ticket_id" = "Ticket ID:";
+
+/* Build and diagnostics */
+"build_environment_staging" = "TEST ENVIRONMENT · STAGING";
+"build_version" = "Version %@";
+"debug_logs_accessibility" = "Debug logs";
+"debug_logs_title" = "Debug logs";
+"common_close" = "Close";
+"common_clear" = "Clear";

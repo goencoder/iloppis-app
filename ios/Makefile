@@ -4,16 +4,42 @@
 PROJECT      := iLoppis.xcodeproj
 SCHEME       := iLoppis
 DEVICE_NAME  ?= iPhone 17
-BUNDLE_ID    := se.iloppis.app
-BUILD_DIR    := $(HOME)/Library/Developer/Xcode/DerivedData
+ENV          ?= staging
+ifeq ($(ENV),prod)
+ENV          := production
+endif
 
-.PHONY: help build clean install run start stop start-simulator stop-simulator status logs devices all get-device-id
+ifeq ($(ENV),staging)
+BUNDLE_ID     := se.iloppis.app.staging
+DISPLAY_NAME  := iLoppis (Staging)
+API_BASE_URL  := https://iloppis-staging.fly.dev/
+DEBUG_LOGGING := YES
+else ifeq ($(ENV),production)
+BUNDLE_ID     := se.iloppis.app
+DISPLAY_NAME  := iLoppis
+API_BASE_URL  := https://iloppis.se/
+DEBUG_LOGGING := NO
+else
+$(error ENV must be staging, production, or prod)
+endif
+
+BUILD_DIR    ?= $(CURDIR)/build/DerivedData
+XCODE_ENV_SETTINGS := \
+	ILOPPIS_ENVIRONMENT=$(ENV) \
+	ILOPPIS_API_BASE_URL=$(API_BASE_URL) \
+	ILOPPIS_DISPLAY_NAME='$(DISPLAY_NAME)' \
+	ILOPPIS_NETWORK_DEBUG_LOGGING=$(DEBUG_LOGGING) \
+	PRODUCT_BUNDLE_IDENTIFIER=$(BUNDLE_ID)
+
+.PHONY: help build release archive clean install run start stop start-simulator stop-simulator status logs devices all get-device-id
 
 help:
 	@echo "iLoppis iOS Makefile"
 	@echo ""
 	@echo "Build commands:"
 	@echo "  make build          – Build app for simulator"
+	@echo "  make release        – Build Release app for simulator"
+	@echo "  make archive        – Create a device archive (signing required)"
 	@echo "  make clean          – Clean build artifacts"
 	@echo ""
 	@echo "Run commands:"
@@ -35,21 +61,45 @@ help:
 	@echo "Environment:"
 	@echo "  DEVICE_NAME = $(DEVICE_NAME)"
 	@echo "  BUNDLE_ID   = $(BUNDLE_ID)"
+	@echo "  ENV         = $(ENV)"
+	@echo "  API_BASE_URL = $(API_BASE_URL)"
 
 get-device-id:
-	@xcrun simctl list devices available | grep "iPhone 17 " | grep -v "Pro" | head -1 | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/'
+	@xcrun simctl list devices available | grep "$(DEVICE_NAME) (" | head -1 | sed -E 's/.*\(([A-F0-9-]+)\).*/\1/'
 
 build:
 	@echo "Building $(SCHEME) for simulator..."
 	xcodebuild -project $(PROJECT) \
 		-scheme $(SCHEME) \
+		-configuration Debug \
 		-destination 'platform=iOS Simulator,name=$(DEVICE_NAME)' \
+		-derivedDataPath $(BUILD_DIR) \
+		$(XCODE_ENV_SETTINGS) \
 		build
+
+release:
+	@echo "Building $(SCHEME) $(ENV) Release for simulator..."
+	xcodebuild -project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-configuration Release \
+		-destination 'platform=iOS Simulator,name=$(DEVICE_NAME)' \
+		-derivedDataPath $(BUILD_DIR) \
+		$(XCODE_ENV_SETTINGS) \
+		build
+
+archive:
+	@echo "Archiving $(SCHEME) $(ENV) for device..."
+	xcodebuild -project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-configuration Release \
+		-destination 'generic/platform=iOS' \
+		-archivePath build/$(SCHEME)-$(ENV).xcarchive \
+		$(XCODE_ENV_SETTINGS) \
+		archive
 
 clean:
 	@echo "Cleaning build artifacts..."
-	xcodebuild -project $(PROJECT) -scheme $(SCHEME) clean
-	rm -rf $(BUILD_DIR)/iLoppis-*
+	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath $(BUILD_DIR) clean
 
 install: build
 	@echo "Installing app on simulator..."

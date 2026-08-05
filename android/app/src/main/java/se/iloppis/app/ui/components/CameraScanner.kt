@@ -1,6 +1,6 @@
 package se.iloppis.app.ui.components
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview

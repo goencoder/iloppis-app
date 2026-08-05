@@ -17,10 +17,16 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
-            resValue("string", "app_name", "iLoppis ( Staging )")
+            resValue("string", "app_name", "iLoppis (Staging)")
+            buildConfigField("String", "APP_ENVIRONMENT", "\"staging\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://iloppis-staging.fly.dev/\"")
+            buildConfigField("boolean", "ENABLE_NETWORK_DEBUG_LOGGING", "true")
         }
         create("production") {
             dimension = "environment"
+            buildConfigField("String", "APP_ENVIRONMENT", "\"production\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://iloppis.se/\"")
+            buildConfigField("boolean", "ENABLE_NETWORK_DEBUG_LOGGING", "false")
         }
     }
 

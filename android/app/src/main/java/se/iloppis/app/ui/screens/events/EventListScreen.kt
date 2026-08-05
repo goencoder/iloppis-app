@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.CodeEntryMode
+import se.iloppis.app.domain.model.AppBuildInfo
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.buttons.AppButton
@@ -114,7 +115,8 @@ private fun UnifiedEventListContent(
 
         // ── Sticky footer: tool access button ──
         FooterToolButtons(
-            onToolClick = onToolClick
+            onToolClick = onToolClick,
+            buildInfo = AppBuildInfo.current(),
         )
     }
 }
@@ -124,7 +126,8 @@ private fun UnifiedEventListContent(
  */
 @Composable
 private fun FooterToolButtons(
-    onToolClick: () -> Unit
+    onToolClick: () -> Unit,
+    buildInfo: AppBuildInfo,
 ) {
     Column(
         modifier = Modifier
@@ -153,6 +156,38 @@ private fun FooterToolButtons(
                 }
             )
         }
+        BuildInformation(buildInfo)
+    }
+}
+
+@Composable
+private fun BuildInformation(buildInfo: AppBuildInfo) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (buildInfo.isStaging) {
+            Surface(
+                color = AppColors.WarningContainer,
+                contentColor = AppColors.OnWarningContainer,
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.build_environment_staging),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        Text(
+            text = stringResource(R.string.build_version, buildInfo.versionLabel),
+            color = AppColors.TextMuted,
+            style = MaterialTheme.typography.labelSmall,
+        )
     }
 }
 

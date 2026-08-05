@@ -1,7 +1,7 @@
 package se.iloppis.app.data
 
 import android.content.Context
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 
 /**
  * Centralised one-call initialisation for all event-scoped file stores.

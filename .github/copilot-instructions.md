@@ -275,7 +275,7 @@ mobile/ios/
 ## API Integration
 
 ### Base URL
-- Production: `https://iloppis.fly.dev`
+- Production: `https://iloppis.se/`
 - All endpoints under `/v1/`
 
 ### Authentication

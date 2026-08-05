@@ -225,7 +225,7 @@ final class EventListViewModel: ObservableObject {
             } else {
                 response = try await apiClient.getApiKeyByAlias(alias: normalized)
             }
-            DebugLogStore.shared.append("[CodeExchange] alias=\(normalized) type=\(response.type ?? "(nil)") isActive=\(response.isActive)")
+            DebugLogStore.appendIfEnabled("[CodeExchange] alias=\(normalized) type=\(response.type ?? "(nil)") isActive=\(response.isActive)")
             guard response.isActive else {
                 onAction(.validationFailed("code_entry_error_inactive"))
                 return

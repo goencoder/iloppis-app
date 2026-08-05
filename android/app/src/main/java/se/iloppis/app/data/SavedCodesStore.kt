@@ -1,6 +1,6 @@
 package se.iloppis.app.data
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

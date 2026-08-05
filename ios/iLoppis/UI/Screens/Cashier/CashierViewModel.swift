@@ -32,7 +32,9 @@ final class CashierViewModel: ObservableObject {
             await self?.applyHeartbeatResponse(response)
         },
         onHeartbeatFailure: { error in
-            logger.warning("Cashier heartbeat failed: \(error.localizedDescription, privacy: .public)")
+            if DebugLogStore.isEnabled {
+                logger.warning("Cashier heartbeat failed: \(error.localizedDescription, privacy: .public)")
+            }
         },
         sessionManager: registerSessionManager
     )
@@ -185,14 +187,18 @@ final class CashierViewModel: ObservableObject {
         defer { state.isLoading = false }
 
         do {
-            logger.info("Loading vendors for event: \(self.eventId, privacy: .public)")
+            if DebugLogStore.isEnabled {
+                logger.info("Loading vendors for event: \(self.eventId, privacy: .public)")
+            }
             var allSellers = Set<Int>()
             var nextToken: String? = nil
             var pageCount = 0
 
             repeat {
                 pageCount += 1
-                logger.info("Fetching vendor page \(pageCount), pageToken: \(nextToken ?? "nil", privacy: .public)")
+                if DebugLogStore.isEnabled {
+                    logger.info("Fetching vendor page \(pageCount), pageToken: \(nextToken ?? "nil", privacy: .public)")
+                }
                 
                 let response = try await apiClient.listVendors(
                     eventId: eventId,
@@ -201,36 +207,37 @@ final class CashierViewModel: ObservableObject {
                     nextPageToken: nextToken
                 )
                 
-                logger.info("Page \(pageCount): Received \(response.vendors.count, privacy: .public) vendors")
-                
-                // Log details about each vendor for debugging
-                for (index, vendor) in response.vendors.enumerated() {
-                    logger.debug("  Vendor[\(index)]: id=\(vendor.id, privacy: .public), sellerNumber=\(vendor.sellerNumber, privacy: .public), status=\(vendor.status ?? "nil", privacy: .public)")
+                if DebugLogStore.isEnabled {
+                    logger.info("Page \(pageCount): Received \(response.vendors.count, privacy: .public) vendors")
+                }
+
+                for vendor in response.vendors {
                     allSellers.insert(vendor.sellerNumber)
                 }
-                
+
                 nextToken = response.nextPageToken
-                logger.info("Next page token: \(nextToken ?? "nil", privacy: .public)")
+                if DebugLogStore.isEnabled {
+                    logger.info("Next page token: \(nextToken ?? "nil", privacy: .public)")
+                }
             } while !(nextToken ?? "").isEmpty
 
             state.validSellers = allSellers
-            logger.info("✅ Successfully loaded \(allSellers.count, privacy: .public) unique sellers across \(pageCount) pages")
+            if DebugLogStore.isEnabled {
+                logger.info("Loaded \(allSellers.count, privacy: .public) sellers across \(pageCount) pages")
+            }
         } catch let error as ApiError {
-            logger.error("❌ Failed to load vendors: \(error.localizedDescription, privacy: .public)")
-            
-            // Log additional details for decode errors
-            if case .decoding(let underlyingError, let data, let responseType) = error {
-                logger.error("  Response type: \(responseType, privacy: .public)")
-                logger.error("  Underlying error: \(underlyingError.localizedDescription, privacy: .public)")
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    let preview = String(jsonString.prefix(1000))
-                    logger.error("  JSON preview: \(preview, privacy: .public)")
+            if DebugLogStore.isEnabled {
+                logger.error("Failed to load vendors: \(error.localizedDescription, privacy: .public)")
+                if case .decoding(let underlyingError, _, let responseType) = error {
+                    logger.error("Response type: \(responseType, privacy: .public)")
+                    logger.error("Underlying error: \(underlyingError.localizedDescription, privacy: .public)")
                 }
             }
-            
             state.errorMessage = "Failed to load vendors: \(error.localizedDescription)"
         } catch {
-            logger.error("❌ Unexpected error loading vendors: \(error.localizedDescription, privacy: .public)")
+            if DebugLogStore.isEnabled {
+                logger.error("Unexpected error loading vendors: \(error.localizedDescription, privacy: .public)")
+            }
             state.errorMessage = "Failed to load vendors: \(error.localizedDescription)"
         }
     }

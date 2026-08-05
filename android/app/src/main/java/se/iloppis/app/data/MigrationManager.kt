@@ -1,7 +1,7 @@
 package se.iloppis.app.data
 
 import android.content.Context
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.core.content.edit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -172,3 +172,11 @@
 "scanner_field_scanned_at_label" = "Skannad:";
 "scanner_field_valid_window_label" = "Giltighet:";
 "scanner_field_ticket_id" = "Biljett-ID:";
+
+/* Build and diagnostics */
+"build_environment_staging" = "TESTMILJÖ · STAGING";
+"build_version" = "Version %@";
+"debug_logs_accessibility" = "Debugloggar";
+"debug_logs_title" = "Debugloggar";
+"common_close" = "Stäng";
+"common_clear" = "Rensa";

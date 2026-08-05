@@ -1,7 +1,7 @@
 package se.iloppis.app.data
 
 import android.content.Context
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow

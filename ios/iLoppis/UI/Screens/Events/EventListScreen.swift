@@ -2,7 +2,8 @@ import SwiftUI
 
 struct EventListScreen: View {
     @ObservedObject var viewModel: EventListViewModel
-        @StateObject private var debugLogs = DebugLogStore.shared
+    @StateObject private var debugLogs = DebugLogStore.shared
+    private let buildInfo = AppBuildInfo.current
 
     var body: some View {
         NavigationStack {
@@ -15,14 +16,17 @@ struct EventListScreen: View {
                 searchBar
                 filterRow
                 content
+                buildInformation
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button {
-                            debugLogs.isPresented = true
-                        } label: {
-                            Image(systemName: "ladybug")
+                        if buildInfo.networkDebugLoggingEnabled {
+                            Button {
+                                debugLogs.isPresented = true
+                            } label: {
+                                Image(systemName: "ladybug")
+                            }
+                            .accessibilityLabel(LocalizedStringKey("debug_logs_accessibility"))
                         }
-                        .accessibilityLabel("Debug Logs")
                     }
                 }
             }
@@ -74,6 +78,29 @@ struct EventListScreen: View {
             .font(.system(size: 28, weight: .bold))
             .foregroundColor(AppColors.textPrimary)
             .padding(.vertical, 8)
+    }
+
+    private var buildInformation: some View {
+        HStack(spacing: 8) {
+            if buildInfo.isStaging {
+                Text(LocalizedStringKey("build_environment_staging"))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundColor(AppColors.warning)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(AppColors.warning.opacity(0.12))
+                    .clipShape(Capsule())
+            }
+
+            Text(String(
+                format: NSLocalizedString("build_version", comment: ""),
+                buildInfo.versionLabel
+            ))
+            .font(.caption2)
+            .foregroundColor(AppColors.textMuted)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .accessibilityElement(children: .combine)
     }
 
     private var quickAccessButtons: some View {
@@ -185,13 +212,13 @@ private struct DebugConsoleView: View {
                         .padding(.vertical, 2)
                 }
             }
-            .navigationTitle("Debug Logs")
+            .navigationTitle(LocalizedStringKey("debug_logs_title"))
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") { store.isPresented = false }
+                    Button(LocalizedStringKey("common_close")) { store.isPresented = false }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Clear") { store.clear() }
+                    Button(LocalizedStringKey("common_clear")) { store.clear() }
                 }
             }
         }

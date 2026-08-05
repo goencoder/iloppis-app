@@ -14,7 +14,7 @@ ENV ?= staging
 #   make ios               Run in iOS simulator
 
 .PHONY: help android-device android-emulator android-build android-clean \
-        ios ios-build ios-clean logs-android logs-ios check
+        ios ios-build ios-clean logs-android logs-ios check android-bundle android-release-check ios-release
 
 # Default target
 help:
@@ -28,6 +28,8 @@ help:
 	@echo "  make android-emulator   Start emulator and run app"
 	@echo "  make android-build      Build debug APK"
 	@echo "  make android-release    Build release APK"
+	@echo "  make android-bundle     Build release AAB"
+	@echo "  make android-release-check  Run flavored release quality gate"
 	@echo "  make android-clean      Clean Android build artifacts"
 	@echo "  make android-devices    List connected Android devices"
 	@echo "  make android-logs       Stream Android app logs"
@@ -36,6 +38,7 @@ help:
 	@echo "🍎 iOS COMMANDS:"
 	@echo "  make ios                Start simulator and run app"
 	@echo "  make ios-build          Build for simulator"
+	@echo "  make ios-release        Build Release for simulator"
 	@echo "  make ios-clean          Clean iOS build artifacts"
 	@echo "  make ios-devices        List iOS simulators"
 	@echo "  make ios-logs           Stream iOS app logs"
@@ -70,6 +73,12 @@ android-build:
 android-release:
 	@cd android && ENV=$(ENV) $(MAKE) release
 
+android-bundle:
+	@cd android && ENV=$(ENV) $(MAKE) bundle
+
+android-release-check:
+	@cd android && ENV=$(ENV) $(MAKE) release-check
+
 # Clean Android build
 android-clean:
 	@cd android && $(MAKE) clean
@@ -97,11 +106,14 @@ android-stop:
 # Run in iOS simulator
 ios:
 	@echo "🍎 Starting iOS simulator and deploying app..."
-	@cd ios && $(MAKE) start
+	@cd ios && ENV=$(ENV) $(MAKE) start
 
 # Build iOS app
 ios-build:
-	@cd ios && $(MAKE) build
+	@cd ios && ENV=$(ENV) $(MAKE) build
+
+ios-release:
+	@cd ios && ENV=$(ENV) $(MAKE) release
 
 # Clean iOS build
 ios-clean:

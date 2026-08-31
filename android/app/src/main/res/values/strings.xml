@@ -381,4 +381,6 @@
     <string name="review_error_delete_failed">Kunde inte radera köpet: %1$s</string>
     <string name="build_environment_staging">TESTMILJÖ · STAGING</string>
     <string name="build_version">Version %1$s</string>
+    <string name="privacy_policy">Integritetspolicy</string>
+    <string name="privacy_policy_url" translatable="false">https://iloppis.se/integritetspolicy</string>
 </resources>

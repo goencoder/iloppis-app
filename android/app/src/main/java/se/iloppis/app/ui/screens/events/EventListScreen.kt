@@ -11,6 +11,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
@@ -162,6 +163,9 @@ private fun FooterToolButtons(
 
 @Composable
 private fun BuildInformation(buildInfo: AppBuildInfo) {
+    val uriHandler = LocalUriHandler.current
+    val privacyPolicyUrl = stringResource(R.string.privacy_policy_url)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -188,6 +192,13 @@ private fun BuildInformation(buildInfo: AppBuildInfo) {
             color = AppColors.TextMuted,
             style = MaterialTheme.typography.labelSmall,
         )
+        Spacer(modifier = Modifier.width(8.dp))
+        TextButton(onClick = { uriHandler.openUri(privacyPolicyUrl) }) {
+            Text(
+                text = stringResource(R.string.privacy_policy),
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
     }
 }
 

@@ -98,9 +98,14 @@ struct EventListScreen: View {
             ))
             .font(.caption2)
             .foregroundColor(AppColors.textMuted)
+
+            Link(
+                LocalizedStringKey("privacy_policy"),
+                destination: URL(string: "https://iloppis.se/integritetspolicy")!
+            )
+            .font(.caption2)
         }
         .frame(maxWidth: .infinity, alignment: .center)
-        .accessibilityElement(children: .combine)
     }
 
     private var quickAccessButtons: some View {

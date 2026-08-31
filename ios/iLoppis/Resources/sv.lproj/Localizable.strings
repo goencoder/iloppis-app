@@ -176,6 +176,7 @@
 /* Build and diagnostics */
 "build_environment_staging" = "TESTMILJÖ · STAGING";
 "build_version" = "Version %@";
+"privacy_policy" = "Integritetspolicy";
 "debug_logs_accessibility" = "Debugloggar";
 "debug_logs_title" = "Debugloggar";
 "common_close" = "Stäng";

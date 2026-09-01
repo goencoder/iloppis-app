@@ -34,6 +34,9 @@ import kotlin.math.ceil
 
 private const val TAG = "CashierViewModel"
 
+internal fun parseCashierPrice(value: String): Int? =
+    value.toIntOrNull()?.takeIf { it >= 0 }
+
 /**
  * Represents a single transaction item in the current purchase.
  */
@@ -472,8 +475,8 @@ class CashierViewModel(
 
         val newItems = mutableListOf<TransactionItem>()
         for (priceStr in priceStrings) {
-            val price = priceStr.toIntOrNull()
-            if (price == null || price < 0) {
+            val price = parseCashierPrice(priceStr)
+            if (price == null) {
                 _uiState.value = _uiState.value.copy(warningMessage = UiText.StringResource(R.string.cashier_warning_invalid_price, listOf(priceStr)))
                 return
             }

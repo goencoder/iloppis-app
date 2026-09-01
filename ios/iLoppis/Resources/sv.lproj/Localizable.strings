@@ -104,6 +104,8 @@
 "cashier_button_cash" = "Kontant";
 "cashier_button_swish" = "Swish";
 "cashier_event_label" = "Event: %@";
+"cashier_warning_enter_price" = "Ange minst ett pris";
+"cashier_warning_invalid_price" = "Priset måste vara ett heltal på 0 kr eller mer: %@";
 
 "keypad_clear" = "C";
 "keypad_ok" = "OK";

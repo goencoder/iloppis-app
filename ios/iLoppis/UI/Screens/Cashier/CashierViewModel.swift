@@ -302,14 +302,17 @@ final class CashierViewModel: ObservableObject {
             .map(String.init)
 
         guard !priceParts.isEmpty else {
-            state.warningMessage = "Enter at least one price"
+            state.warningMessage = NSLocalizedString("cashier_warning_enter_price", comment: "")
             return
         }
 
         var newItems: [TransactionItem] = []
         for part in priceParts {
-            guard let price = Int(part), price >= 0 else {
-                state.warningMessage = "Invalid price: \(part)"
+            guard let price = Int(part), price >= 0, price <= Int(Int32.max) else {
+                state.warningMessage = String(
+                    format: NSLocalizedString("cashier_warning_invalid_price", comment: ""),
+                    part
+                )
                 return
             }
             newItems.append(TransactionItem(sellerNumber: sellerNum, price: price))

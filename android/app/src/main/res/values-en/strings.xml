@@ -358,7 +358,7 @@
     <string name="cashier_error_auth_expired">Cashier authorization has expired. Re-open the cashier with a new code.</string>
     <string name="cashier_warning_invalid_seller">Invalid seller number</string>
     <string name="cashier_warning_enter_price">Enter at least one price</string>
-    <string name="cashier_warning_invalid_price">Invalid price: %1$s</string>
+    <string name="cashier_warning_invalid_price">Price must be a whole number of 0 SEK or more: %1$s</string>
     <string name="cashier_warning_no_items">No items to pay for</string>
     <string name="review_error_purchase_not_found">Purchase not found</string>
     <string name="review_error_invalid_seller">Invalid seller number</string>

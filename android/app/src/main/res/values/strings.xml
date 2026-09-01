@@ -368,7 +368,7 @@
     <string name="cashier_error_auth_expired">Kassans behörighet har gått ut. Öppna kassan igen med en ny kod.</string>
     <string name="cashier_warning_invalid_seller">Ogiltigt säljarnummer</string>
     <string name="cashier_warning_enter_price">Ange minst ett pris</string>
-    <string name="cashier_warning_invalid_price">Ogiltigt pris: %1$s</string>
+    <string name="cashier_warning_invalid_price">Priset måste vara ett heltal på 0 kr eller mer: %1$s</string>
     <string name="cashier_warning_no_items">Inga varor att betala</string>
     <string name="review_error_purchase_not_found">Köpet hittades inte</string>
     <string name="review_error_invalid_seller">Ogiltigt säljarnummer</string>

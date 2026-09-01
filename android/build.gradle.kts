@@ -12,6 +12,15 @@ dependencyCheck {
     format = "HTML"
     outputDirectory.set(layout.buildDirectory.dir("reports/dependency-check"))
 
+    // Read the NVD credential from the release environment; never commit it.
+    providers.environmentVariable("NVD_API_KEY").orNull
+        ?.takeIf { it.isNotBlank() }
+        ?.let { nvdApiKey ->
+            nvd {
+                apiKey = nvdApiKey
+            }
+        }
+
     // Suppress false positives (add as needed)
     suppressionFile = file("dependency-check-suppressions.xml").takeIf { it.exists() }?.absolutePath
 

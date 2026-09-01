@@ -381,6 +381,10 @@
     <string name="review_error_delete_failed">Kunde inte radera köpet: %1$s</string>
     <string name="build_environment_staging">TESTMILJÖ · STAGING</string>
     <string name="build_version">Version %1$s</string>
+    <string name="app_help_open">Hjälp</string>
+    <string name="app_help_title">Så använder du iLoppis</string>
+    <string name="app_help_body">På startsidan kan du hitta och läsa om kommande, pågående och tidigare loppisar.\n\nVerktygskoder delas ut av arrangören. Tryck på Verktyg och ange koden för att öppna kassa, biljettskanner eller livestatistik för rätt event.\n\nI kassan registrerar du varor med säljarnummer och väljer kontant eller Swish. Appen genomför ingen betalning; den registrerar bara det betalsätt som användes. Osynkade köp sparas på enheten och skickas när nätverket är tillbaka.\n\nBiljettskannern läser biljettens QR-kod med kameran. Du kan också söka eller ange biljettkoden manuellt.</string>
+    <string name="common_close">Stäng</string>
     <string name="privacy_policy">Integritetspolicy</string>
     <string name="privacy_policy_url" translatable="false">https://iloppis.se/integritetspolicy</string>
 </resources>

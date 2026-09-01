@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +33,6 @@ import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 /**
  * Detailed purchase review screen showing individual items with edit/remove actions.
@@ -267,7 +267,7 @@ private fun PurchaseDetailContent(
     onRemoveItem: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm", LocalConfiguration.current.locales[0])
     val timestamp = try {
         java.time.Instant.parse(purchase.timestamp).toEpochMilli()
     } catch (e: Exception) {

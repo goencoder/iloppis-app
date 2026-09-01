@@ -68,7 +68,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.network.stats.LiveCashierStatus

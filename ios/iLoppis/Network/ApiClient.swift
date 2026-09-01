@@ -22,7 +22,11 @@ struct AppBuildInfo {
             let apiBaseURL = URL(string: urlString),
             apiBaseURL.scheme == "https",
             let host = apiBaseURL.host,
-            !host.isEmpty
+            !host.isEmpty,
+            [
+                "staging": "https://iloppis-staging.fly.dev/",
+                "production": "https://iloppis.se/"
+            ][environment] == apiBaseURL.absoluteString
         else {
             fatalError("Missing or invalid compiled iLoppis environment configuration")
         }
@@ -44,7 +48,7 @@ struct AppBuildInfo {
             versionName: versionName,
             versionCode: versionCode,
             apiBaseURL: apiBaseURL,
-            networkDebugLoggingEnabled: networkDebugLoggingEnabled
+            networkDebugLoggingEnabled: environment == "staging" && networkDebugLoggingEnabled
         )
     }()
 }
@@ -106,7 +110,7 @@ struct ApiClient {
     ) {
         self.session = session
         self.baseURL = appBuildInfo.apiBaseURL
-        self.enableDebugLogging = enableDebugLogging ?? appBuildInfo.networkDebugLoggingEnabled
+        self.enableDebugLogging = appBuildInfo.isStaging && (enableDebugLogging ?? appBuildInfo.networkDebugLoggingEnabled)
         self.jsonDecoder = JSONDecoder()
         self.jsonEncoder = JSONEncoder()
     }
@@ -448,6 +452,8 @@ struct ApiClient {
     }
     
     private func logDecodeError(error: Error, data: Data, url: URL, responseType: String) {
+        guard enableDebugLogging else { return }
+
         let errorLine = "[ApiClient] ❌ DECODE ERROR for \(responseType)"
         logger.error("❌ DECODE ERROR for \(responseType, privacy: .public)")
         print(errorLine)

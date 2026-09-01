@@ -9,6 +9,10 @@ import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -165,39 +169,61 @@ private fun FooterToolButtons(
 private fun BuildInformation(buildInfo: AppBuildInfo) {
     val uriHandler = LocalUriHandler.current
     val privacyPolicyUrl = stringResource(R.string.privacy_policy_url)
+    var showHelp by remember { mutableStateOf(false) }
 
-    Row(
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            title = { Text(stringResource(R.string.app_help_title)) },
+            text = { Text(stringResource(R.string.app_help_body)) },
+            confirmButton = {
+                TextButton(onClick = { showHelp = false }) {
+                    Text(stringResource(R.string.common_close))
+                }
+            },
+        )
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (buildInfo.isStaging) {
-            Surface(
-                color = AppColors.WarningContainer,
-                contentColor = AppColors.OnWarningContainer,
-                shape = RoundedCornerShape(12.dp),
-            ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (buildInfo.isStaging) {
+                Surface(
+                    color = AppColors.WarningContainer,
+                    contentColor = AppColors.OnWarningContainer,
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.build_environment_staging),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = stringResource(R.string.build_version, buildInfo.versionLabel),
+                color = AppColors.TextMuted,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { showHelp = true }) {
                 Text(
-                    text = stringResource(R.string.build_environment_staging),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    text = stringResource(R.string.app_help_open),
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-        Text(
-            text = stringResource(R.string.build_version, buildInfo.versionLabel),
-            color = AppColors.TextMuted,
-            style = MaterialTheme.typography.labelSmall,
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        TextButton(onClick = { uriHandler.openUri(privacyPolicyUrl) }) {
-            Text(
-                text = stringResource(R.string.privacy_policy),
-                style = MaterialTheme.typography.labelSmall,
-            )
+            TextButton(onClick = { uriHandler.openUri(privacyPolicyUrl) }) {
+                Text(
+                    text = stringResource(R.string.privacy_policy),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
         }
     }
 }

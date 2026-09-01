@@ -3,6 +3,7 @@ import SwiftUI
 struct EventListScreen: View {
     @ObservedObject var viewModel: EventListViewModel
     @StateObject private var debugLogs = DebugLogStore.shared
+    @State private var isHelpPresented = false
     private let buildInfo = AppBuildInfo.current
 
     var body: some View {
@@ -68,6 +69,11 @@ struct EventListScreen: View {
             .sheet(isPresented: $debugLogs.isPresented) {
                 DebugConsoleView(store: debugLogs)
             }
+            .alert(LocalizedStringKey("app_help_title"), isPresented: $isHelpPresented) {
+                Button(LocalizedStringKey("common_close"), role: .cancel) {}
+            } message: {
+                Text(LocalizedStringKey("app_help_body"))
+            }
         }
     }
 
@@ -98,6 +104,11 @@ struct EventListScreen: View {
             ))
             .font(.caption2)
             .foregroundColor(AppColors.textMuted)
+
+            Button(LocalizedStringKey("app_help_open")) {
+                isHelpPresented = true
+            }
+            .font(.caption2)
 
             Link(
                 LocalizedStringKey("privacy_policy"),

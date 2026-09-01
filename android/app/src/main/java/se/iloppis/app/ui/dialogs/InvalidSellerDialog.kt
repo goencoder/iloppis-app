@@ -6,13 +6,13 @@ import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonSize
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import se.iloppis.app.R
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 /**
  * Dialog shown when auto-recovery fails for INVALID_SELLER errors.
@@ -41,7 +41,7 @@ fun InvalidSellerDialog(
     onDismiss: () -> Unit,
     onReviewNow: () -> Unit
 ) {
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm", LocalConfiguration.current.locales[0])
     val timestampMillis = try {
         java.time.Instant.parse(timestamp).toEpochMilli()
     } catch (e: Exception) {

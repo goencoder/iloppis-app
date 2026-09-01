@@ -176,6 +176,9 @@
 /* Build and diagnostics */
 "build_environment_staging" = "TESTMILJÖ · STAGING";
 "build_version" = "Version %@";
+"app_help_open" = "Hjälp";
+"app_help_title" = "Så använder du iLoppis";
+"app_help_body" = "På startsidan kan du hitta och läsa om kommande, pågående och tidigare loppisar.\n\nVerktygskoder delas ut av arrangören. Tryck på Verktyg och ange koden för att öppna kassa, biljettskanner eller livestatistik för rätt event.\n\nI kassan registrerar du varor med säljarnummer och väljer kontant eller Swish. Appen genomför ingen betalning; den registrerar bara det betalsätt som användes. Osynkade köp sparas på enheten och skickas när nätverket är tillbaka.\n\nBiljettskannern läser biljettens QR-kod med kameran. Du kan också söka eller ange biljettkoden manuellt.";
 "privacy_policy" = "Integritetspolicy";
 "debug_logs_accessibility" = "Debugloggar";
 "debug_logs_title" = "Debugloggar";

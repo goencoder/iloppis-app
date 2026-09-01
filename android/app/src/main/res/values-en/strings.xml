@@ -371,5 +371,9 @@
     <string name="review_error_delete_failed">Could not delete purchase: %1$s</string>
     <string name="build_environment_staging">TEST ENVIRONMENT · STAGING</string>
     <string name="build_version">Version %1$s</string>
+    <string name="app_help_open">Help</string>
+    <string name="app_help_title">How to use iLoppis</string>
+    <string name="app_help_body">On the home screen, you can find and read about upcoming, ongoing, and past flea markets.\n\nTool codes are provided by the organizer. Tap Tools and enter the code to open the cashier, ticket scanner, or live statistics for the correct event.\n\nIn the cashier, register items with their seller number and select Cash or Swish. The app does not process a payment; it only records the payment method used. Unsynced purchases are stored on the device and sent when the network is available again.\n\nThe ticket scanner reads the ticket QR code with the camera. You can also search for or enter the ticket code manually.</string>
+    <string name="common_close">Close</string>
     <string name="privacy_policy">Privacy Policy</string>
 </resources>

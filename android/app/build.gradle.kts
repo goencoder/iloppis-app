@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,29 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+}
+
+val releaseKeystorePropertiesFile = rootProject.file("keystore.properties")
+val releaseKeystoreProperties = Properties().apply {
+    if (releaseKeystorePropertiesFile.isFile) {
+        releaseKeystorePropertiesFile.inputStream().use(::load)
+    }
+}
+
+fun requiredSigningProperty(name: String): String =
+    releaseKeystoreProperties.getProperty(name)?.takeIf { it.isNotBlank() }
+        ?: error("Missing '$name' in ${releaseKeystorePropertiesFile.absolutePath}")
+
+gradle.taskGraph.whenReady {
+    val signedReleaseRequested = allTasks.any { task ->
+        task.name.matches(Regex("(bundle|assemble).+Release"))
+    }
+    if (signedReleaseRequested && !releaseKeystorePropertiesFile.isFile) {
+        error(
+            "Release signing requires ${releaseKeystorePropertiesFile.absolutePath}. " +
+                "Copy keystore.properties.example, fill in the upload-key values, and keep it out of Git."
+        )
+    }
 }
 
 android {
@@ -34,12 +59,24 @@ android {
         applicationId = "se.iloppis.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "1.0.0"
+    }
+
+    signingConfigs {
+        create("release") {
+            if (releaseKeystorePropertiesFile.isFile) {
+                storeFile = file(requiredSigningProperty("storeFile"))
+                storePassword = requiredSigningProperty("storePassword")
+                keyAlias = requiredSigningProperty("keyAlias")
+                keyPassword = requiredSigningProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

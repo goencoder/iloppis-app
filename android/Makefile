@@ -21,6 +21,7 @@ endif
 BUILD_CONFIG_PATH := app/build/generated/source/buildConfig/$(ENV)/release/se/iloppis/app/BuildConfig.java
 MERGED_MANIFEST_PATH := app/build/intermediates/merged_manifest/$(ENV)Release/process$(FLAVOR_CAPITALIZED)ReleaseMainManifest/AndroidManifest.xml
 AAB_PATH := app/build/outputs/bundle/$(ENV)Release/app-$(ENV)-release.aab
+R8_MAPPING_PATH := app/build/outputs/mapping/$(ENV)Release/mapping.txt
 PLAY_DEPLOYMENT_CERT ?= deployment_cert.der
 # Public SHA-256 fingerprint from Play Console. This pins the local public
 # deployment/app-signing certificate; it is not an upload signing secret.
@@ -58,7 +59,7 @@ AVD_NAME     ?= Pixel_6_API_34
 PACKAGE_NAME := se.iloppis.app$(if $(filter staging,$(ENV)),.staging)
 DEVICE       ?=
 
-.PHONY: help build clean install run start stop emulator stop-emulator create-avd list-avds status logs devices all lint security check test release bundle release-check verify-release-config verify-play-deployment-cert verify-aab-signature
+.PHONY: help build clean install run start stop emulator stop-emulator create-avd list-avds status logs devices all lint security check test release bundle release-check verify-release-config verify-play-deployment-cert verify-aab-signature verify-r8-metadata
 
 help:
 	@echo "iLoppis Android Makefile"
@@ -69,6 +70,7 @@ help:
 	@echo "  make bundle         – Build release AAB for store upload"
 	@echo "  make release-check  – Run flavored debug unit tests, release lint, manifest verification, and AAB build"
 	@echo "  make verify-play-deployment-cert – Verify the local Play deployment certificate"
+	@echo "  make verify-r8-metadata – Verify mapping and R8 metadata in the release bundle"
 	@echo "  make clean          – Clean build artifacts"
 	@echo ""
 	@echo "Quality checks:"
@@ -139,8 +141,10 @@ release-check:
 	@$(MAKE) verify-release-config ENV=$(ENV)
 	@$(MAKE) verify-play-deployment-cert ENV=$(ENV)
 	@$(MAKE) verify-aab-signature ENV=$(ENV)
+	@$(MAKE) verify-r8-metadata ENV=$(ENV)
 	@echo "✅ $(ENV) release quality gate passed"
 	@echo "📦 AAB: $(AAB_PATH)"
+	@echo "🗺️  R8 mapping: $(R8_MAPPING_PATH)"
 
 verify-release-config:
 	@echo "Verifying $(ENV) release manifest and BuildConfig..."
@@ -183,6 +187,14 @@ verify-aab-signature:
 		exit 1; \
 	fi; \
 	echo "✅ AAB signature verified"
+
+verify-r8-metadata:
+	@test -s "$(R8_MAPPING_PATH)" || (echo "❌ Missing or empty R8 mapping: $(R8_MAPPING_PATH)" && exit 1)
+	@unzip -l "$(AAB_PATH)" | grep -q 'BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map' || \
+		(echo "❌ AAB does not contain the R8 mapping metadata" && exit 1)
+	@unzip -l "$(AAB_PATH)" | grep -q 'BUNDLE-METADATA/com.android.tools/r8.json' || \
+		(echo "❌ AAB does not contain R8 metadata" && exit 1)
+	@echo "✅ R8 mapping and bundle metadata verified"
 
 clean:
 	@echo "Cleaning build artifacts..."

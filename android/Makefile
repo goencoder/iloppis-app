@@ -158,6 +158,8 @@ verify-release-config:
 	@grep -q 'public static final String API_BASE_URL = "$(API_BASE_URL)";' $(BUILD_CONFIG_PATH) || (echo "❌ API_BASE_URL mismatch in BuildConfig" && exit 1)
 	@grep -q 'public static final String APP_ENVIRONMENT = "$(ENV)";' $(BUILD_CONFIG_PATH) || (echo "❌ APP_ENVIRONMENT mismatch in BuildConfig" && exit 1)
 	@grep -q 'package="$(EXPECTED_APP_ID)"' $(MERGED_MANIFEST_PATH) || (echo "❌ Package mismatch in merged manifest" && exit 1)
+	@grep -A2 'android:name="org.apache.http.legacy"' $(MERGED_MANIFEST_PATH) | grep -q 'android:required="true"' || \
+		(echo "❌ Required Google Maps compatibility library is missing from merged manifest" && exit 1)
 	@if grep -q 'android:debuggable="true"' $(MERGED_MANIFEST_PATH); then \
 		echo "❌ Release manifest is debuggable"; \
 		exit 1; \

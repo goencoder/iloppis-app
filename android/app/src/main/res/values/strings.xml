@@ -175,6 +175,7 @@
     <string name="scanner_button_grant_permission">Ge kamerabehörighet</string>
     <string name="scanner_permission_rationale">Kameran behövs för att skanna QR-koder på biljetter.</string>
     <string name="scanner_permission_needed">Aktivera kameran för att skanna biljetter</string>
+    <string name="scanner_camera_unavailable">Kameraskannern kunde inte startas. Använd manuell sökning.</string>
     <string name="scanner_tap_to_scan">Tryck på knappen för att börja skanna</string>
     <string name="scanner_paused">Skanning pausad</string>
     <string name="scanner_preview_icon">📷</string>

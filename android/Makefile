@@ -144,7 +144,9 @@ release-check:
 	@$(MAKE) verify-r8-metadata ENV=$(ENV)
 	@echo "✅ $(ENV) release quality gate passed"
 	@echo "📦 AAB: $(AAB_PATH)"
-	@echo "🗺️  R8 mapping: $(R8_MAPPING_PATH)"
+	@if grep -q 'isMinifyEnabled = true' app/build.gradle.kts; then \
+		echo "🗺️  R8 mapping: $(R8_MAPPING_PATH)"; \
+	fi
 
 verify-release-config:
 	@echo "Verifying $(ENV) release manifest and BuildConfig..."
@@ -189,12 +191,16 @@ verify-aab-signature:
 	echo "✅ AAB signature verified"
 
 verify-r8-metadata:
-	@test -s "$(R8_MAPPING_PATH)" || (echo "❌ Missing or empty R8 mapping: $(R8_MAPPING_PATH)" && exit 1)
-	@unzip -l "$(AAB_PATH)" | grep -q 'BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map' || \
-		(echo "❌ AAB does not contain the R8 mapping metadata" && exit 1)
-	@unzip -l "$(AAB_PATH)" | grep -q 'BUNDLE-METADATA/com.android.tools/r8.json' || \
-		(echo "❌ AAB does not contain R8 metadata" && exit 1)
-	@echo "✅ R8 mapping and bundle metadata verified"
+	@if grep -q 'isMinifyEnabled = true' app/build.gradle.kts; then \
+		test -s "$(R8_MAPPING_PATH)" || (echo "❌ Missing or empty R8 mapping: $(R8_MAPPING_PATH)" && exit 1); \
+		unzip -l "$(AAB_PATH)" | grep -q 'BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map' || \
+			(echo "❌ AAB does not contain the R8 mapping metadata" && exit 1); \
+		unzip -l "$(AAB_PATH)" | grep -q 'BUNDLE-METADATA/com.android.tools/r8.json' || \
+			(echo "❌ AAB does not contain R8 metadata" && exit 1); \
+		echo "✅ R8 mapping and bundle metadata verified"; \
+	else \
+		echo "ℹ️  R8 metadata verification skipped because minification is disabled"; \
+	fi
 
 clean:
 	@echo "Cleaning build artifacts..."

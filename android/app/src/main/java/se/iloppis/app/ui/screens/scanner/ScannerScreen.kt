@@ -339,6 +339,21 @@ private fun ScannerPreview(
             // Show live camera feed only when scanning is active
             CameraScanner(
                 onBarcodeScanned = onBarcodeScanned,
+                unavailableContent = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.scanner_camera_unavailable),
+                            color = AppColors.Error,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxSize()
             )
         } else if (cameraPermissionGranted && !isScanningActive) {

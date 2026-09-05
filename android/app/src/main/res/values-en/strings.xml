@@ -163,6 +163,7 @@
     <string name="scanner_button_grant_permission">Grant camera permission</string>
     <string name="scanner_permission_rationale">Camera is needed to scan QR codes on tickets.</string>
     <string name="scanner_permission_needed">Enable camera to scan tickets</string>
+    <string name="scanner_camera_unavailable">The camera scanner could not start. Use manual search.</string>
     <string name="scanner_tap_to_scan">Press the button to start scanning</string>
     <string name="scanner_paused">Scanning paused</string>
     <string name="scanner_preview_icon">📷</string>

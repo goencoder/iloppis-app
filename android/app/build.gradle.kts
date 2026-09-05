@@ -59,8 +59,8 @@ android {
         applicationId = "se.iloppis.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.2.0"
+        versionCode = 4
+        versionName = "0.2.1"
     }
 
     signingConfigs {
@@ -77,8 +77,10 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // Temporarily disabled after R8 full-mode broke ML Kit component
+            // discovery in the Play-distributed 0.2.0 build.
+            isMinifyEnabled = false
+            isShrinkResources = false
             ndk {
                 debugSymbolLevel = "SYMBOL_TABLE"
             }

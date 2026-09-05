@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -26,12 +29,14 @@ import java.util.concurrent.Executors
  * 
  * @param onBarcodeScanned Called when a barcode is successfully scanned. 
  *                         Return true to stop scanning, false to continue.
+ * @param unavailableContent Content shown if ML Kit or CameraX cannot initialize.
  * @param modifier Modifier for the camera preview container.
  */
 @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 @Composable
 fun CameraScanner(
     onBarcodeScanned: (String) -> Boolean,
+    unavailableContent: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -39,7 +44,11 @@ fun CameraScanner(
     
     val previewView = remember { PreviewView(context) }
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
-    val barcodeScanner = remember { BarcodeScanning.getClient() }
+    val barcodeScannerResult = remember { runCatching { BarcodeScanning.getClient() } }
+    val barcodeScanner = barcodeScannerResult.getOrNull()
+    var initializationFailed by remember {
+        mutableStateOf(barcodeScannerResult.isFailure)
+    }
     
     // Track if we should process scans (to avoid duplicate processing)
     val isProcessing = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
@@ -47,99 +56,106 @@ fun CameraScanner(
     DisposableEffect(Unit) {
         onDispose {
             cameraExecutor.shutdown()
-            barcodeScanner.close()
+            barcodeScanner?.close()
         }
     }
 
     Box(modifier = modifier) {
-        AndroidView(
-            factory = { ctx ->
-                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-                
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
-                    
-                    // Preview use case
-                    val preview = Preview.Builder()
-                        .build()
-                        .also {
-                            it.surfaceProvider = previewView.surfaceProvider
-                        }
-                    
-                    // Image analysis use case for barcode scanning
-                    val imageAnalysis = ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                        .also { analysis ->
-                            analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                                // Skip if already processing a scan
-                                if (isProcessing.get()) {
-                                    imageProxy.close()
-                                    return@setAnalyzer
-                                }
-                                
-                                val mediaImage = imageProxy.image
-                                if (mediaImage != null) {
-                                    val inputImage = InputImage.fromMediaImage(
-                                        mediaImage,
-                                        imageProxy.imageInfo.rotationDegrees
-                                    )
-                                    
-                                    barcodeScanner.process(inputImage)
-                                        .addOnSuccessListener { barcodes ->
-                                            for (barcode in barcodes) {
-                                                val rawValue = barcode.rawValue
-                                                if (rawValue != null && 
-                                                    (barcode.format == Barcode.FORMAT_QR_CODE || 
-                                                     barcode.format == Barcode.FORMAT_CODE_128 ||
-                                                     barcode.format == Barcode.FORMAT_CODE_39)) {
-                                                    
-                                                    if (isProcessing.compareAndSet(false, true)) {
-                                                        Log.d("CameraScanner", "Scanned: $rawValue")
-                                                        val shouldStop = onBarcodeScanned(rawValue)
-                                                        if (!shouldStop) {
-                                                            // Allow new scans after a short delay
-                                                            android.os.Handler(android.os.Looper.getMainLooper())
-                                                                .postDelayed({
-                                                                    isProcessing.set(false)
-                                                                }, 1500)
+        if (initializationFailed || barcodeScanner == null) {
+            unavailableContent()
+        } else {
+            AndroidView(
+                factory = { ctx ->
+                    try {
+                        val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+
+                        cameraProviderFuture.addListener({
+                            try {
+                                val cameraProvider = cameraProviderFuture.get()
+
+                                // Preview use case
+                                val preview = Preview.Builder()
+                                    .build()
+                                    .also {
+                                        it.surfaceProvider = previewView.surfaceProvider
+                                    }
+
+                                // Image analysis use case for barcode scanning
+                                val imageAnalysis = ImageAnalysis.Builder()
+                                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                    .build()
+                                    .also { analysis ->
+                                        analysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                                            // Skip if already processing a scan
+                                            if (isProcessing.get()) {
+                                                imageProxy.close()
+                                                return@setAnalyzer
+                                            }
+
+                                            val mediaImage = imageProxy.image
+                                            if (mediaImage != null) {
+                                                val inputImage = InputImage.fromMediaImage(
+                                                    mediaImage,
+                                                    imageProxy.imageInfo.rotationDegrees
+                                                )
+
+                                                barcodeScanner.process(inputImage)
+                                                    .addOnSuccessListener { barcodes ->
+                                                        for (barcode in barcodes) {
+                                                            val rawValue = barcode.rawValue
+                                                            if (rawValue != null &&
+                                                                (barcode.format == Barcode.FORMAT_QR_CODE ||
+                                                                    barcode.format == Barcode.FORMAT_CODE_128 ||
+                                                                    barcode.format == Barcode.FORMAT_CODE_39)
+                                                            ) {
+                                                                if (isProcessing.compareAndSet(false, true)) {
+                                                                    Log.d("CameraScanner", "Scanned: $rawValue")
+                                                                    val shouldStop = onBarcodeScanned(rawValue)
+                                                                    if (!shouldStop) {
+                                                                        // Allow new scans after a short delay
+                                                                        android.os.Handler(android.os.Looper.getMainLooper())
+                                                                            .postDelayed({
+                                                                                isProcessing.set(false)
+                                                                            }, 1500)
+                                                                    }
+                                                                }
+                                                                break
+                                                            }
                                                         }
                                                     }
-                                                    break
-                                                }
+                                                    .addOnFailureListener { e ->
+                                                        Log.e("CameraScanner", "Barcode scan failed", e)
+                                                    }
+                                                    .addOnCompleteListener {
+                                                        imageProxy.close()
+                                                    }
+                                            } else {
+                                                imageProxy.close()
                                             }
                                         }
-                                        .addOnFailureListener { e ->
-                                            Log.e("CameraScanner", "Barcode scan failed", e)
-                                        }
-                                        .addOnCompleteListener {
-                                            imageProxy.close()
-                                        }
-                                } else {
-                                    imageProxy.close()
-                                }
+                                    }
+
+                                cameraProvider.unbindAll()
+                                cameraProvider.bindToLifecycle(
+                                    lifecycleOwner,
+                                    CameraSelector.DEFAULT_BACK_CAMERA,
+                                    preview,
+                                    imageAnalysis
+                                )
+                            } catch (e: Exception) {
+                                Log.e("CameraScanner", "Camera initialization failed", e)
+                                initializationFailed = true
                             }
-                        }
-                    
-                    // Select back camera
-                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-                    
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageAnalysis
-                        )
+                        }, ContextCompat.getMainExecutor(ctx))
                     } catch (e: Exception) {
-                        Log.e("CameraScanner", "Camera binding failed", e)
+                        Log.e("CameraScanner", "Camera provider creation failed", e)
+                        initializationFailed = true
                     }
-                }, ContextCompat.getMainExecutor(ctx))
-                
-                previewView
-            },
-            modifier = Modifier.fillMaxSize()
-        )
+
+                    previewView
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }

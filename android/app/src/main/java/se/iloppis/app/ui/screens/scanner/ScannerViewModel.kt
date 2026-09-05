@@ -1,6 +1,6 @@
 package se.iloppis.app.ui.screens.scanner
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -133,10 +133,7 @@ data class ScannerUiState(
     val currentGroupCount: Int get() = currentGroup.size
 }
 
-/**
- * Refactored ViewModel using composition and OOP principles.
- * Reduced from ~650 to ~380 lines by extracting responsibilities.
- */
+/** Coordinates ticket scanning, search, grouping, and offline persistence. */
 class ScannerViewModel(
     private val eventId: String,
     eventName: String,
@@ -144,6 +141,7 @@ class ScannerViewModel(
 ) : ViewModel() {
 
     companion object {
+        /** Creates a ViewModel factory bound to one event and scanner credential. */
         fun factory(eventId: String, eventName: String, apiKey: String) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -169,7 +167,6 @@ class ScannerViewModel(
     val uiState: StateFlow<ScannerUiState> = _uiState.asStateFlow()
 
     init {
-        // Initialize file stores for this event
         val context = se.iloppis.app.ILoppisAppHolder.appContext
         se.iloppis.app.data.EventStoreManager.initializeForEvent(context, eventId)
 
@@ -179,6 +176,7 @@ class ScannerViewModel(
         }
     }
 
+    /** Applies a scanner UI [action] and updates [uiState]. */
     fun onAction(action: ScannerAction) {
         when (action) {
             is ScannerAction.SubmitCode -> handleCodeSubmission(action.code)
@@ -194,7 +192,6 @@ class ScannerViewModel(
             is ScannerAction.ToggleErrorScans -> {
                 val newShowErrors = !_uiState.value.showErrorScans
                 _uiState.value = _uiState.value.copy(showErrorScans = newShowErrors)
-                // Re-filter history
                 updateGroupedHistory()
             }
             is ScannerAction.RequestTicketSearch -> openTicketSearch()

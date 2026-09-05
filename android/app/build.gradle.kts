@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,29 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+}
+
+val releaseKeystorePropertiesFile = rootProject.file("keystore.properties")
+val releaseKeystoreProperties = Properties().apply {
+    if (releaseKeystorePropertiesFile.isFile) {
+        releaseKeystorePropertiesFile.inputStream().use(::load)
+    }
+}
+
+fun requiredSigningProperty(name: String): String =
+    releaseKeystoreProperties.getProperty(name)?.takeIf { it.isNotBlank() }
+        ?: error("Missing '$name' in ${releaseKeystorePropertiesFile.absolutePath}")
+
+gradle.taskGraph.whenReady {
+    val signedReleaseRequested = allTasks.any { task ->
+        task.name.matches(Regex("(bundle|assemble).+Release"))
+    }
+    if (signedReleaseRequested && !releaseKeystorePropertiesFile.isFile) {
+        error(
+            "Release signing requires ${releaseKeystorePropertiesFile.absolutePath}. " +
+                "Copy keystore.properties.example, fill in the upload-key values, and keep it out of Git."
+        )
+    }
 }
 
 android {
@@ -17,10 +42,16 @@ android {
             dimension = "environment"
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-staging"
-            resValue("string", "app_name", "iLoppis ( Staging )")
+            resValue("string", "app_name", "iLoppis (Staging)")
+            buildConfigField("String", "APP_ENVIRONMENT", "\"staging\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://iloppis-staging.fly.dev/\"")
+            buildConfigField("boolean", "ENABLE_NETWORK_DEBUG_LOGGING", "true")
         }
         create("production") {
             dimension = "environment"
+            buildConfigField("String", "APP_ENVIRONMENT", "\"production\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://iloppis.se/\"")
+            buildConfigField("boolean", "ENABLE_NETWORK_DEBUG_LOGGING", "false")
         }
     }
 
@@ -28,13 +59,31 @@ android {
         applicationId = "se.iloppis.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 4
+        versionName = "0.2.1"
+    }
+
+    signingConfigs {
+        create("release") {
+            if (releaseKeystorePropertiesFile.isFile) {
+                storeFile = file(requiredSigningProperty("storeFile"))
+                storePassword = requiredSigningProperty("storePassword")
+                keyAlias = requiredSigningProperty("keyAlias")
+                keyPassword = requiredSigningProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
+            // Temporarily disabled after R8 full-mode broke ML Kit component
+            // discovery in the Play-distributed 0.2.0 build.
             isMinifyEnabled = false
+            isShrinkResources = false
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -134,6 +183,7 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.browser)
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.zxing.core)
 
     // Testing

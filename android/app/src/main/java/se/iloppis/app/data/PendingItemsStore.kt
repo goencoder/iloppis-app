@@ -1,7 +1,7 @@
 package se.iloppis.app.data
 
 import android.content.Context
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -13,11 +13,8 @@ import java.io.File
 /**
  * Thread-safe storage for pending items using JSONL format (one JSON object per line).
  *
- * File location: <filesDir>/pending_items.jsonl
- * Row existence = pending, deleted row = uploaded successfully.
- *
- * All methods use mutex to ensure only one thread accesses the file at a time.
- * Emits update events via SharedFlow for reactive UI updates.
+ * A row remains until it has been accepted by the backend. Mutations are serialized
+ * and emit [itemsUpdated]. Call [initialize] before accessing the store.
  */
 object PendingItemsStore {
     private const val TAG = "PendingItemsStore"
@@ -29,7 +26,6 @@ object PendingItemsStore {
 
     private lateinit var file: File
 
-    // Rate-limit logging of malformed lines (max once per 10 seconds)
     private var lastMalformedLogTime = 0L
     private const val MALFORMED_LOG_INTERVAL_MS = 10_000L
 
@@ -40,6 +36,10 @@ object PendingItemsStore {
         return file
     }
 
+    /**
+     * Selects the event-scoped backing file used by subsequent operations.
+     * Reinitializing switches the store to [eventId] without migrating existing rows.
+     */
     fun initialize(context: Context, eventId: String) {
         file = JsonlFileOps.createEventFile(context, eventId, FILENAME)
     }
@@ -55,9 +55,7 @@ object PendingItemsStore {
     private fun readLines(): List<PendingItem> =
         JsonlFileOps.readAll(file) { line, e -> logMalformedLine(line, e) }
 
-    /**
-     * Append new items to the file.
-     */
+    /** Appends [items] atomically and emits [itemsUpdated]; an empty list is ignored. */
     suspend fun appendItems(items: List<PendingItem>) {
         if (items.isEmpty()) return
         val f = requireInitialized()
@@ -65,17 +63,15 @@ object PendingItemsStore {
         _itemsUpdated.emit(Unit)
     }
 
-    /**
-     * Read all items from the file.
-     */
+    /** Returns a snapshot of pending items in insertion order. */
     suspend fun readAll(): List<PendingItem> {
         val f = requireInitialized()
         return mutex.withLock { readLines() }
     }
 
     /**
-     * Update items matching a purchaseId.
-     * The updater function returns an updated item or null to delete.
+     * Applies [updater] to items belonging to [purchaseId]. Returning `null` deletes
+     * an item. Emits [itemsUpdated] after the mutation attempt.
      */
     suspend fun updateItems(purchaseId: String, updater: (PendingItem) -> PendingItem?) {
         val f = requireInitialized()
@@ -89,16 +85,15 @@ object PendingItemsStore {
         _itemsUpdated.emit(Unit)
     }
 
-    /**
-     * Delete all items for a specific purchaseId.
-     */
+    /** Deletes all items belonging to [purchaseId] and emits [itemsUpdated]. */
     suspend fun deleteByPurchaseId(purchaseId: String) {
         updateItems(purchaseId) { null }
     }
 
     /**
-     * Get count of items grouped by error severity.
-     * @return Triple of (infoCount, warningCount, criticalCount)
+     * Counts purchases by their highest error severity.
+     *
+     * @return `(waiting, rejected, serverError)` purchase counts.
      */
     suspend fun getErrorCounts(): Triple<Int, Int, Int> {
         requireInitialized()

@@ -3,10 +3,7 @@ package se.iloppis.app.ui.theme
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 
-/**
- * Light-only color scheme sourced entirely from AppColors.
- * No dynamic colors, no dark theme.
- */
+/** Light-only color scheme sourced from [AppColors]. */
 private val LightColorScheme = lightColorScheme(
     primary = AppColors.Primary,
     secondary = AppColors.Success,
@@ -30,6 +27,7 @@ private val LightColorScheme = lightColorScheme(
     tertiaryContainer = AppColors.WarningContainer,
 )
 
+/** Applies the iLoppis Material theme to [content]. */
 @Composable
 fun ILoppisTheme(
     content: @Composable () -> Unit

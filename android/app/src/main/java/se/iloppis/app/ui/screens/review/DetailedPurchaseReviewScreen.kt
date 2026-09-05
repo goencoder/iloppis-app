@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,18 +33,8 @@ import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import se.iloppis.app.ui.theme.AppColors
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
-/**
- * Detailed purchase review screen showing individual items with edit/remove actions.
- * 
- * Allows user to:
- * - View all items in a rejected purchase with individual error messages
- * - Edit seller numbers on specific items
- * - Remove items from the purchase
- * - Delete the entire purchase
- * - Retry upload with modified data
- */
+/** Displays one rejected purchase with edit, removal, deletion, and retry actions. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailedPurchaseReviewScreen(
@@ -53,7 +44,6 @@ fun DetailedPurchaseReviewScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
-    // Handle navigation on success/deletion
     LaunchedEffect(uiState.uploadSuccess, uiState.purchaseDeleted) {
         if (uiState.uploadSuccess || uiState.purchaseDeleted) {
             onBack()
@@ -267,7 +257,7 @@ private fun PurchaseDetailContent(
     onRemoveItem: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm", LocalConfiguration.current.locales[0])
     val timestamp = try {
         java.time.Instant.parse(purchase.timestamp).toEpochMilli()
     } catch (e: Exception) {

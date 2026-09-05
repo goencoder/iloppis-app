@@ -163,6 +163,7 @@
     <string name="scanner_button_grant_permission">Grant camera permission</string>
     <string name="scanner_permission_rationale">Camera is needed to scan QR codes on tickets.</string>
     <string name="scanner_permission_needed">Enable camera to scan tickets</string>
+    <string name="scanner_camera_unavailable">The camera scanner could not start. Use manual search.</string>
     <string name="scanner_tap_to_scan">Press the button to start scanning</string>
     <string name="scanner_paused">Scanning paused</string>
     <string name="scanner_preview_icon">📷</string>
@@ -358,7 +359,7 @@
     <string name="cashier_error_auth_expired">Cashier authorization has expired. Re-open the cashier with a new code.</string>
     <string name="cashier_warning_invalid_seller">Invalid seller number</string>
     <string name="cashier_warning_enter_price">Enter at least one price</string>
-    <string name="cashier_warning_invalid_price">Invalid price: %1$s</string>
+    <string name="cashier_warning_invalid_price">Price must be a whole number of 0 SEK or more: %1$s</string>
     <string name="cashier_warning_no_items">No items to pay for</string>
     <string name="review_error_purchase_not_found">Purchase not found</string>
     <string name="review_error_invalid_seller">Invalid seller number</string>
@@ -369,4 +370,11 @@
     <string name="review_error_upload_failed">Upload failed: %1$s</string>
     <string name="review_error_network">Network error: %1$s</string>
     <string name="review_error_delete_failed">Could not delete purchase: %1$s</string>
+    <string name="build_environment_staging">TEST ENVIRONMENT · STAGING</string>
+    <string name="build_version">Version %1$s</string>
+    <string name="app_help_open">Help</string>
+    <string name="app_help_title">How to use iLoppis</string>
+    <string name="app_help_body">On the home screen, you can find and read about upcoming, ongoing, and past flea markets.\n\nTool codes are provided by the organizer. Tap Tools and enter the code to open the cashier, ticket scanner, or live statistics for the correct event.\n\nIn the cashier, register items with their seller number and select Cash or Swish. The app does not process a payment; it only records the payment method used. Unsynced purchases are stored on the device and sent when the network is available again.\n\nThe ticket scanner reads the ticket QR code with the camera. You can also search for or enter the ticket code manually.</string>
+    <string name="common_close">Close</string>
+    <string name="privacy_policy">Privacy Policy</string>
 </resources>

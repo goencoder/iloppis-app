@@ -60,6 +60,7 @@ import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
 
+/** Displays code entry and navigates after successful verification. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CodeEntryScreen(mode: CodeEntryMode, eventId: String? = null) {

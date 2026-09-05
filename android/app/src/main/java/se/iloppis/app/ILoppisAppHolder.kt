@@ -11,6 +11,7 @@ object ILoppisAppHolder {
     lateinit var appContext: Context
         private set
 
+    /** Stores the supplied context's application context for app-wide background work. */
     fun initialize(context: Context) {
         appContext = context.applicationContext
     }

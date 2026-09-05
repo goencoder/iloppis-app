@@ -1,7 +1,7 @@
 package se.iloppis.app.data
 
 import android.content.Context
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,24 +16,7 @@ import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-/**
- * Thread-safe file-based storage for rejected purchases that need manual review.
- *
- * File location: context.filesDir/events/{eventId}/pending_review.json
- *
- * Works alongside PendingItemsStore (pending_items.jsonl):
- * - PendingItemsStore: items awaiting upload (row exists = pending, deleted = uploaded)
- * - RejectedPurchaseStore: purchases that failed with errors needing user attention
- *
- * BackgroundSyncManager uploads from PendingItemsStore; if a purchase is rejected
- * with a non-recoverable error, the items stay in PendingItemsStore with errorText set
- * and may also be tracked here for detailed per-item review.
- *
- * This store persists purchases that:
- * - Failed with rejection errors (e.g., INVALID_SELLER)
- * - Need manual intervention to resolve
- * - Should be shown in the Purchase Review Screen
- */
+/** Thread-safe file storage for rejected purchases that need manual review. */
 object RejectedPurchaseStore {
     private const val TAG = "RejectedPurchaseStore"
     private const val FILE_NAME = "pending_review.json"
@@ -46,25 +29,15 @@ object RejectedPurchaseStore {
         ignoreUnknownKeys = true
     }
     
-    // Coroutine scope for emitting events
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
-    // SharedFlow to notify observers when a rejected purchase is added
-    // replay = 0: Only new events (no buffering of past events)
-    // extraBufferCapacity = 1: Buffer one event if no collectors are active
     private val _rejectedPurchaseAdded = MutableSharedFlow<RejectedPurchase>(
         replay = 0,
         extraBufferCapacity = 1
     )
     val rejectedPurchaseAdded: SharedFlow<RejectedPurchase> = _rejectedPurchaseAdded.asSharedFlow()
 
-    /**
-     * Initialize the store with the application context and event ID.
-     * Must be called before any other operations.
-     * 
-     * @param context Application context
-     * @param eventId Event ID for data isolation
-     */
+    /** Selects the event-scoped storage file used by subsequent operations. */
     fun initialize(context: Context, eventId: String) {
         this.eventId = eventId
         val eventDir = File(context.filesDir, "events/$eventId")
@@ -91,9 +64,6 @@ object RejectedPurchaseStore {
         )
     }
 
-    /**
-     * Private unlocked read method for internal use.
-     */
     private fun readPurchasesUnlocked(): List<RejectedPurchase> {
         val f = requireInitialized()
         if (!f.exists()) {
@@ -113,21 +83,13 @@ object RejectedPurchaseStore {
         }
     }
 
-    /**
-     * Add a rejected purchase to the store.
-     * If a purchase with the same ID exists, it will be updated.
-     * 
-     * Emits an event via SharedFlow for reactive UI updates.
-     */
+    /** Adds or replaces [purchase], then emits it through [rejectedPurchaseAdded]. */
     fun addRejectedPurchase(purchase: RejectedPurchase) {
         lock.withLock {
             try {
                 val existing = readPurchasesUnlocked().toMutableList()
                 
-                // Remove existing purchase with same ID (update scenario)
                 existing.removeAll { it.purchaseId == purchase.purchaseId }
-                
-                // Add the new/updated purchase
                 existing.add(purchase)
                 
                 val jsonString = json.encodeToString(existing)
@@ -140,27 +102,21 @@ object RejectedPurchaseStore {
             }
         }
         
-        // Emit event outside of lock to avoid blocking file operations
-        // This allows UI to react immediately to new rejected purchases
+        // Emit outside the file lock so slow collectors cannot block persistence.
         scope.launch {
             _rejectedPurchaseAdded.emit(purchase)
             Log.d(TAG, "Emitted rejected purchase event: ${purchase.purchaseId}")
         }
     }
 
-    /**
-     * Get all rejected purchases.
-     */
+    /** Returns all rejected purchases, or an empty list when none are stored. */
     fun getAllRejectedPurchases(): List<RejectedPurchase> {
         lock.withLock {
             return readPurchasesUnlocked()
         }
     }
 
-    /**
-     * Remove a rejected purchase by ID.
-     * Returns true if a purchase was removed, false if not found.
-     */
+    /** Removes [purchaseId] and returns whether it existed. */
     fun removeRejectedPurchase(purchaseId: String): Boolean {
         lock.withLock {
             try {
@@ -181,10 +137,7 @@ object RejectedPurchaseStore {
         }
     }
 
-    /**
-     * Update an existing rejected purchase with new data.
-     * If the purchase doesn't exist, it will be added.
-     */
+    /** Updates [purchase], adding it when its ID is not yet stored. */
     fun updateRejectedPurchase(purchase: RejectedPurchase) {
         lock.withLock {
             try {
@@ -202,7 +155,6 @@ object RejectedPurchaseStore {
                 val jsonString = json.encodeToString(existing)
                 requireInitialized().writeText(jsonString)
                 
-                // Emit event for new/updated purchase
                 scope.launch {
                     _rejectedPurchaseAdded.emit(purchase)
                 }
@@ -213,27 +165,21 @@ object RejectedPurchaseStore {
         }
     }
 
-    /**
-     * Get count of rejected purchases.
-     */
+    /** Returns the number of stored rejected purchases. */
     fun getCount(): Int {
         lock.withLock {
             return readPurchasesUnlocked().size
         }
     }
 
-    /**
-     * Get a specific rejected purchase by ID.
-     */
+    /** Returns [purchaseId], or `null` when it is not stored. */
     fun getRejectedPurchase(purchaseId: String): RejectedPurchase? {
         lock.withLock {
             return readPurchasesUnlocked().firstOrNull { it.purchaseId == purchaseId }
         }
     }
 
-    /**
-     * Clear all rejected purchases.
-     */
+    /** Removes all rejected purchases from the event-scoped file. */
     fun clear() {
         lock.withLock {
             try {

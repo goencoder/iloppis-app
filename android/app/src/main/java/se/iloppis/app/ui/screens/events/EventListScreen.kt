@@ -9,12 +9,18 @@ import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.CodeEntryMode
+import se.iloppis.app.domain.model.AppBuildInfo
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.components.buttons.AppButton
@@ -26,15 +32,7 @@ import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
 
-/**
- * Unified main screen combining Home and Event List.
- *
- * This screen displays:
- * - Quick access button for tool access via direct code entry
- * - Functional event search with 300ms debounce
- * - Filter chips mapped to real API calls
- * - List of events with computed status badges
- */
+/** Displays searchable events and the entry point to organizer tools. */
 @Composable
 fun EventListScreen() {
     val screen = screenContext()
@@ -114,7 +112,8 @@ private fun UnifiedEventListContent(
 
         // ── Sticky footer: tool access button ──
         FooterToolButtons(
-            onToolClick = onToolClick
+            onToolClick = onToolClick,
+            buildInfo = AppBuildInfo.current(),
         )
     }
 }
@@ -124,7 +123,8 @@ private fun UnifiedEventListContent(
  */
 @Composable
 private fun FooterToolButtons(
-    onToolClick: () -> Unit
+    onToolClick: () -> Unit,
+    buildInfo: AppBuildInfo,
 ) {
     Column(
         modifier = Modifier
@@ -152,6 +152,70 @@ private fun FooterToolButtons(
                     )
                 }
             )
+        }
+        BuildInformation(buildInfo)
+    }
+}
+
+@Composable
+private fun BuildInformation(buildInfo: AppBuildInfo) {
+    val uriHandler = LocalUriHandler.current
+    val privacyPolicyUrl = stringResource(R.string.privacy_policy_url)
+    var showHelp by remember { mutableStateOf(false) }
+
+    if (showHelp) {
+        AlertDialog(
+            onDismissRequest = { showHelp = false },
+            title = { Text(stringResource(R.string.app_help_title)) },
+            text = { Text(stringResource(R.string.app_help_body)) },
+            confirmButton = {
+                TextButton(onClick = { showHelp = false }) {
+                    Text(stringResource(R.string.common_close))
+                }
+            },
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (buildInfo.isStaging) {
+                Surface(
+                    color = AppColors.WarningContainer,
+                    contentColor = AppColors.OnWarningContainer,
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.build_environment_staging),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = stringResource(R.string.build_version, buildInfo.versionLabel),
+                color = AppColors.TextMuted,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { showHelp = true }) {
+                Text(
+                    text = stringResource(R.string.app_help_open),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+            TextButton(onClick = { uriHandler.openUri(privacyPolicyUrl) }) {
+                Text(
+                    text = stringResource(R.string.privacy_policy),
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
         }
     }
 }
@@ -246,7 +310,7 @@ private fun EventListBody(
 }
 
 @Composable
-fun LoadingState() {
+private fun LoadingState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -256,7 +320,7 @@ fun LoadingState() {
 }
 
 @Composable
-fun ErrorState(message: String) {
+private fun ErrorState(message: String) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -269,7 +333,7 @@ fun ErrorState(message: String) {
 }
 
 @Composable
-fun EmptyState() {
+private fun EmptyState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

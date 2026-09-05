@@ -48,6 +48,7 @@ import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
 
+/** Displays event details and launches the tools enabled for [event]. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsDetailsScreen(event: Event) {

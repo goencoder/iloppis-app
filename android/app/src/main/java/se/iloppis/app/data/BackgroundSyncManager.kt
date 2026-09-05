@@ -1,7 +1,7 @@
 package se.iloppis.app.data
 
 import android.content.Context
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -28,11 +28,8 @@ import java.time.Instant
 /**
  * Background sync manager for sold items.
  *
- * Key guarantees:
- * - Local-first durability: checkout writes to disk before UI clears.
- * - Single upload pipeline: same classification/retry behavior every cycle.
- * - Automatic retry on network errors
- * - Exposes pending count via StateFlow for reactive UI
+ * Checkout data is durable before the UI clears, uploads use one classification
+ * pipeline, and transient network failures are retried without losing local rows.
  */
 object BackgroundSyncManager {
     private const val TAG = "BackgroundSyncManager"
@@ -70,7 +67,8 @@ object BackgroundSyncManager {
     )
 
     /**
-     * Start or update sync manager configuration for an event.
+     * Starts periodic synchronization for [eventId], or replaces the credentials of
+     * the running event. Switching events also switches all event-scoped stores.
      */
     fun start(context: Context, eventId: String, apiKey: String) {
         val sameEvent = initialized && this.eventId == eventId
@@ -99,6 +97,7 @@ object BackgroundSyncManager {
         }
     }
 
+    /** Cancels scheduled and immediate synchronization and clears event credentials. */
     fun stop() {
         syncJob?.cancel()
         syncJob = null
@@ -110,15 +109,17 @@ object BackgroundSyncManager {
         Log.d(TAG, "Stopped")
     }
 
-    /**
-     * Append items to pending store. This is the durability point for checkout.
-     */
+    /** Persists [items] before returning and refreshes [pendingPurchaseCount]. */
     suspend fun enqueueItems(items: List<PendingItem>) {
         if (items.isEmpty()) return
         PendingItemsStore.appendItems(items)
         refreshPendingCount()
     }
 
+    /**
+     * Schedules a sync without waiting for the next interval. A previously scheduled
+     * immediate sync is cancelled; the periodic worker continues unchanged.
+     */
     fun triggerImmediateSync() {
         triggerJob?.cancel()
         triggerJob = scope.launch {
@@ -126,9 +127,6 @@ object BackgroundSyncManager {
         }
     }
 
-    /**
-     * Wraps syncOnce in try/catch so the periodic loop never dies.
-     */
     private suspend fun syncOnceSafely() {
         try {
             syncOnce()
@@ -137,14 +135,7 @@ object BackgroundSyncManager {
         }
     }
 
-    /**
-     * Single sync cycle — aligned with LoppisKassan's syncOnceInternal().
-     *
-     * 1. Read all pending items from disk
-     * 2. Group by purchaseId, upload each
-     * 3. Handle responses: delete accepted, update rejected errorText
-     * 4. Refresh pending count
-     */
+    /** Uploads pending purchases in creation order and persists each outcome. */
     private suspend fun syncOnce() {
         val currentApiKey = apiKey ?: return
         val currentEventId = eventId ?: return
@@ -395,11 +386,7 @@ object BackgroundSyncManager {
         }
     }
 
-    /**
-     * Re-read PendingItemsStore and update the pending purchase count.
-     * Called internally after sync and externally after manual changes
-     * to PendingItemsStore (e.g. delete/retry from review screens).
-     */
+    /** Recomputes [pendingPurchaseCount] from distinct locally pending purchases. */
     suspend fun refreshPendingCount() {
         val items = PendingItemsStore.readAll()
         val count = items.map { it.purchaseId }.distinct().size

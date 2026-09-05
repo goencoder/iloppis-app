@@ -1,7 +1,7 @@
 package se.iloppis.app.ui.screens.cashier
 
 import android.content.Context
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +33,9 @@ import java.security.MessageDigest
 import kotlin.math.ceil
 
 private const val TAG = "CashierViewModel"
+
+internal fun parseCashierPrice(value: String): Int? =
+    value.toIntOrNull()?.takeIf { it >= 0 }
 
 /**
  * Represents a single transaction item in the current purchase.
@@ -170,6 +173,7 @@ class CashierViewModel(
         private const val HEARTBEAT_DISPLAY_NAME_KEY_PREFIX = "heartbeat_display_name_"
         private const val HEARTBEAT_DISPLAY_NAME_VERIFIED_KEY_PREFIX = "heartbeat_display_name_verified_"
 
+        /** Creates a ViewModel factory bound to one event and cashier credential. */
         fun factory(eventId: String, eventName: String, apiKey: String) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -310,14 +314,12 @@ class CashierViewModel(
         super.onCleared()
     }
 
-    /**
-     * Trigger an immediate sync for all pending items.
-     * Used when user manually retries failed purchases.
-     */
+    /** Requests immediate upload of all locally pending sale items. */
     fun triggerSync() {
         BackgroundSyncManager.triggerImmediateSync()
     }
 
+    /** Applies a cashier UI [action] and updates [uiState]. */
     fun onAction(action: CashierAction) {
         when (action) {
             is CashierAction.KeypadPress -> handleKeypadPress(action.digit)
@@ -472,8 +474,8 @@ class CashierViewModel(
 
         val newItems = mutableListOf<TransactionItem>()
         for (priceStr in priceStrings) {
-            val price = priceStr.toIntOrNull()
-            if (price == null || price < 0) {
+            val price = parseCashierPrice(priceStr)
+            if (price == null) {
                 _uiState.value = _uiState.value.copy(warningMessage = UiText.StringResource(R.string.cashier_warning_invalid_price, listOf(priceStr)))
                 return
             }
@@ -517,25 +519,11 @@ class CashierViewModel(
     }
 
     private fun setPaidAmount(amount: String) {
-        // Only allow digits
         val filtered = amount.filter { it.isDigit() }
         _uiState.value = _uiState.value.copy(paidAmount = filtered)
     }
 
-    /**
-     * Process checkout and register purchase locally.
-     *
-     * ## Local-first guarantee (aligned with LoppisKassan)
-     *
-     * 1. Generate stable IDs (purchaseId + itemIds)
-     * 2. Persist pending items to local disk
-     * 3. Clear UI and show receipt only after local persistence succeeds
-     * 4. Trigger background sync to upload pending purchases
-     * 5. On success: items deleted from PendingItemsStore
-     * 6. On failure: items remain on disk, retried every 30s
-     *
-     * @param method Payment method (CASH or SWISH)
-     */
+    /** Persists a checkout locally before clearing the UI and scheduling its upload. */
     private fun checkout(method: PaymentMethodType) {
         val transactionsSnapshot = _uiState.value.transactions
         if (transactionsSnapshot.isEmpty()) {
@@ -719,6 +707,11 @@ class CashierViewModel(
         return seed
     }
 
+    /**
+     * Requests register closure and sends its remaining lifecycle events.
+     *
+     * @return `true` only when the closure state has been delivered successfully.
+     */
     suspend fun requestCloseAndFlush(): Boolean {
         heartbeatCoordinator.stop()
         val closeSucceeded = when (registerSessionManager.getCurrent()?.state) {
@@ -741,6 +734,7 @@ class CashierViewModel(
         return closeSucceeded
     }
 
+    /** Requests asynchronous closure when no sold items remain pending. */
     fun requestCloseIfIdle() {
         if (_uiState.value.pendingSoldItemsCount > 0) {
             return

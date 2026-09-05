@@ -16,31 +16,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.iloppis.app.ui.theme.AppColors
 
-/**
- * Standardised button component for the iLoppis app.
- *
- * All new buttons should use [AppButton] instead of raw `Button()`.
- * Existing `PrimaryButton`, `CancelTextButton` and `IconButton`
- * remain but will be migrated over time.
- */
+/** Visual treatment for an [AppButton]. */
 
 // ── Enums ────────────────────────────────────
 
 enum class AppButtonVariant {
-    /** Primary action (teal) — main call to action such as scan, verify, submit */
+    /** Main call to action. */
     Primary,
-    /** Success/confirmation (green) — mark done, indicate successful outcome */
+    /** Successful or confirming action. */
     Success,
-    /** Secondary/neutral action — back, non-destructive alternative */
+    /** Neutral alternative action. */
     Secondary,
-    /** Destructive/danger — delete, irreversible or high-risk actions */
+    /** Destructive or high-risk action. */
     Danger,
-    /** Neutral outlined — low-emphasis alternative to primary/secondary */
+    /** Low-emphasis outlined action. */
     Outlined,
-    /** Text-only button — dismiss/cancel, inline or low-emphasis actions */
+    /** Text-only action. */
     Text
 }
 
+/** Supported [AppButton] dimensions. */
 enum class AppButtonSize(val height: Dp, val fontSize: Int, val paddingH: Dp) {
     Small(32.dp, 12, 12.dp),
     Medium(40.dp, 14, 16.dp),
@@ -50,6 +45,12 @@ enum class AppButtonSize(val height: Dp, val fontSize: Int, val paddingH: Dp) {
 
 // ── Component ────────────────────────────────
 
+/**
+ * Displays a consistently styled app button.
+ *
+ * While [loading] is true, the button is disabled and shows a progress indicator.
+ * Explicit color arguments override the selected [variant].
+ */
 @Composable
 fun AppButton(
     text: String,

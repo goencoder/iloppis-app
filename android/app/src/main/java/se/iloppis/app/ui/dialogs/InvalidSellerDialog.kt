@@ -6,33 +6,15 @@ import se.iloppis.app.ui.components.buttons.AppButton
 import se.iloppis.app.ui.components.buttons.AppButtonSize
 import se.iloppis.app.ui.components.buttons.AppButtonVariant
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import se.iloppis.app.R
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
-/**
- * Dialog shown when auto-recovery fails for INVALID_SELLER errors.
- * 
- * Display rules:
- * - Show after failed auto-recovery attempt
- * - Only show when kassa fields are empty (idle state)
- * - Non-blocking (can be dismissed immediately)
- * - Minimum 5 minutes between popups
- * 
- * Swedish text as per spec:
- * ⚠️ Köp behöver granskas
- * Ett tidigare köp kunde inte laddas upp eftersom en eller flera
- * säljare inte är godkända för detta event.
- * 
- * Köp: ABC123 (14:23)
- * Problem: Säljare 456 ej godkänd
- * 
- * Du kan fortsätta registrera nya köp.
- */
+/** Displays a dismissible summary of a purchase rejected for invalid sellers. */
 @Composable
 fun InvalidSellerDialog(
     purchaseId: String,
@@ -41,7 +23,7 @@ fun InvalidSellerDialog(
     onDismiss: () -> Unit,
     onReviewNow: () -> Unit
 ) {
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val timeFormat = SimpleDateFormat("HH:mm", LocalConfiguration.current.locales[0])
     val timestampMillis = try {
         java.time.Instant.parse(timestamp).toEpochMilli()
     } catch (e: Exception) {

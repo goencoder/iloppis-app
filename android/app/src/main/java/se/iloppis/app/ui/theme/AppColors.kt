@@ -2,18 +2,7 @@ package se.iloppis.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-/**
- * Central color palette for the iLoppis app.
- * All colors used in the app should be referenced from here.
- * 
- * Button Color Guidelines:
- * - Primary (Teal): Main actions (Scan, Verify, Submit, Continue)
- * - Secondary (Border): Less important actions (Back, Cancel as button)
- * - Text: Dismiss/Cancel as text link
- * - Success (Green): Positive confirmations (in result sheets only)
- * - Warning (Amber): Caution states (duplicate, offline)
- * - Error (Red): Error states and destructive actions
- */
+/** Semantic color palette shared by the app's Compose components. */
 object AppColors {
     // Skog (Woods) theme - source: iloppis/frontend/src/styles/themes.js (Themes.Woods)
     val Background = Color(0xFFF9FAFB)

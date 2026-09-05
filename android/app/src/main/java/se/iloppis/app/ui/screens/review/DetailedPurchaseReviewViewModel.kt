@@ -1,6 +1,6 @@
 package se.iloppis.app.ui.screens.review
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -27,16 +27,7 @@ import se.iloppis.app.ui.util.UiText
 
 private const val TAG = "DetailedPurchaseReviewVM"
 
-/**
- * ViewModel for detailed purchase review screen.
- *
- * Handles:
- * - Loading a specific rejected purchase by ID
- * - Editing seller numbers on individual items
- * - Removing items from the purchase
- * - Deleting the entire purchase
- * - Retrying upload with modified data
- */
+/** Reviews, edits, deletes, and retries one rejected purchase. */
 class DetailedPurchaseReviewViewModel(
     private val purchaseId: String,
     private val eventId: String,
@@ -44,6 +35,7 @@ class DetailedPurchaseReviewViewModel(
 ) : ViewModel() {
 
     companion object {
+        /** Creates a ViewModel factory bound to one rejected purchase. */
         fun factory(purchaseId: String, eventId: String, apiKey: String) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -56,8 +48,6 @@ class DetailedPurchaseReviewViewModel(
     val uiState: StateFlow<DetailedPurchaseUiState> = _uiState.asStateFlow()
 
     private val api: CashierAPI = ILoppisClient(clientConfig()).create()
-    // Use global singleton VendorRepository (initialized by CashierViewModel)
-
     init {
         loadPurchase()
         loadValidSellers()
@@ -101,6 +91,7 @@ class DetailedPurchaseReviewViewModel(
         }
     }
 
+    /** Applies a purchase-review UI [action] and updates [uiState]. */
     fun onAction(action: DetailedPurchaseAction) {
         when (action) {
             is DetailedPurchaseAction.EditSeller -> editSellerNumber(action.itemIndex, action.newSeller)

@@ -1,9 +1,9 @@
 package se.iloppis.app.utils.provider
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.Composable
 import kotlinx.serialization.json.Json.Default.decodeFromString
+import se.iloppis.app.BuildConfig
 import se.iloppis.app.R
 import se.iloppis.app.network.config.ClientConfig
 import se.iloppis.app.network.config.ClientConfigProvider
@@ -19,20 +19,25 @@ fun Provider(
     networkConfigFile: Int = R.raw.client,
     content: @Composable () -> Unit
 ) {
-    var networkConfig: ClientConfig? = null
-    try {
+    val networkConfig = try {
         context.resources.openRawResource(networkConfigFile).use {
-            networkConfig = decodeFromString<ClientConfig>(it.readBytes().decodeToString())
+            decodeFromString<ClientConfig>(it.readBytes().decodeToString())
         }
     } catch (e: Exception) {
-        Log.e("ProviderError", e.message ?: "Error parsing json for network client config")
+        throw IllegalStateException(
+            "Missing or invalid client configuration for the compiled ${BuildConfig.APP_ENVIRONMENT} environment",
+            e
+        )
     }
 
-    if (networkConfig != null) {
-        ClientConfigProvider(networkConfig) {
-            content()
-        }
-    } else {
+    check(normalizeBaseUrl(networkConfig.url) == normalizeBaseUrl(BuildConfig.API_BASE_URL)) {
+        "Client configuration URL does not match the compiled ${BuildConfig.APP_ENVIRONMENT} environment"
+    }
+
+    val compiledConfig = networkConfig.copy(debug = BuildConfig.ENABLE_NETWORK_DEBUG_LOGGING)
+    ClientConfigProvider(compiledConfig) {
         content()
     }
 }
+
+private fun normalizeBaseUrl(url: String): String = url.trim().removeSuffix("/") + "/"

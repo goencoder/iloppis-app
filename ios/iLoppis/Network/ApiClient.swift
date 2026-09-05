@@ -3,6 +3,56 @@ import OSLog
 
 private let logger = Logger(subsystem: "se.iloppis.app", category: "ApiClient")
 
+struct AppBuildInfo {
+    let environment: String
+    let versionName: String
+    let versionCode: String
+    let apiBaseURL: URL
+    let networkDebugLoggingEnabled: Bool
+
+    var isStaging: Bool { environment == "staging" }
+    var versionLabel: String { "\(versionName) (\(versionCode))" }
+
+    static let current: AppBuildInfo = {
+        let bundle = Bundle.main
+        guard
+            let environment = bundle.object(forInfoDictionaryKey: "ILoppisEnvironment") as? String,
+            ["staging", "production"].contains(environment),
+            let urlString = bundle.object(forInfoDictionaryKey: "ILoppisAPIBaseURL") as? String,
+            let apiBaseURL = URL(string: urlString),
+            apiBaseURL.scheme == "https",
+            let host = apiBaseURL.host,
+            !host.isEmpty,
+            [
+                "staging": "https://iloppis-staging.fly.dev/",
+                "production": "https://iloppis.se/"
+            ][environment] == apiBaseURL.absoluteString
+        else {
+            fatalError("Missing or invalid compiled iLoppis environment configuration")
+        }
+
+        let versionName = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+        let versionCode = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
+        let debugValue = bundle.object(forInfoDictionaryKey: "ILoppisNetworkDebugLogging")
+        let networkDebugLoggingEnabled: Bool
+        if let boolValue = debugValue as? Bool {
+            networkDebugLoggingEnabled = boolValue
+        } else if let stringValue = debugValue as? String {
+            networkDebugLoggingEnabled = ["yes", "true", "1"].contains(stringValue.lowercased())
+        } else {
+            networkDebugLoggingEnabled = false
+        }
+
+        return AppBuildInfo(
+            environment: environment,
+            versionName: versionName,
+            versionCode: versionCode,
+            apiBaseURL: apiBaseURL,
+            networkDebugLoggingEnabled: environment == "staging" && networkDebugLoggingEnabled
+        )
+    }()
+}
+
 @MainActor
 final class DebugLogStore: ObservableObject {
     static let shared = DebugLogStore()
@@ -25,6 +75,17 @@ final class DebugLogStore: ObservableObject {
         lines.removeAll()
     }
 
+    nonisolated static var isEnabled: Bool {
+        AppBuildInfo.current.networkDebugLoggingEnabled
+    }
+
+    nonisolated static func appendIfEnabled(_ message: @autoclosure @escaping () -> String) {
+        guard isEnabled else { return }
+        Task { @MainActor in
+            DebugLogStore.shared.append(message())
+        }
+    }
+
     private static func timestamp() -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -34,7 +95,7 @@ final class DebugLogStore: ObservableObject {
 }
 
 struct ApiClient {
-    let baseURL = URL(string: "https://iloppis-staging.fly.dev/")!
+    let baseURL: URL
 
     private let enableDebugLogging: Bool
 
@@ -42,9 +103,14 @@ struct ApiClient {
     private let jsonDecoder: JSONDecoder
     private let jsonEncoder: JSONEncoder
 
-    init(session: URLSession = .shared, enableDebugLogging: Bool = true) {
+    init(
+        session: URLSession = .shared,
+        appBuildInfo: AppBuildInfo = .current,
+        enableDebugLogging: Bool? = nil
+    ) {
         self.session = session
-        self.enableDebugLogging = enableDebugLogging
+        self.baseURL = appBuildInfo.apiBaseURL
+        self.enableDebugLogging = appBuildInfo.isStaging && (enableDebugLogging ?? appBuildInfo.networkDebugLoggingEnabled)
         self.jsonDecoder = JSONDecoder()
         self.jsonEncoder = JSONEncoder()
     }
@@ -329,7 +395,7 @@ struct ApiClient {
         let line = "[ApiClient] → \(method) \(url) auth=\(hasAuth ? "yes" : "no")"
         logger.info("→ \(method, privacy: .public) \(url, privacy: .public) auth=\(hasAuth ? "yes" : "no", privacy: .public)")
         print(line)
-        Task { @MainActor in DebugLogStore.shared.append(line) }
+        DebugLogStore.appendIfEnabled(line)
         
         // Log all request headers (excluding sensitive auth values)
         if let headers = request.allHTTPHeaderFields {
@@ -340,7 +406,7 @@ struct ApiClient {
             let headersLine = "[ApiClient]   headers: \(sanitizedHeaders)"
             logger.info("  headers: \(String(describing: sanitizedHeaders), privacy: .public)")
             print(headersLine)
-            Task { @MainActor in DebugLogStore.shared.append(headersLine) }
+            DebugLogStore.appendIfEnabled(headersLine)
         }
 
         if let body = request.httpBody, !body.isEmpty,
@@ -348,7 +414,7 @@ struct ApiClient {
             let bodyLine = "[ApiClient]   body: \(bodyString)"
             logger.info("  body: \(bodyString, privacy: .public)")
             print(bodyLine)
-            Task { @MainActor in DebugLogStore.shared.append(bodyLine) }
+            DebugLogStore.appendIfEnabled(bodyLine)
         }
     }
 
@@ -360,20 +426,20 @@ struct ApiClient {
         let line = "[ApiClient] ← \(response.statusCode) \(method) \(url) (\(durationMs)ms)"
         logger.info("← \(response.statusCode, privacy: .public) \(method, privacy: .public) \(url, privacy: .public) (\(durationMs)ms)")
         print(line)
-        Task { @MainActor in DebugLogStore.shared.append(line) }
+        DebugLogStore.appendIfEnabled(line)
         
         // Log response headers
         let headers = response.allHeaderFields
         let headersLine = "[ApiClient]   response headers: \(headers)"
         logger.info("  response headers: \(String(describing: headers), privacy: .public)")
         print(headersLine)
-        Task { @MainActor in DebugLogStore.shared.append(headersLine) }
+        DebugLogStore.appendIfEnabled(headersLine)
 
         // Log response size
         let sizeLine = "[ApiClient]   response size: \(data.count) bytes"
         logger.info("  response size: \(data.count) bytes")
         print(sizeLine)
-        Task { @MainActor in DebugLogStore.shared.append(sizeLine) }
+        DebugLogStore.appendIfEnabled(sizeLine)
 
         guard !data.isEmpty else { return }
         if let string = String(data: data, encoding: .utf8), !string.isEmpty {
@@ -381,20 +447,22 @@ struct ApiClient {
             let responseLine = "[ApiClient]   response body: \(trimmed)"
             logger.info("  response body: \(trimmed, privacy: .public)")
             print(responseLine)
-            Task { @MainActor in DebugLogStore.shared.append(responseLine) }
+            DebugLogStore.appendIfEnabled(responseLine)
         }
     }
     
     private func logDecodeError(error: Error, data: Data, url: URL, responseType: String) {
+        guard enableDebugLogging else { return }
+
         let errorLine = "[ApiClient] ❌ DECODE ERROR for \(responseType)"
         logger.error("❌ DECODE ERROR for \(responseType, privacy: .public)")
         print(errorLine)
-        Task { @MainActor in DebugLogStore.shared.append(errorLine) }
+        DebugLogStore.appendIfEnabled(errorLine)
         
         let urlLine = "[ApiClient]   URL: \(url.absoluteString)"
         logger.error("  URL: \(url.absoluteString, privacy: .public)")
         print(urlLine)
-        Task { @MainActor in DebugLogStore.shared.append(urlLine) }
+        DebugLogStore.appendIfEnabled(urlLine)
         
         // Log the underlying error details
         if let decodingError = error as? DecodingError {
@@ -402,12 +470,12 @@ struct ApiClient {
             let detailsLine = "[ApiClient]   Error: \(details)"
             logger.error("  Error: \(details, privacy: .public)")
             print(detailsLine)
-            Task { @MainActor in DebugLogStore.shared.append(detailsLine) }
+            DebugLogStore.appendIfEnabled(detailsLine)
         } else {
             let detailsLine = "[ApiClient]   Error: \(error.localizedDescription)"
             logger.error("  Error: \(error.localizedDescription, privacy: .public)")
             print(detailsLine)
-            Task { @MainActor in DebugLogStore.shared.append(detailsLine) }
+            DebugLogStore.appendIfEnabled(detailsLine)
         }
         
         // Log raw JSON
@@ -416,7 +484,7 @@ struct ApiClient {
             let jsonLine = "[ApiClient]   Raw JSON: \(trimmed)"
             logger.error("  Raw JSON: \(trimmed, privacy: .public)")
             print(jsonLine)
-            Task { @MainActor in DebugLogStore.shared.append(jsonLine) }
+            DebugLogStore.appendIfEnabled(jsonLine)
         }
     }
     

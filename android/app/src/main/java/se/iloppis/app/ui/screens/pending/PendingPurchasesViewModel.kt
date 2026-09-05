@@ -1,6 +1,6 @@
 package se.iloppis.app.ui.screens.pending
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -34,9 +34,9 @@ data class PendingItemUi(
 )
 
 enum class PurchaseSeverity {
-    INFO,      // All errorText=""
-    WARNING,   // Some errorText but no "serverfel"
-    CRITICAL   // Contains "serverfel"
+    INFO,
+    WARNING,
+    CRITICAL
 }
 
 // ──────────────────────────────────────────────
@@ -58,6 +58,7 @@ sealed class PendingPurchasesAction {
 class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
 
     companion object {
+        /** Creates a ViewModel factory for pending purchases belonging to [eventId]. */
         fun factory(eventId: String) = object : androidx.lifecycle.ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
@@ -70,13 +71,11 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
     private var processingJob: Job? = null
 
     init {
-        // Initialize file stores for this event
         val context = se.iloppis.app.ILoppisAppHolder.appContext
         se.iloppis.app.data.EventStoreManager.initializeForEvent(context, eventId)
         
         loadPurchases()
         
-        // Listen for updates from PendingItemsStore
         viewModelScope.launch {
             PendingItemsStore.itemsUpdated.collect {
                 loadPurchases()
@@ -84,6 +83,7 @@ class PendingPurchasesViewModel(private val eventId: String) : ViewModel() {
         }
     }
 
+    /** Applies a pending-purchase UI [action] and updates [uiState]. */
     fun onAction(action: PendingPurchasesAction) {
         when (action) {
             is PendingPurchasesAction.ToggleExpanded -> toggleExpanded(action.purchaseId)

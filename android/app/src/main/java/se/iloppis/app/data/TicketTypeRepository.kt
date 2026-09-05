@@ -1,6 +1,6 @@
 package se.iloppis.app.data
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -12,8 +12,7 @@ private const val TAG = "TicketTypeRepository"
 private val UUID_PATTERN = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 /**
- * Global singleton for ticket type name resolution.
- * Maps ticket type UUID → type name (e.g., "heldag").
+ * Event-scoped cache that maps ticket type IDs to human-readable names.
  */
 object TicketTypeRepository {
     private val mutex = Mutex()
@@ -21,7 +20,8 @@ object TicketTypeRepository {
     private val api: TicketsAPI = ILoppisClient(clientConfig()).create()
 
     /**
-     * Initialize or refresh ticket types for a specific event.
+     * Replaces the cache with ticket types from [eventId]. Cancellation propagates;
+     * other failures are logged and leave an empty cache.
      */
     suspend fun refresh(eventId: String, apiKey: String) {
         try {
@@ -45,8 +45,8 @@ object TicketTypeRepository {
     }
 
     /**
-     * Resolve ticket type UUID to display name.
-     * Returns the UUID if not found (graceful degradation).
+     * Resolves [ticketTypeId] to a display name. Unknown opaque UUIDs return `null`;
+     * unknown human-readable values are returned unchanged.
      */
     suspend fun resolveTypeName(ticketTypeId: String): String? {
         return mutex.withLock {
@@ -54,18 +54,14 @@ object TicketTypeRepository {
         }
     }
 
-    /**
-     * Check if repository has been initialized.
-     */
+    /** Returns whether the cache currently contains at least one ticket type. */
     suspend fun isInitialized(): Boolean {
         return mutex.withLock {
             ticketTypeMap.isNotEmpty()
         }
     }
 
-    /**
-     * Returns all cached ticket type entries as (id, name) pairs.
-     */
+    /** Returns a snapshot of cached `(id, displayName)` pairs. */
     suspend fun getAllTypes(): List<Pair<String, String>> {
         return mutex.withLock {
             ticketTypeMap.entries.map { it.key to it.value }

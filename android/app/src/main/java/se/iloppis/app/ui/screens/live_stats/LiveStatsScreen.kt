@@ -68,7 +68,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import se.iloppis.app.R
 import se.iloppis.app.domain.model.Event
 import se.iloppis.app.network.stats.LiveCashierStatus
@@ -87,6 +87,11 @@ private val svLocale = Locale.Builder().setLanguage("sv").setRegion("SE").build(
 private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", svLocale)
     .withZone(ZoneId.systemDefault())
 
+/**
+ * Displays live statistics for [event].
+ *
+ * Polling follows the host lifecycle and pauses while [isActivePage] is false.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveStatsScreen(

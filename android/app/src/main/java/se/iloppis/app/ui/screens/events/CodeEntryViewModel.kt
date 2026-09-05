@@ -1,6 +1,6 @@
 package se.iloppis.app.ui.screens.events
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
@@ -147,6 +147,7 @@ class CodeEntryViewModel(
 ) : ViewModel() {
 
     companion object {
+        /** Creates a ViewModel factory configured for [mode] and an optional [eventId]. */
         fun factory(mode: CodeEntryMode, eventId: String?) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -162,6 +163,7 @@ class CodeEntryViewModel(
         loadSavedCodes()
     }
 
+    /** Applies a code-entry UI [action] and updates [uiState]. */
     fun onAction(action: CodeEntryAction) {
         when (action) {
             is CodeEntryAction.UpdateCode -> onCodeChange(action.input)

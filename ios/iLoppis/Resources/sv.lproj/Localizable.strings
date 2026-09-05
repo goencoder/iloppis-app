@@ -104,6 +104,8 @@
 "cashier_button_cash" = "Kontant";
 "cashier_button_swish" = "Swish";
 "cashier_event_label" = "Event: %@";
+"cashier_warning_enter_price" = "Ange minst ett pris";
+"cashier_warning_invalid_price" = "Priset måste vara ett heltal på 0 kr eller mer: %@";
 
 "keypad_clear" = "C";
 "keypad_ok" = "OK";
@@ -172,3 +174,15 @@
 "scanner_field_scanned_at_label" = "Skannad:";
 "scanner_field_valid_window_label" = "Giltighet:";
 "scanner_field_ticket_id" = "Biljett-ID:";
+
+/* Build and diagnostics */
+"build_environment_staging" = "TESTMILJÖ · STAGING";
+"build_version" = "Version %@";
+"app_help_open" = "Hjälp";
+"app_help_title" = "Så använder du iLoppis";
+"app_help_body" = "På startsidan kan du hitta och läsa om kommande, pågående och tidigare loppisar.\n\nVerktygskoder delas ut av arrangören. Tryck på Verktyg och ange koden för att öppna kassa, biljettskanner eller livestatistik för rätt event.\n\nI kassan registrerar du varor med säljarnummer och väljer kontant eller Swish. Appen genomför ingen betalning; den registrerar bara det betalsätt som användes. Osynkade köp sparas på enheten och skickas när nätverket är tillbaka.\n\nBiljettskannern läser biljettens QR-kod med kameran. Du kan också söka eller ange biljettkoden manuellt.";
+"privacy_policy" = "Integritetspolicy";
+"debug_logs_accessibility" = "Debugloggar";
+"debug_logs_title" = "Debugloggar";
+"common_close" = "Stäng";
+"common_clear" = "Rensa";

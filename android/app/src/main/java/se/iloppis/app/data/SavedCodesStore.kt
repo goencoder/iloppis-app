@@ -1,6 +1,6 @@
 package se.iloppis.app.data
 
-import android.util.Log
+import se.iloppis.app.utils.AppLog as Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -18,31 +18,27 @@ private const val MAX_SAVED_CODES = 20
 /**
  * A previously-entered code that resolved successfully.
  *
- * Stored app-wide (not per-event) so codes from all events are available
- * when entering from the main page.
+ * Codes are app-wide so entries from different events can appear on the main page.
  */
 @Serializable
 data class SavedCode(
-    /** The alias in XXX-XXX format */
+    /** Alias in `XXX-XXX` format. */
     val alias: String,
-    /** Event ID this code belongs to */
+    /** Event that owns the code. */
     val eventId: String,
-    /** Human-readable event name for display */
+    /** Human-readable event name. */
     val eventName: String,
-    /** TOOL type such as CASHIER, SCANNER, or LIVE_STATS */
+    /** Tool type such as `CASHIER`, `SCANNER`, or `LIVE_STATS`. */
     val codeType: String,
-    /** Epoch millis when the code was saved */
+    /** Save time in Unix epoch milliseconds. */
     val savedAt: Long = System.currentTimeMillis()
 )
 
 /**
  * App-wide persistent store for previously-entered codes.
  *
- * File location: `<filesDir>/saved_codes.json`
- *
- * Codes are saved after successful verification so users can
- * quickly re-enter a tool without typing the code again.
- * On next entry, codes are validated async against the API.
+ * Codes are persisted only after successful verification and must be revalidated
+ * against the API before reuse.
  */
 object SavedCodesStore {
 
@@ -57,9 +53,7 @@ object SavedCodesStore {
         return File(ILoppisAppHolder.appContext.filesDir, FILE_NAME)
     }
 
-    /**
-     * Load all saved codes.
-     */
+    /** Returns saved codes newest first, or an empty list if storage cannot be read. */
     suspend fun loadAll(): List<SavedCode> = mutex.withLock {
         withContext(Dispatchers.IO) {
             try {
@@ -75,17 +69,13 @@ object SavedCodesStore {
         }
     }
 
-    /**
-     * Save a code after successful verification.
-     * Replaces any existing entry with the same alias.
-     */
+    /** Saves [code] first, replacing its alias and retaining at most 20 entries. */
     suspend fun save(code: SavedCode) = mutex.withLock {
         withContext(Dispatchers.IO) {
             try {
                 val existing = readUnsafe().toMutableList()
                 existing.removeAll { it.alias == code.alias }
                 existing.add(0, code)
-                // Cap the list to avoid unbounded growth
                 val capped = if (existing.size > MAX_SAVED_CODES) existing.take(MAX_SAVED_CODES) else existing
                 writeUnsafe(capped)
                 Log.d(TAG, "Saved code ${code.alias} for event ${code.eventId}")
@@ -95,9 +85,7 @@ object SavedCodesStore {
         }
     }
 
-    /**
-     * Remove a saved code by alias.
-     */
+    /** Removes every saved entry matching [alias]; storage failures are logged. */
     suspend fun remove(alias: String) = mutex.withLock {
         withContext(Dispatchers.IO) {
             try {
@@ -110,8 +98,6 @@ object SavedCodesStore {
             }
         }
     }
-
-    // ── Internal helpers (must be called within mutex) ──
 
     private fun readUnsafe(): List<SavedCode> {
         val f = file()

@@ -19,6 +19,7 @@ android/*.iml
 android/*.jks
 android/*.keystore
 android/keystore.properties
+android/deployment_cert.der
 
 # Debug/crash files
 android/*.hprof

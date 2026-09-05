@@ -14,6 +14,8 @@
 		AA0000000000000000000206 /* EventDetailDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000106 /* EventDetailDialog.swift */; };
 		AA0000000000000000000207 /* CodeEntryDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000107 /* CodeEntryDialog.swift */; };
 		AA0000000000000000000226 /* CodeConfirmDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000128 /* CodeConfirmDialog.swift */; };
+		AA0000000000000000000227 /* RegisterSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000129 /* RegisterSessionManager.swift */; };
+		AA0000000000000000000228 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000130 /* InfoPlist.strings */; };
 		AA0000000000000000000208 /* EventListModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000108 /* EventListModels.swift */; };
 		AA0000000000000000000209 /* EventListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000109 /* EventListViewModel.swift */; };
 		AA0000000000000000000210 /* EventListScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000110 /* EventListScreen.swift */; };
@@ -63,6 +65,9 @@
 		AA0000000000000000000126 /* CashierHeartbeat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashierHeartbeat.swift; sourceTree = "<group>"; };
 		AA0000000000000000000127 /* LiveStatsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveStatsScreen.swift; sourceTree = "<group>"; };
 		AA0000000000000000000128 /* CodeConfirmDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeConfirmDialog.swift; sourceTree = "<group>"; };
+		AA0000000000000000000129 /* RegisterSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterSessionManager.swift; sourceTree = "<group>"; };
+		AA0000000000000000000131 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA0000000000000000000132 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = Resources/sv.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +84,7 @@
 		); name = Products; sourceTree = "<group>"; };
 		AA0000000000000000000018 /* iLoppis */ = {isa = PBXGroup; children = (
 			AA0000000000000000000116 /* Assets.xcassets */,
+			AA0000000000000000000130 /* InfoPlist.strings */,
 			AA0000000000000000000113 /* Localizable.strings */,
 			AA0000000000000000000101 /* Info.plist */,
 			AA0000000000000000000100 /* iLoppisApp.swift */,
@@ -130,6 +136,7 @@
 			AA0000000000000000000119 /* CashierModels.swift */,
 			AA0000000000000000000118 /* CashierViewModel.swift */,
 			AA0000000000000000000126 /* CashierHeartbeat.swift */,
+			AA0000000000000000000129 /* RegisterSessionManager.swift */,
 		); path = Cashier; sourceTree = "<group>"; };
 		AA0000000000000000000029 /* LiveStats */ = {isa = PBXGroup; children = (
 			AA0000000000000000000127 /* LiveStatsScreen.swift */,
@@ -160,6 +167,7 @@
 
 /* Begin PBXResourcesBuildPhase section */
 		AA0000000000000000000012 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (
+			AA0000000000000000000228 /* InfoPlist.strings in Resources */,
 			AA0000000000000000000213 /* Localizable.strings in Resources */,
 			AA0000000000000000000214 /* Assets.xcassets in Resources */,
 		); runOnlyForDeploymentPostprocessing = 0; };
@@ -186,6 +194,7 @@
 			AA0000000000000000000217 /* CashierModels.swift in Sources */,
 			AA0000000000000000000216 /* CashierViewModel.swift in Sources */,
 			AA0000000000000000000224 /* CashierHeartbeat.swift in Sources */,
+			AA0000000000000000000227 /* RegisterSessionManager.swift in Sources */,
 			AA0000000000000000000225 /* LiveStatsScreen.swift in Sources */,
 			AA0000000000000000000212 /* ScannerScreen.swift in Sources */,
 			AA0000000000000000000219 /* ScannerModels.swift in Sources */,
@@ -199,6 +208,10 @@
 			AA0000000000000000000114 /* en */,
 			AA0000000000000000000115 /* sv */,
 		); name = Localizable.strings; sourceTree = "<group>"; };
+		AA0000000000000000000130 /* InfoPlist.strings */ = {isa = PBXVariantGroup; children = (
+			AA0000000000000000000131 /* en */,
+			AA0000000000000000000132 /* sv */,
+		); name = InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
@@ -229,7 +242,7 @@
 			CLANG_WARN_SUSPICIOUS_MOVE = YES;
 			CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 			CODE_SIGN_STYLE = Automatic;
-			CURRENT_PROJECT_VERSION = 1;
+			CURRENT_PROJECT_VERSION = 3;
 			DEBUG_INFORMATION_FORMAT = dwarf;
 			ENABLE_PREVIEWS = YES;
 			ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -242,6 +255,10 @@
 			GCC_WARN_UNUSED_FUNCTION = YES;
 			GCC_WARN_UNUSED_VARIABLE = YES;
 			IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			ILOPPIS_API_BASE_URL = "https://iloppis-staging.fly.dev/";
+			ILOPPIS_DISPLAY_NAME = "iLoppis (Staging)";
+			ILOPPIS_ENVIRONMENT = staging;
+			ILOPPIS_NETWORK_DEBUG_LOGGING = YES;
 			MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 			MTL_FAST_MATH = YES;
 			ONLY_ACTIVE_ARCH = YES;
@@ -280,7 +297,7 @@
 			CLANG_WARN_SUSPICIOUS_MOVE = YES;
 			CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 			CODE_SIGN_STYLE = Automatic;
-			CURRENT_PROJECT_VERSION = 1;
+			CURRENT_PROJECT_VERSION = 3;
 			DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 			ENABLE_NS_ASSERTIONS = NO;
 			ENABLE_PREVIEWS = YES;
@@ -308,15 +325,15 @@
 		AA0000000000000000000009 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
 			ASSETCATALOG_COMPILER_APPICON_NAME = "";
 			CODE_SIGN_STYLE = Automatic;
-			CURRENT_PROJECT_VERSION = 1;
+			CURRENT_PROJECT_VERSION = 3;
 			DEVELOPMENT_TEAM = "";
 			ENABLE_PREVIEWS = YES;
 			GENERATE_INFOPLIST_FILE = NO;
 			INFOPLIST_FILE = iLoppis/Info.plist;
 			IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 			LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-			MARKETING_VERSION = 1.0;
-			PRODUCT_BUNDLE_IDENTIFIER = se.iloppis.app;
+			MARKETING_VERSION = 0.2.0;
+			PRODUCT_BUNDLE_IDENTIFIER = se.iloppis.app.staging;
 			PRODUCT_NAME = "$(TARGET_NAME)";
 			SWIFT_EMIT_LOC_STRINGS = YES;
 			SWIFT_VERSION = 5.0;
@@ -325,14 +342,18 @@
 		AA0000000000000000000010 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
 			ASSETCATALOG_COMPILER_APPICON_NAME = "";
 			CODE_SIGN_STYLE = Automatic;
-			CURRENT_PROJECT_VERSION = 1;
+			CURRENT_PROJECT_VERSION = 3;
 			DEVELOPMENT_TEAM = "";
 			ENABLE_PREVIEWS = YES;
 			GENERATE_INFOPLIST_FILE = NO;
 			INFOPLIST_FILE = iLoppis/Info.plist;
 			IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+			ILOPPIS_API_BASE_URL = "https://iloppis.se/";
+			ILOPPIS_DISPLAY_NAME = iLoppis;
+			ILOPPIS_ENVIRONMENT = production;
+			ILOPPIS_NETWORK_DEBUG_LOGGING = NO;
 			LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-			MARKETING_VERSION = 1.0;
+			MARKETING_VERSION = 0.2.0;
 			PRODUCT_BUNDLE_IDENTIFIER = se.iloppis.app;
 			PRODUCT_NAME = "$(TARGET_NAME)";
 			SWIFT_EMIT_LOC_STRINGS = YES;

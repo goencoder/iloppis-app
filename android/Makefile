@@ -8,6 +8,24 @@ ENV := production
 endif
 FLAVOR_CAPITALIZED := $(shell echo $(ENV) | awk '{print toupper(substr($$0,1,1)) substr($$0,2)}')
 ANDROID_HOME ?= /opt/homebrew/share/android-commandlinetools
+EXPECTED_APP_ID := se.iloppis.app$(if $(filter staging,$(ENV)),.staging)
+
+ifeq ($(ENV),staging)
+API_BASE_URL   := https://iloppis-staging.fly.dev/
+else ifeq ($(ENV),production)
+API_BASE_URL   := https://iloppis.se/
+else
+$(error ENV must be staging, production, or prod)
+endif
+
+BUILD_CONFIG_PATH := app/build/generated/source/buildConfig/$(ENV)/release/se/iloppis/app/BuildConfig.java
+MERGED_MANIFEST_PATH := app/build/intermediates/merged_manifest/$(ENV)Release/process$(FLAVOR_CAPITALIZED)ReleaseMainManifest/AndroidManifest.xml
+AAB_PATH := app/build/outputs/bundle/$(ENV)Release/app-$(ENV)-release.aab
+R8_MAPPING_PATH := app/build/outputs/mapping/$(ENV)Release/mapping.txt
+PLAY_DEPLOYMENT_CERT ?= deployment_cert.der
+# Public SHA-256 fingerprint from Play Console. This pins the local public
+# deployment/app-signing certificate; it is not an upload signing secret.
+EXPECTED_PLAY_DEPLOYMENT_CERT_SHA256 := 2cfb7bfb93009fd2bacfcecffcc9d33423d74d34dd25206469cd76ebd0dff32b
 
 # Java Version Detection and Setup
 # Android development requires Java 17 or 21 (not Java 25+)
@@ -41,7 +59,7 @@ AVD_NAME     ?= Pixel_6_API_34
 PACKAGE_NAME := se.iloppis.app$(if $(filter staging,$(ENV)),.staging)
 DEVICE       ?=
 
-.PHONY: help build clean install run start stop emulator stop-emulator create-avd list-avds status logs devices all lint security check test release
+.PHONY: help build clean install run start stop emulator stop-emulator create-avd list-avds status logs devices screenshot all lint security check test release bundle release-check verify-release-config verify-play-deployment-cert verify-aab-signature verify-r8-metadata
 
 help:
 	@echo "iLoppis Android Makefile"
@@ -49,6 +67,10 @@ help:
 	@echo "Build commands:"
 	@echo "  make build          – Build debug APK"
 	@echo "  make release        – Build release APK (requires signing config)"
+	@echo "  make bundle         – Build release AAB for store upload"
+	@echo "  make release-check  – Run flavored debug unit tests, release lint, manifest verification, and AAB build"
+	@echo "  make verify-play-deployment-cert – Verify the local Play deployment certificate"
+	@echo "  make verify-r8-metadata – Verify mapping and R8 metadata in the release bundle"
 	@echo "  make clean          – Clean build artifacts"
 	@echo ""
 	@echo "Quality checks:"
@@ -72,6 +94,7 @@ help:
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make logs           – Stream app logs (Ctrl+C to stop)"
+	@echo "  make screenshot FILE=<output.png> – Capture the selected device"
 	@echo "  make create-avd     – Create default AVD (requires system image)"
 	@echo "  make list-avds      – List available AVDs"
 	@echo "  make all            – Complete workflow: emulator + build + install + run"
@@ -104,6 +127,83 @@ release:
 	@echo "Building $(ENV) release APK..."
 	@echo "⚠️  Requires signing configuration in gradle.properties"
 	./gradlew assemble$(FLAVOR_CAPITALIZED)Release --no-daemon
+
+bundle:
+	@echo "Building $(ENV) release Android App Bundle..."
+	./gradlew bundle$(FLAVOR_CAPITALIZED)Release --no-daemon
+
+release-check:
+	@echo "Running $(ENV) release quality gate..."
+	./gradlew \
+		test$(FLAVOR_CAPITALIZED)DebugUnitTest \
+		lint$(FLAVOR_CAPITALIZED)Release \
+		bundle$(FLAVOR_CAPITALIZED)Release \
+		--no-daemon
+	@$(MAKE) verify-release-config ENV=$(ENV)
+	@$(MAKE) verify-play-deployment-cert ENV=$(ENV)
+	@$(MAKE) verify-aab-signature ENV=$(ENV)
+	@$(MAKE) verify-r8-metadata ENV=$(ENV)
+	@echo "✅ $(ENV) release quality gate passed"
+	@echo "📦 AAB: $(AAB_PATH)"
+	@if grep -q 'isMinifyEnabled = true' app/build.gradle.kts; then \
+		echo "🗺️  R8 mapping: $(R8_MAPPING_PATH)"; \
+	fi
+
+verify-release-config:
+	@echo "Verifying $(ENV) release manifest and BuildConfig..."
+	@test -f $(BUILD_CONFIG_PATH) || (echo "❌ Missing BuildConfig: $(BUILD_CONFIG_PATH)" && exit 1)
+	@test -f $(MERGED_MANIFEST_PATH) || (echo "❌ Missing merged manifest: $(MERGED_MANIFEST_PATH)" && exit 1)
+	@grep -q 'public static final boolean DEBUG = false;' $(BUILD_CONFIG_PATH) || (echo "❌ Release BuildConfig is still debuggable" && exit 1)
+	@grep -q 'public static final String APPLICATION_ID = "$(EXPECTED_APP_ID)";' $(BUILD_CONFIG_PATH) || (echo "❌ APPLICATION_ID mismatch in BuildConfig" && exit 1)
+	@grep -q 'public static final String API_BASE_URL = "$(API_BASE_URL)";' $(BUILD_CONFIG_PATH) || (echo "❌ API_BASE_URL mismatch in BuildConfig" && exit 1)
+	@grep -q 'public static final String APP_ENVIRONMENT = "$(ENV)";' $(BUILD_CONFIG_PATH) || (echo "❌ APP_ENVIRONMENT mismatch in BuildConfig" && exit 1)
+	@grep -q 'package="$(EXPECTED_APP_ID)"' $(MERGED_MANIFEST_PATH) || (echo "❌ Package mismatch in merged manifest" && exit 1)
+	@grep -A2 'android:name="org.apache.http.legacy"' $(MERGED_MANIFEST_PATH) | grep -q 'android:required="false"' || \
+		(echo "❌ Required Google Maps compatibility library is missing from merged manifest" && exit 1)
+	@if grep -q 'android:debuggable="true"' $(MERGED_MANIFEST_PATH); then \
+		echo "❌ Release manifest is debuggable"; \
+		exit 1; \
+	fi
+	@echo "✅ Release BuildConfig and merged manifest verified"
+
+verify-play-deployment-cert:
+	@if [ "$(ENV)" != "production" ]; then \
+		echo "ℹ️  Play deployment certificate verification is only required for production"; \
+		exit 0; \
+	fi; \
+	test -f "$(PLAY_DEPLOYMENT_CERT)" || (echo "❌ Missing Play deployment certificate: $(PLAY_DEPLOYMENT_CERT)" && exit 1); \
+	openssl x509 -inform DER -in "$(PLAY_DEPLOYMENT_CERT)" -noout >/dev/null 2>&1 || (echo "❌ Invalid DER X.509 certificate: $(PLAY_DEPLOYMENT_CERT)" && exit 1); \
+	actual_fingerprint=$$(shasum -a 256 "$(PLAY_DEPLOYMENT_CERT)" | awk '{print $$1}'); \
+	if [ "$$actual_fingerprint" != "$(EXPECTED_PLAY_DEPLOYMENT_CERT_SHA256)" ]; then \
+		echo "❌ Play deployment certificate fingerprint mismatch"; \
+		echo "   Expected: $(EXPECTED_PLAY_DEPLOYMENT_CERT_SHA256)"; \
+		echo "   Actual:   $$actual_fingerprint"; \
+		exit 1; \
+	fi; \
+	echo "✅ Play deployment certificate verified: $$actual_fingerprint"
+
+verify-aab-signature:
+	@test -f "$(AAB_PATH)" || (echo "❌ Missing AAB: $(AAB_PATH)" && exit 1)
+	@verification_output=$$("$(JAVA_HOME)/bin/jarsigner" -verify -strict "$(AAB_PATH)" 2>&1); \
+	if ! printf '%s\n' "$$verification_output" | grep -q '^jar verified'; then \
+		printf '%s\n' "$$verification_output"; \
+		echo "❌ AAB is not signed with an upload key"; \
+		echo "   deployment_cert.der is public and cannot sign the bundle."; \
+		exit 1; \
+	fi; \
+	echo "✅ AAB signature verified"
+
+verify-r8-metadata:
+	@if grep -q 'isMinifyEnabled = true' app/build.gradle.kts; then \
+		test -s "$(R8_MAPPING_PATH)" || (echo "❌ Missing or empty R8 mapping: $(R8_MAPPING_PATH)" && exit 1); \
+		unzip -l "$(AAB_PATH)" | grep -q 'BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map' || \
+			(echo "❌ AAB does not contain the R8 mapping metadata" && exit 1); \
+		unzip -l "$(AAB_PATH)" | grep -q 'BUNDLE-METADATA/com.android.tools/r8.json' || \
+			(echo "❌ AAB does not contain R8 metadata" && exit 1); \
+		echo "✅ R8 mapping and bundle metadata verified"; \
+	else \
+		echo "ℹ️  R8 metadata verification skipped because minification is disabled"; \
+	fi
 
 clean:
 	@echo "Cleaning build artifacts..."
@@ -167,7 +267,7 @@ owasp:
 	@echo "This may take 10-30 minutes on first run."
 	./gradlew dependencyCheckAnalyze --no-daemon
 	@echo ""
-	@echo "📊 Report: app/build/reports/dependency-check-report.html"
+	@echo "📊 Report: build/reports/dependency-check/dependency-check-report.html"
 
 lint:
 	@echo ""
@@ -210,6 +310,19 @@ test:
 devices:
 	@echo "=== Connected Devices ==="
 	@$(ADB) devices -l
+
+screenshot:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make screenshot FILE=<output.png> [DEVICE=<serial>]"; \
+		exit 1; \
+	fi
+	@mkdir -p "$$(dirname "$(FILE)")"
+ifdef DEVICE
+	@$(ADB) -s "$(DEVICE)" exec-out screencap -p > "$(FILE)"
+else
+	@$(ADB) -e exec-out screencap -p > "$(FILE)"
+endif
+	@echo "✅ Screenshot saved: $(FILE)"
 
 install: build
 	@echo "Installing APK..."

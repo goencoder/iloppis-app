@@ -9,16 +9,18 @@ import java.io.File
 /**
  * Thread-safe storage for committed scans using JSONL format (one JSON object per line).
  *
- * File location: <filesDir>/committed_scans.jsonl
- * Used for offline duplicate detection and scan history.
- *
- * All methods use mutex to ensure only one thread accesses the file at a time.
+ * The store backs offline duplicate detection and scan history. Call [initialize]
+ * before accessing it; operations are serialized by an internal mutex.
  */
 object CommittedScansStore {
     private const val FILENAME = "committed_scans.jsonl"
     private val mutex = Mutex()
     private lateinit var file: File
 
+    /**
+     * Selects the event-scoped backing file used by subsequent operations.
+     * Reinitializing switches the store to [eventId] without migrating existing rows.
+     */
     fun initialize(context: Context, eventId: String) {
         file = JsonlFileOps.createEventFile(context, eventId, FILENAME)
     }
@@ -27,27 +29,22 @@ object CommittedScansStore {
         file = File(directory, FILENAME)
     }
 
+    /** Appends a successfully committed [scan] atomically. */
     suspend fun appendScan(scan: CommittedScan) {
         mutex.withLock { JsonlFileOps.appendOne(file, scan) }
     }
 
-    /**
-     * Check if a ticket has already been scanned (for offline duplicate detection).
-     */
+    /** Returns whether [ticketId] occurs in the committed history. */
     suspend fun hasTicket(ticketId: String): Boolean = mutex.withLock {
         JsonlFileOps.readAll<CommittedScan>(file).any { it.ticketId == ticketId }
     }
 
-    /**
-     * Get recent scans for display. Returns most recent scans first.
-     */
+    /** Returns at most [limit] scans, newest first. */
     suspend fun getRecentScans(limit: Int = 50): List<CommittedScan> = mutex.withLock {
         JsonlFileOps.readAll<CommittedScan>(file).takeLast(limit).reversed()
     }
 
-    /**
-     * Count successful scans for a specific event.
-     */
+    /** Counts successful and offline-successful scans belonging to [eventId]. */
     suspend fun countScansForEvent(eventId: String): Int = mutex.withLock {
         JsonlFileOps.readAll<CommittedScan>(file).count { scan ->
             scan.eventId == eventId &&
@@ -55,9 +52,7 @@ object CommittedScansStore {
         }
     }
 
-    /**
-     * Get recent scans for a specific event.
-     */
+    /** Returns at most [limit] scans for [eventId], newest first. */
     suspend fun getRecentScansForEvent(eventId: String, limit: Int = 50): List<CommittedScan> =
         mutex.withLock {
             JsonlFileOps.readAll<CommittedScan>(file)

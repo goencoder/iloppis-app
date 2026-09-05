@@ -3,19 +3,7 @@ package se.iloppis.app.data.models
 import kotlinx.serialization.Serializable
 import se.iloppis.app.network.cashier.PaymentMethod
 
-/**
- * StoredSoldItem represents a sold item that is persisted to local storage.
- * Matches Desktop (SoldItem.java) and Backend (SoldItem proto) terminology.
- *
- * @property itemId UUID - matches Desktop/Backend
- * @property eventId Event identifier
- * @property purchaseId ULID that groups items in the same purchase
- * @property seller Seller number (matches backend)
- * @property price Price in SEK
- * @property paymentMethod "KONTANT" or "SWISH"
- * @property soldTime Epoch millis
- * @property uploaded Upload status flag (matches Desktop)
- */
+/** A sold item in the local persistence format shared with the cashier workflow. */
 @Serializable
 data class StoredSoldItem(
     val itemId: String,

@@ -3,14 +3,23 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
-    id("org.owasp.dependencycheck") version "11.1.1"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 // OWASP Dependency Check configuration for security scanning
 dependencyCheck {
     autoUpdate = true
     format = "HTML"
-    outputDirectory = "build/reports/dependency-check"
+    outputDirectory.set(layout.buildDirectory.dir("reports/dependency-check"))
+
+    // Read the NVD credential from the release environment; never commit it.
+    providers.environmentVariable("NVD_API_KEY").orNull
+        ?.takeIf { it.isNotBlank() }
+        ?.let { nvdApiKey ->
+            nvd {
+                apiKey = nvdApiKey
+            }
+        }
 
     // Suppress false positives (add as needed)
     suppressionFile = file("dependency-check-suppressions.xml").takeIf { it.exists() }?.absolutePath

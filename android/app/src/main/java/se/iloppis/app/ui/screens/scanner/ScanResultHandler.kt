@@ -5,10 +5,7 @@ import se.iloppis.app.domain.model.VisitorTicketStatus
 import se.iloppis.app.ui.theme.AppColors
 import androidx.compose.ui.graphics.Color
 
-/**
- * Handles scan result classification and formatting.
- * Encapsulates logic for determining scan status and UI properties.
- */
+/** Classifies a ticket scan and exposes its presentation state. */
 sealed class ScanResultHandler {
     abstract val status: ScanStatus
     abstract val borderColor: Color
@@ -45,6 +42,11 @@ sealed class ScanResultHandler {
     }
     
     companion object {
+        /**
+         * Maps an HTTP result to a scan classification.
+         *
+         * @throws IllegalStateException when a successful response has no [ticket].
+         */
         fun fromHttpCode(
             code: Int,
             message: String,
@@ -64,6 +66,7 @@ sealed class ScanResultHandler {
             }
         }
         
+        /** Converts [handler] to the state consumed by the scanner UI. */
         fun toScanResult(handler: ScanResultHandler): ScanResult {
             return when (handler) {
                 is Success -> ScanResult(handler.ticket, handler.status)

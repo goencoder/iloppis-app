@@ -10,22 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import se.iloppis.app.R
 
-/**
- * Dialog shown when server errors (5xx) occur during purchase uploads.
- * 
- * Display rules:
- * - Show max once per server error session
- * - Only show when kassa fields are empty (idle state)
- * - Non-blocking (can be dismissed immediately)
- * 
- * Swedish text as per spec:
- * ⚠️ Serverproblem
- * iLoppis-servern svarar inte. Kassa fungerar i offline-läge.
- * Köp sparas lokalt och laddas upp automatiskt när problemet är löst.
- * 
- * Detta kräver åtgärd från iLoppis support.
- * Antal väntande köp: X
- */
+/** Displays the number of purchases waiting locally after a server failure. */
 @Composable
 fun ServerErrorDialog(
     pendingPurchasesCount: Int,

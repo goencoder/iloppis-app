@@ -34,16 +34,7 @@ import se.iloppis.app.ui.theme.AppColors
 import java.text.SimpleDateFormat
 import java.util.Date
 
-/**
- * Detailed purchase review screen showing individual items with edit/remove actions.
- * 
- * Allows user to:
- * - View all items in a rejected purchase with individual error messages
- * - Edit seller numbers on specific items
- * - Remove items from the purchase
- * - Delete the entire purchase
- * - Retry upload with modified data
- */
+/** Displays one rejected purchase with edit, removal, deletion, and retry actions. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailedPurchaseReviewScreen(
@@ -53,7 +44,6 @@ fun DetailedPurchaseReviewScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
-    // Handle navigation on success/deletion
     LaunchedEffect(uiState.uploadSuccess, uiState.purchaseDeleted) {
         if (uiState.uploadSuccess || uiState.purchaseDeleted) {
             onBack()

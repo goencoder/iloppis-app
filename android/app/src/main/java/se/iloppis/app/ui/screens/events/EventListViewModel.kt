@@ -27,12 +27,7 @@ import se.iloppis.app.network.events.EventLifecycle
 import se.iloppis.app.network.ILoppisClient
 import java.time.Instant
 
-/**
- * ViewModel for the unified event list screen.
- *
- * Handles search with debounce, filter chips, and saved events.
- * All filter chips map to real API calls per the UX spec.
- */
+/** Loads and filters the event list, including debounced search. */
 class EventListViewModel : ViewModel() {
 
     var uiState by mutableStateOf(EventListUiState())
@@ -45,6 +40,7 @@ class EventListViewModel : ViewModel() {
         loadEvents()
     }
 
+    /** Applies an event-list UI [action] and updates [uiState]. */
     fun onAction(action: EventListAction) {
         when (action) {
             is EventListAction.LoadEvents -> loadEvents()
@@ -53,9 +49,7 @@ class EventListViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Update search query with 300ms debounce.
-     */
+    /** Updates the query and reloads after a short debounce. */
     private fun updateSearch(query: String) {
         uiState = uiState.copy(searchQuery = query)
         searchJob?.cancel()
@@ -65,18 +59,14 @@ class EventListViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Change active filter chip and reload events.
-     */
+    /** Changes the active filter and reloads events. */
     private fun selectFilter(filter: EventFilterChip) {
         if (filter == uiState.activeFilter) return
         uiState = uiState.copy(activeFilter = filter)
         loadEvents()
     }
 
-    /**
-     * Load events based on current search + filter state.
-     */
+    /** Loads events for the current search and filter state. */
     private fun loadEvents() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
@@ -101,9 +91,7 @@ class EventListViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Load events from API with filter + search applied.
-     */
+    /** Fetches events with the current API filter and search query. */
     private suspend fun loadFilteredEvents(): List<Event> {
         val api = ILoppisClient(clientConfig()).create<EventAPI>()
         val now = "${Instant.now()}"

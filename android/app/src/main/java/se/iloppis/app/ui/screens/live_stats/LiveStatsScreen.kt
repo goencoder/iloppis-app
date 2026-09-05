@@ -87,6 +87,11 @@ private val svLocale = Locale.Builder().setLanguage("sv").setRegion("SE").build(
 private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", svLocale)
     .withZone(ZoneId.systemDefault())
 
+/**
+ * Displays live statistics for [event].
+ *
+ * Polling follows the host lifecycle and pauses while [isActivePage] is false.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveStatsScreen(

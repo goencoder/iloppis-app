@@ -147,6 +147,7 @@ class CodeEntryViewModel(
 ) : ViewModel() {
 
     companion object {
+        /** Creates a ViewModel factory configured for [mode] and an optional [eventId]. */
         fun factory(mode: CodeEntryMode, eventId: String?) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -162,6 +163,7 @@ class CodeEntryViewModel(
         loadSavedCodes()
     }
 
+    /** Applies a code-entry UI [action] and updates [uiState]. */
     fun onAction(action: CodeEntryAction) {
         when (action) {
             is CodeEntryAction.UpdateCode -> onCodeChange(action.input)

@@ -6,8 +6,6 @@ import se.iloppis.app.network.cashier.RegisterLifecycleEventType
 import java.util.UUID
 
 /**
- * ILP-003-08: Register session lifecycle manager for Android cashier.
- *
  * Persists session state in SharedPreferences so it survives process death and restarts.
  * State machine mirrors the backend/desktop contract:
  *
@@ -44,12 +42,13 @@ class RegisterSessionManager private constructor(private val appContext: Context
     private var current: Session? = null
 
     init {
-        // Restore persisted state on first access.
         current = loadFromPrefs()
     }
 
-    // ─────────────────────────────────────────────────────────── lifecycle API
-
+    /**
+     * Replaces any current session with a new open session for the given event and register.
+     * The returned session has a fresh ID and a pending `OPEN` lifecycle event.
+     */
     @Synchronized
     fun openSession(eventId: String, registerId: String): Session {
         val s = Session(
@@ -64,6 +63,11 @@ class RegisterSessionManager private constructor(private val appContext: Context
         return s
     }
 
+    /**
+     * Moves an open session to `CLOSE_REQUESTED` and schedules that lifecycle event.
+     *
+     * @return `true` only when the state transition was applied.
+     */
     @Synchronized
     fun requestClose(): Boolean {
         val s = current ?: return false
@@ -77,6 +81,12 @@ class RegisterSessionManager private constructor(private val appContext: Context
         return true
     }
 
+    /**
+     * Schedules `CLOSE_CONFIRMED` for a session awaiting closure.
+     * The session becomes closed only after [clearPendingLifecycleEvent] acknowledges it.
+     *
+     * @return `true` only when confirmation was scheduled.
+     */
     @Synchronized
     fun confirmClose(): Boolean {
         val s = current ?: return false
@@ -90,11 +100,8 @@ class RegisterSessionManager private constructor(private val appContext: Context
     }
 
     /**
-     * Called after a lifecycle event has been successfully sent in a heartbeat tick.
-     *
-     * Clears only when the in-flight request matches the current session + pending
-     * lifecycle event to avoid dropping a newer transition set while the request was
-     * in flight.
+     * Clears a delivered lifecycle event only when both expected values still match.
+     * This prevents a stale response from discarding a newer session transition.
      */
     @Synchronized
     fun clearPendingLifecycleEvent(
@@ -117,6 +124,7 @@ class RegisterSessionManager private constructor(private val appContext: Context
         persist(current!!)
     }
 
+    /** Schedules a liveness sync unless a transition is pending or the session is closed. */
     @Synchronized
     fun recordSync() {
         val s = current ?: return
@@ -129,16 +137,14 @@ class RegisterSessionManager private constructor(private val appContext: Context
         persist(updated)
     }
 
-    // ─────────────────────────────────────────────────────────── queries
-
+    /** Returns the current persisted session snapshot, or `null` before the first session. */
     @Synchronized
     fun getCurrent(): Session? = current
 
+    /** Returns whether the current session can still send cashier activity. */
     @Synchronized
     fun isSessionActive(): Boolean =
         current?.state == State.OPEN || current?.state == State.CLOSE_REQUESTED
-
-    // ─────────────────────────────────────────────────────────── persistence
 
     private fun persist(s: Session) {
         val commitNow = s.state == State.CLOSED
@@ -168,6 +174,7 @@ class RegisterSessionManager private constructor(private val appContext: Context
         @Volatile
         private var instance: RegisterSessionManager? = null
 
+        /** Returns the process-wide manager backed by the application context. */
         fun getInstance(context: Context): RegisterSessionManager =
             instance ?: synchronized(this) {
                 instance ?: RegisterSessionManager(context.applicationContext).also { instance = it }

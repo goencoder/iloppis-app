@@ -84,6 +84,7 @@ private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss", svLocale)
 private val windowFormatter = DateTimeFormatter.ofPattern("d MMM HH:mm", svLocale)
     .withZone(ZoneId.systemDefault())
 
+/** Displays the ticket scanner for [event] and requests camera access when needed. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ScannerScreen(
@@ -101,11 +102,9 @@ fun ScannerScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Camera permission state
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
-    var isScanningActive by remember { mutableStateOf(true) } // Always active for continuous scanning
+    var isScanningActive by remember { mutableStateOf(true) }
 
-    // Auto-dismiss after 5 blinks (1500ms)
     uiState.activeResult?.let { result ->
         LaunchedEffect(result) {
             delay(1500)

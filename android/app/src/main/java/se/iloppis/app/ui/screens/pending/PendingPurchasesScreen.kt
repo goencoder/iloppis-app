@@ -39,16 +39,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-/**
- * Screen showing all pending purchases with expandable inline editing.
- * 
- * Features:
- * - Badge icon (ℹ️/⚠️/🔴) per purchase based on errorText severity
- * - Expandable list: click to expand/collapse items
- * - Inline editing: Ändra säljare, Ta bort, Radera hela köpet, Försök igen
- * - 5-second spinner on edit operations
- * - Auto-refresh via SharedFlow from PendingItemsStore
- */
+/** Displays pending purchases with inline editing, deletion, and retry actions. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PendingPurchasesScreen(

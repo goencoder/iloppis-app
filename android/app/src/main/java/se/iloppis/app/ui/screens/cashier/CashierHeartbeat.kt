@@ -32,11 +32,7 @@ internal fun CashierUiState.toCashierPresenceSnapshot(rawPendingPurchasesCount: 
     )
 }
 
-/**
- * ILP-003-08: Build a heartbeat request from a snapshot, attaching any pending lifecycle
- * event from the session manager.  The manager reference is kept out of the DTO so it is
- * never serialised over the wire.
- */
+/** Builds a heartbeat request without serializing the session manager itself. */
 internal fun CashierPresenceSnapshot.toHeartbeatRequest(
     clientType: se.iloppis.app.network.cashier.CashierClientType,
     sessionManager: RegisterSessionManager
@@ -61,11 +57,12 @@ internal class CashierHeartbeatCoordinator(
     private val sendHeartbeat: suspend (CashierPresenceHeartbeatRequest) -> CashierPresenceHeartbeatResponse,
     private val onHeartbeatResponse: (CashierPresenceHeartbeatResponse) -> Unit,
     private val onHeartbeatFailure: (Throwable) -> Unit,
-    /** ILP-003-08: optional session manager; clears pending lifecycle event after a successful send. */
+    /** Clears acknowledged lifecycle transitions after successful heartbeats. */
     private val sessionManager: RegisterSessionManager? = null
 ) {
     private var job: Job? = null
 
+    /** Starts one heartbeat loop when [shouldRun] permits it; repeated calls are idempotent. */
     fun start() {
         if (job?.isActive == true || !shouldRun()) {
             return
@@ -80,8 +77,6 @@ internal class CashierHeartbeatCoordinator(
                 try {
                     val request = requestFactory()
                     val response = sendHeartbeat(request)
-                    // ILP-003-08: clear only if the sent request still matches
-                    // the current pending lifecycle state.
                     sessionManager?.clearPendingLifecycleEvent(
                         expectedLifecycleEvent = request.lifecycleEventType,
                         expectedSessionId = request.sessionId
@@ -101,6 +96,7 @@ internal class CashierHeartbeatCoordinator(
         }
     }
 
+    /** Cancels the active heartbeat loop; repeated calls are safe. */
     fun stop() {
         job?.cancel()
         job = null

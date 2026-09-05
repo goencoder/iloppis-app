@@ -3,20 +3,7 @@ package se.iloppis.app.data.models
 import kotlinx.serialization.Serializable
 import se.iloppis.app.network.cashier.PaymentMethod
 
-/**
- * Represents a single item pending upload to the backend.
- * 
- * This item is stored in pending_items.jsonl (one JSON object per line).
- * Row existence = pending, deleted row = uploaded successfully.
- * 
- * @property itemId Unique identifier for this item (UUID)
- * @property purchaseId Common identifier for all items in same purchase (UUID)
- * @property sellerId Seller number who owns this item
- * @property price Price in SEK (whole number, no decimals)
- * @property paymentMethod Payment method used for the item
- * @property errorText Error message from backend/server. Empty = waiting/retry, text = has error
- * @property timestamp ISO-8601 timestamp when item was created
- */
+/** A sold item retained locally until its backend upload succeeds. */
 @Serializable
 data class PendingItem(
     val itemId: String,

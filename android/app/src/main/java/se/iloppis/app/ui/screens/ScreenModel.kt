@@ -16,57 +16,30 @@ import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.navigation.ScreenPage
 import se.iloppis.app.ui.states.ScreenState
 
-/**
- * Screen view model
- */
+/** Owns the in-memory navigation stack and screen-level presentation state. */
 class ScreenModel : ViewModel() {
-    /**
-     * Screen model state
-     */
+    /** Current screen-level presentation state. */
     var state by mutableStateOf(ScreenState())
         private set
 
-    /**
-     * Screen overlay
-     */
+    /** Overlay rendered above the current page, or `null`. */
     var overlay by mutableStateOf<(@Composable () -> Unit)?>(null)
         private set
 
-    /**
-     * Previous screen page
-     */
+    /** Navigation stack, rooted at [ScreenPage.Splash] during startup. */
     var pages = mutableStateListOf<ScreenPage>(ScreenPage.Splash)
         private set
 
-    /**
-     * Current screen page
-     *
-     * The page that is currently loaded
-     * and viewed in the application.
-     */
+    /** Current page, or `null` if the stack was emptied. */
     val page by derivedStateOf { pages.lastOrNull() }
 
-    /**
-     * Previous page
-     */
+    /** Page immediately below [page], or `null`. */
     val previous by derivedStateOf { pages.getOrNull(pages.size - 2) }
 
-    /**
-     * Screen border
-     *
-     * Provides values for the screens border
-     * such as the [se.iloppis.app.ui.components.navigation.Navigator]
-     * screen borders.
-     *
-     * @see ScreenState.borders
-     */
+    /** Padding applied around the active screen. */
     val border by derivedStateOf { state.borders }
 
-
-
-    /**
-     * Sends action to screen view model
-     */
+    /** Applies a navigation or presentation [action]. */
     fun onAction(action: ScreenAction) {
         when(action) {
             is ScreenAction.Loading -> setLoad(action.status)
@@ -82,8 +55,6 @@ class ScreenModel : ViewModel() {
         }
     }
 
-
-
     private fun setLoad(state: Boolean) { this.state = this.state.copy(isLoading = state) }
     private fun showNavigator(state: Boolean) { this.state = this.state.copy(showNavigator = state) }
 
@@ -97,35 +68,20 @@ class ScreenModel : ViewModel() {
 
     private fun setScreenOverlay(overlay: (@Composable () -> Unit)?) { this.overlay = overlay }
 
-
-
-    /**
-     * Pops previous page from the navigation queue
-     */
+    /** Removes and returns the current page, or `null` when the stack is empty. */
     fun popPage() : ScreenPage? = pages.removeLastOrNull()
 
     private fun pushPage(page: ScreenPage) {
-        /*
-            Navigation hierarchy:
-            - EventList is root screen
-            - EventsDetailPage: EventList > EventsDetailPage
-            - CodeEntry & CodeConfirm: EventList > CodeEntry > CodeConfirm
-            - Cashier/Scanner: Can be reached from CodeConfirm or EventsDetailPage
-        */
-
         when(page) {
             is ScreenPage.Splash -> {
-                // Splash replaces everything
                 pages.clear()
                 pages.add(page)
             }
             is ScreenPage.EventList -> {
-                // Reset to root
                 pages.clear()
                 pages.add(page)
             }
             is ScreenPage.EventsDetailPage -> {
-                // Keep: EventList > EventsDetailPage
                 if(pages.lastOrNull() !is ScreenPage.EventList) {
                     pages.clear()
                     pages.add(ScreenPage.EventList)
@@ -133,7 +89,6 @@ class ScreenModel : ViewModel() {
                 pages.add(page)
             }
             is ScreenPage.CodeEntry -> {
-                // Keep: EventList > CodeEntry
                 if(pages.lastOrNull() !is ScreenPage.EventList) {
                     pages.clear()
                     pages.add(ScreenPage.EventList)
@@ -141,7 +96,6 @@ class ScreenModel : ViewModel() {
                 pages.add(page)
             }
             is ScreenPage.CodeConfirm -> {
-                // Keep: EventList > CodeEntry > CodeConfirm
                 if(pages.lastOrNull() !is ScreenPage.CodeEntry) {
                     pages.clear()
                     pages.add(ScreenPage.EventList)
@@ -150,8 +104,6 @@ class ScreenModel : ViewModel() {
                 pages.add(page)
             }
             is ScreenPage.Cashier, is ScreenPage.Scanner, is ScreenPage.LiveStats -> {
-                // Navigate from CodeConfirm or EventsDetailPage
-                // Keep existing path and add tool page
                 if(pages.lastOrNull() !is ScreenPage.CodeConfirm && pages.lastOrNull() !is ScreenPage.EventsDetailPage) {
                     pages.clear()
                     pages.add(ScreenPage.EventList)
@@ -164,21 +116,13 @@ class ScreenModel : ViewModel() {
 
 
 
-/**
- * Local screen model context
- */
 private val localScreenModel = compositionLocalOf<ScreenModel> {
     error("No screen view model provider present in this context")
 }
 
 
 
-/**
- * Screen view model provider
- *
- * Provides a screen view model for the context
- * where this provider is present
- */
+/** Provides [screen] to [content] through the local Compose context. */
 @Composable
 fun ScreenModelProvider(screen: ScreenModel = viewModel(), content: @Composable () -> Unit) {
     val view = remember { screen }
@@ -187,9 +131,7 @@ fun ScreenModelProvider(screen: ScreenModel = viewModel(), content: @Composable 
 
 
 
-/**
- * Gets local screen view model context
- */
+/** Returns the [ScreenModel] supplied by the nearest [ScreenModelProvider]. */
 @Composable
 fun screenContext(): ScreenModel {
     return localScreenModel.current

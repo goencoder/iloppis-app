@@ -5,12 +5,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 
-/**
- * Wrapper for text that can originate from string resources (with optional args)
- * or from dynamic/server-supplied strings.
- *
- * ViewModels produce [UiText] values; Composables call [asString] to resolve them.
- */
+/** Text supplied either by an Android resource or at runtime. */
 sealed class UiText {
 
     /** A string backed by an Android string resource, optionally with format args. */
@@ -24,6 +19,7 @@ sealed class UiText {
 
     // ── Composable resolver ──────────────────────────────────────────
 
+    /** Resolves this value using the current Compose resources and locale. */
     @Composable
     fun asString(): String = when (this) {
         is StringResource -> stringResource(resId, *args.toTypedArray())
@@ -32,6 +28,7 @@ sealed class UiText {
 
     // ── Non-composable resolver (for tests, services, etc.) ─────────
 
+    /** Resolves this value using [context]'s resources and locale. */
     fun asString(context: Context): String = when (this) {
         is StringResource -> context.getString(resId, *args.toTypedArray())
         is DynamicString -> value

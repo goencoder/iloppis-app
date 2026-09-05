@@ -32,6 +32,7 @@ class LiveStatsViewModel(
     private val apiKey: String
 ) : ViewModel() {
     companion object {
+        /** Creates a ViewModel factory bound to one event and live-statistics credential. */
         fun factory(eventId: String, apiKey: String) =
             object : androidx.lifecycle.ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
@@ -52,17 +53,20 @@ class LiveStatsViewModel(
         startPolling()
     }
 
+    /** Starts polling unless a polling job is already active. */
     fun onScreenStarted() {
         if (pollingJob?.isActive != true) {
             startPolling()
         }
     }
 
+    /** Stops polling and releases its coroutine job. */
     fun onScreenStopped() {
         pollingJob?.cancel()
         pollingJob = null
     }
 
+    /** Requests one immediate snapshot without changing the polling schedule. */
     fun retry() {
         viewModelScope.launch { fetchSnapshot(forceLoading = _uiState.value.snapshot == null) }
     }

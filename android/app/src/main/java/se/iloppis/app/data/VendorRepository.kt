@@ -12,30 +12,7 @@ import se.iloppis.app.network.vendors.VendorPagination
 
 private const val TAG = "VendorRepository"
 
-/**
- * Global singleton for approved sellers/vendors.
- *
- * Provides thread-safe cached access to approved seller numbers for an event.
- * Must be initialized once with event ID and API key before use.
- *
- * ## Usage
- *
- * ```kotlin
- * // Initialize once (e.g., in CashierViewModel init)
- * VendorRepository.initialize(eventId, apiKey)
- *
- * // Anywhere in app
- * val cached = VendorRepository.getCached()
- * val fresh = VendorRepository.refresh()
- * val sellers = VendorRepository.getOrFetch()
- * val isValid = VendorRepository.isApproved(sellerNumber)
- * ```
- *
- * ## Thread Safety
- *
- * Uses Mutex to ensure only one fetch operation at a time, preventing duplicate API calls
- * when multiple coroutines request seller data simultaneously.
- */
+/** Thread-safe cache of approved seller numbers for the initialized event. */
 object VendorRepository {
     private lateinit var eventId: String
     private lateinit var apiKey: String
@@ -45,36 +22,26 @@ object VendorRepository {
     @Volatile
     private var cachedSellers: Set<Int>? = null
 
-    /**
-     * Initialize the repository with event ID and API key.
-     * Must be called once before any other methods.
-     * Safe to call multiple times - will update credentials.
-     */
+    /** Sets the event credentials used by subsequent requests. Repeated calls replace them. */
     fun initialize(eventId: String, apiKey: String) {
         this.eventId = eventId
         this.apiKey = apiKey
         Log.d(TAG, "Initialized for event $eventId")
     }
 
-    /**
-     * Check if repository is initialized.
-     */
+    /** Returns whether event credentials have been supplied. */
     fun isInitialized(): Boolean = ::eventId.isInitialized && ::apiKey.isInitialized
 
-    /**
-     * Get cached approved sellers without making an API call.
-     * Returns null if cache is empty (never fetched).
-     */
+    /** Returns cached sellers without network access, or `null` before a successful fetch. */
     fun getCached(): Set<Int>? = cachedSellers
 
     /**
      * Fetch approved sellers from API and update cache.
      *
-     * Paginates through all pages to ensure complete seller list.
-     * Thread-safe: Multiple concurrent calls will wait for first fetch to complete.
+     * All pages are loaded while concurrent callers wait on the same mutex.
      *
-     * @return Set of approved seller numbers
-     * @throws Exception if API call fails or not initialized
+     * @throws IllegalStateException when [initialize] has not been called.
+     * @throws Exception when an API request fails.
      */
     suspend fun refresh(): Set<Int> {
         check(isInitialized()) { "VendorRepository not initialized. Call initialize() first." }
@@ -115,33 +82,18 @@ object VendorRepository {
         }
     }
 
-    /**
-     * Get approved sellers from cache, or fetch from API if cache is empty.
-     *
-     * Convenience method that combines getCached() and refresh().
-     *
-     * @return Set of approved seller numbers
-     * @throws Exception if API call fails and cache is empty
-     */
+    /** Returns cached sellers, fetching them when the cache is empty. */
     suspend fun getOrFetch(): Set<Int> {
         return getCached() ?: refresh()
     }
 
-    /**
-     * Clear the cache, forcing next access to fetch fresh data.
-     */
+    /** Clears cached sellers so the next [getOrFetch] performs a request. */
     fun clearCache() {
         cachedSellers = null
         Log.d(TAG, "Cache cleared")
     }
 
-    /**
-     * Check if a seller number is approved.
-     * Uses cached data if available.
-     *
-     * @param sellerNumber The seller number to check
-     * @return true if seller is approved (and cache is populated), false otherwise
-     */
+    /** Returns whether [sellerNumber] is in the cache; an empty cache returns `false`. */
     fun isApproved(sellerNumber: Int): Boolean {
         return cachedSellers?.contains(sellerNumber) ?: false
     }

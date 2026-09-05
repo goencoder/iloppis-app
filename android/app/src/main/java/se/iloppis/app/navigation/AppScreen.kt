@@ -3,136 +3,57 @@ package se.iloppis.app.navigation
 import se.iloppis.app.domain.model.CodeEntryMode
 import se.iloppis.app.domain.model.Event
 
-/**
- * Screen view state page - unified navigation structure
- *
- * Navigation flow:
- * - EventList: Primary screen showing events with search/filters and tool entry buttons
- * - EventsDetailPage: Event details with full information and tool options
- * - CodeEntry: Direct code input for Cashier/Scanner (no event selection needed)
- * - CodeConfirm: Show resolved event before entering tool
- * - Cashier/Scanner/LiveStats: Active tool screens
- */
+/** Complete navigation state carried by the app's in-memory page stack. */
 sealed class ScreenPage {
-    /**
-     * Splash screen - shown on app launch for brand moment
-     */
+    /** Initial branding screen. */
     data object Splash : ScreenPage()
 
-    /**
-     * Unified event list screen (merged Home + Search)
-     *
-     * Shows:
-     * - Event search and filters
-     * - List of events
-     * - Quick access buttons for Cashier/Scanner entry
-     */
+    /** Searchable event list and entry point to organizer tools. */
     data object EventList : ScreenPage()
 
-    /**
-     * Events detail page
-     *
-     * Shows details about a specified event and provides
-     * access to Cashier/Scanner tools
-     */
+    /** Details and organizer-tool entry points for [event]. */
     data class EventsDetailPage(
-        /**
-         * Event to show details about
-         */
         val event: Event
     ) : ScreenPage()
 
     /**
-     * Code entry screen for direct tool access
+     * Code entry for direct organizer-tool access.
      *
-     * Shows code input field with mode (Cashier or Scanner).
-     * No event selection needed - code resolves the event.
-     *
-     * @param mode Tool mode (CASHIER or SCANNER)
-     * @param eventId Optional event ID filter. When non-null, only saved codes
-     *   for this event are shown (navigating from event detail).
-     *   When null, all saved codes are shown (navigating from main page).
+     * @param mode tool requested by the user.
+     * @param eventId limits saved codes to one event; `null` allows all events.
      */
     data class CodeEntry(
         val mode: CodeEntryMode,
         val eventId: String? = null
     ) : ScreenPage()
 
-    /**
-     * Code confirmation screen
-     *
-     * After code is validated, show which event it belongs to
-     * and ask user to confirm before entering the tool.
-     */
+    /** Confirmation shown after an alias resolves but before the tool opens. */
     data class CodeConfirm(
-        /**
-         * Event that the code belongs to
-         */
         val event: Event,
-
-        /**
-         * API key for the tool
-         */
+        /** Secret credential resolved from [alias]; never display or persist it. */
         val apiKey: String,
-
-        /**
-         * Alias used to resolve the tool.
-         */
         val alias: String,
-
-        /**
-         * Mode used when the user entered the code.
-         */
+        /** Entry context used when returning from confirmation. */
         val entryMode: CodeEntryMode,
-
-        /**
-         * Tool mode (CASHIER, SCANNER, or LIVE_STATS)
-         */
+        /** Tool authorized by the resolved credential. */
         val mode: CodeEntryMode
     ) : ScreenPage()
 
-    /**
-     * Cashier page
-     */
+    /** Active cashier for [event], authorized by [apiKey]. */
     data class Cashier(
-        /**
-         * Event that owns this cashier
-         */
         val event: Event,
-
-        /**
-         * API key
-         */
         val apiKey: String
     ) : ScreenPage()
 
-    /**
-     * Scanner page
-     */
+    /** Active entrance scanner for [event], authorized by [apiKey]. */
     data class Scanner(
-        /**
-         * Event that owns this scanner
-         */
         val event: Event,
-
-        /**
-         * API key
-         */
         val apiKey: String
     ) : ScreenPage()
 
-    /**
-     * Live stats page
-     */
+    /** Live event statistics authorized by [apiKey]. */
     data class LiveStats(
-        /**
-         * Event that owns this live stats view
-         */
         val event: Event,
-
-        /**
-         * API key used to fetch live stats directly from backend
-         */
         val apiKey: String
     ) : ScreenPage()
 }

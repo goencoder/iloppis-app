@@ -10,13 +10,7 @@ import kotlinx.coroutines.launch
 import se.iloppis.app.data.RejectedPurchaseStore
 import se.iloppis.app.data.models.RejectedPurchase
 
-/**
- * ViewModel for the purchase review screen.
- *
- * Loads rejected purchases from [RejectedPurchaseStore] and refreshes when new
- * items are added. Store initialization is expected to be handled by the
- * event flow (EventStoreManager).
- */
+/** Loads rejected purchases and observes additions to [RejectedPurchaseStore]. */
 class PurchaseReviewViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(PurchaseReviewUiState())
@@ -31,6 +25,7 @@ class PurchaseReviewViewModel : ViewModel() {
         }
     }
 
+    /** Reloads all rejected purchases from local storage. */
     fun refresh() {
         loadPurchases()
     }

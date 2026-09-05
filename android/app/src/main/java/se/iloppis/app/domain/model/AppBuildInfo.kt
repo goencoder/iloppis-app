@@ -18,6 +18,7 @@ data class AppBuildInfo(
     companion object {
         private const val STAGING_ENVIRONMENT = "staging"
 
+        /** Returns metadata compiled into the currently installed build variant. */
         fun current(): AppBuildInfo = AppBuildInfo(
             environment = BuildConfig.APP_ENVIRONMENT,
             versionName = BuildConfig.VERSION_NAME,

@@ -32,15 +32,7 @@ import se.iloppis.app.ui.screens.screenContext
 import se.iloppis.app.ui.states.ScreenAction
 import se.iloppis.app.ui.theme.AppColors
 
-/**
- * Unified main screen combining Home and Event List.
- *
- * This screen displays:
- * - Quick access button for tool access via direct code entry
- * - Functional event search with 300ms debounce
- * - Filter chips mapped to real API calls
- * - List of events with computed status badges
- */
+/** Displays searchable events and the entry point to organizer tools. */
 @Composable
 fun EventListScreen() {
     val screen = screenContext()
@@ -318,7 +310,7 @@ private fun EventListBody(
 }
 
 @Composable
-fun LoadingState() {
+private fun LoadingState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -328,7 +320,7 @@ fun LoadingState() {
 }
 
 @Composable
-fun ErrorState(message: String) {
+private fun ErrorState(message: String) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -341,7 +333,7 @@ fun ErrorState(message: String) {
 }
 
 @Composable
-fun EmptyState() {
+private fun EmptyState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

@@ -14,25 +14,7 @@ import se.iloppis.app.R
 import java.text.SimpleDateFormat
 import java.util.Date
 
-/**
- * Dialog shown when auto-recovery fails for INVALID_SELLER errors.
- * 
- * Display rules:
- * - Show after failed auto-recovery attempt
- * - Only show when kassa fields are empty (idle state)
- * - Non-blocking (can be dismissed immediately)
- * - Minimum 5 minutes between popups
- * 
- * Swedish text as per spec:
- * ⚠️ Köp behöver granskas
- * Ett tidigare köp kunde inte laddas upp eftersom en eller flera
- * säljare inte är godkända för detta event.
- * 
- * Köp: ABC123 (14:23)
- * Problem: Säljare 456 ej godkänd
- * 
- * Du kan fortsätta registrera nya köp.
- */
+/** Displays a dismissible summary of a purchase rejected for invalid sellers. */
 @Composable
 fun InvalidSellerDialog(
     purchaseId: String,

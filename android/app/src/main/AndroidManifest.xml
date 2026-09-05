@@ -18,7 +18,7 @@
              otherwise supported Android system images. -->
         <uses-library
             android:name="org.apache.http.legacy"
-            android:required="true" />
+            android:required="false" />
 
         <activity
             android:name=".MainActivity"

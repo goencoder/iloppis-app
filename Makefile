@@ -12,7 +12,7 @@ ENV ?= staging
 #   make start PLATFORM=android DEVICE_NAME=Pixel_6_API_34
 #   make start PLATFORM=ios DEVICE_NAME="iPhone 17"
 
-.PHONY: help start android-device android-emulator android-build android-clean \
+.PHONY: help start screenshot android-device android-emulator android-build android-clean \
         ios ios-build ios-clean logs-android logs-ios check android-bundle android-release-check ios-release
 
 PLATFORM ?=
@@ -55,6 +55,7 @@ help:
 	@echo "Examples:"
 	@echo "  make start PLATFORM=android DEVICE_NAME=iLoppis_Pixel_Tablet_API_34"
 	@echo "  make start PLATFORM=ios DEVICE_NAME=\"iPhone 17\""
+	@echo "  make screenshot PLATFORM=android FILE=/tmp/iloppis.png"
 	@echo ""
 	@echo "📚 API DOCUMENTATION:"
 	@echo "  API spec available at: spec/swagger/iloppis.swagger.json"
@@ -83,6 +84,28 @@ start:
 			$(MAKE) -C ios start \
 				ENV="$(ENV)" \
 				DEVICE_NAME="$(DEVICE_NAME)" \
+			;; \
+		*) \
+			echo "Unsupported PLATFORM '$(PLATFORM)'; expected android or ios"; \
+			exit 1; \
+			;; \
+	esac
+
+screenshot:
+	@if [ -z "$(PLATFORM)" ] || [ -z "$(FILE)" ]; then \
+		echo "Usage: make screenshot PLATFORM=<android|ios> FILE=<output.png>"; \
+		exit 1; \
+	fi
+	@case "$(PLATFORM)" in \
+		android) \
+			$(MAKE) -C android screenshot \
+				DEVICE="$(ANDROID_EMULATOR_SERIAL)" \
+				FILE="$(abspath $(FILE))" \
+			;; \
+		ios) \
+			$(MAKE) -C ios screenshot \
+				DEVICE_NAME="$(DEVICE_NAME)" \
+				FILE="$(abspath $(FILE))" \
 			;; \
 		*) \
 			echo "Unsupported PLATFORM '$(PLATFORM)'; expected android or ios"; \

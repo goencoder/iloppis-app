@@ -59,7 +59,7 @@ AVD_NAME     ?= Pixel_6_API_34
 PACKAGE_NAME := se.iloppis.app$(if $(filter staging,$(ENV)),.staging)
 DEVICE       ?=
 
-.PHONY: help build clean install run start stop emulator stop-emulator create-avd list-avds status logs devices all lint security check test release bundle release-check verify-release-config verify-play-deployment-cert verify-aab-signature verify-r8-metadata
+.PHONY: help build clean install run start stop emulator stop-emulator create-avd list-avds status logs devices screenshot all lint security check test release bundle release-check verify-release-config verify-play-deployment-cert verify-aab-signature verify-r8-metadata
 
 help:
 	@echo "iLoppis Android Makefile"
@@ -94,6 +94,7 @@ help:
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make logs           – Stream app logs (Ctrl+C to stop)"
+	@echo "  make screenshot FILE=<output.png> – Capture the selected device"
 	@echo "  make create-avd     – Create default AVD (requires system image)"
 	@echo "  make list-avds      – List available AVDs"
 	@echo "  make all            – Complete workflow: emulator + build + install + run"
@@ -307,6 +308,19 @@ test:
 devices:
 	@echo "=== Connected Devices ==="
 	@$(ADB) devices -l
+
+screenshot:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make screenshot FILE=<output.png> [DEVICE=<serial>]"; \
+		exit 1; \
+	fi
+	@mkdir -p "$$(dirname "$(FILE)")"
+ifdef DEVICE
+	@$(ADB) -s "$(DEVICE)" exec-out screencap -p > "$(FILE)"
+else
+	@$(ADB) -e exec-out screencap -p > "$(FILE)"
+endif
+	@echo "✅ Screenshot saved: $(FILE)"
 
 install: build
 	@echo "Installing APK..."

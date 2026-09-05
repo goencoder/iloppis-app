@@ -31,7 +31,7 @@ XCODE_ENV_SETTINGS := \
 	ILOPPIS_NETWORK_DEBUG_LOGGING=$(DEBUG_LOGGING) \
 	PRODUCT_BUNDLE_IDENTIFIER=$(BUNDLE_ID)
 
-.PHONY: help build release archive clean install run start stop start-simulator stop-simulator status logs devices all get-device-id
+.PHONY: help build release archive clean install run start stop start-simulator stop-simulator status logs devices screenshot all get-device-id
 
 help:
 	@echo "iLoppis iOS Makefile"
@@ -56,6 +56,7 @@ help:
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make logs           – Stream app logs (Ctrl+C to stop)"
+	@echo "  make screenshot FILE=<output.png> – Capture the selected simulator"
 	@echo "  make all            – Complete workflow: simulator + build + run"
 	@echo ""
 	@echo "Environment:"
@@ -191,6 +192,20 @@ logs:
 devices:
 	@echo "Available iOS Simulators:"
 	@xcrun simctl list devices available | grep -E "iPhone|iPad" | sed 's/^/  /'
+
+screenshot:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make screenshot FILE=<output.png> [DEVICE_NAME=\"<device>\"]"; \
+		exit 1; \
+	fi
+	@DEVICE_ID=$$($(MAKE) -s get-device-id); \
+	if [ -z "$$DEVICE_ID" ]; then \
+		echo "❌ Error: Device '$(DEVICE_NAME)' not found"; \
+		exit 1; \
+	fi; \
+	mkdir -p "$$(dirname "$(FILE)")"; \
+	xcrun simctl io $$DEVICE_ID screenshot "$(FILE)"; \
+	echo "✅ Screenshot saved: $(FILE)"
 
 all: start
 	@echo "✅ Complete workflow finished"

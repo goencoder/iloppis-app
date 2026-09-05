@@ -32,6 +32,9 @@ make start PLATFORM=android DEVICE_NAME=Pixel_6_API_34
 # Valfri iOS-simulator
 make start PLATFORM=ios DEVICE_NAME="iPhone 17"
 
+# Ta en skärmbild av den körande Android-emulatorn från en annan terminal
+make screenshot PLATFORM=android FILE=/tmp/iloppis-kassa.png
+
 # iOS i simulator
 make ios
 ```

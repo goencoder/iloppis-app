@@ -9,12 +9,15 @@ ENV ?= staging
 # Root Makefile for Android and iOS development
 #
 # Quick start:
-#   make android-device    Deploy to connected Android phone
-#   make android-emulator  Run in Android emulator
-#   make ios               Run in iOS simulator
+#   make start PLATFORM=android DEVICE_NAME=Pixel_6_API_34
+#   make start PLATFORM=ios DEVICE_NAME="iPhone 17"
 
-.PHONY: help android-device android-emulator android-build android-clean \
+.PHONY: help start android-device android-emulator android-build android-clean \
         ios ios-build ios-clean logs-android logs-ios check android-bundle android-release-check ios-release
+
+PLATFORM ?=
+DEVICE_NAME ?=
+ANDROID_EMULATOR_SERIAL ?= emulator-5554
 
 # Default target
 help:
@@ -24,6 +27,7 @@ help:
 	@echo "╚══════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "🤖 ANDROID COMMANDS:"
+	@echo "  make start PLATFORM=android DEVICE_NAME=<AVD>  Start app in an Android emulator"
 	@echo "  make android-device     Deploy and run on connected phone"
 	@echo "  make android-emulator   Start emulator and run app"
 	@echo "  make android-build      Build debug APK"
@@ -36,6 +40,7 @@ help:
 	@echo "  make android-check      Run lint, security, and tests"
 	@echo ""
 	@echo "🍎 iOS COMMANDS:"
+	@echo "  make start PLATFORM=ios DEVICE_NAME=\"<device>\"  Start app in an iOS simulator"
 	@echo "  make ios                Start simulator and run app"
 	@echo "  make ios-build          Build for simulator"
 	@echo "  make ios-release        Build Release for simulator"
@@ -47,9 +52,43 @@ help:
 	@echo "  make check              Run all quality checks (Android)"
 	@echo "  make clean              Clean all build artifacts"
 	@echo ""
+	@echo "Examples:"
+	@echo "  make start PLATFORM=android DEVICE_NAME=iLoppis_Pixel_Tablet_API_34"
+	@echo "  make start PLATFORM=ios DEVICE_NAME=\"iPhone 17\""
+	@echo ""
 	@echo "📚 API DOCUMENTATION:"
 	@echo "  API spec available at: spec/swagger/iloppis.swagger.json"
 	@echo ""
+
+# ============================================================================
+# GENERAL APP TARGET
+# ============================================================================
+
+start:
+	@if [ -z "$(PLATFORM)" ] || [ -z "$(DEVICE_NAME)" ]; then \
+		echo "Usage: make start PLATFORM=<android|ios> DEVICE_NAME=<virtual device name>"; \
+		echo "Examples:"; \
+		echo "  make start PLATFORM=android DEVICE_NAME=iLoppis_Pixel_Tablet_API_34"; \
+		echo "  make start PLATFORM=ios DEVICE_NAME=\"iPhone 17\""; \
+		exit 1; \
+	fi
+	@case "$(PLATFORM)" in \
+		android) \
+			$(MAKE) -C android start \
+				ENV="$(ENV)" \
+				AVD_NAME="$(DEVICE_NAME)" \
+				DEVICE="$(ANDROID_EMULATOR_SERIAL)" \
+			;; \
+		ios) \
+			$(MAKE) -C ios start \
+				ENV="$(ENV)" \
+				DEVICE_NAME="$(DEVICE_NAME)" \
+			;; \
+		*) \
+			echo "Unsupported PLATFORM '$(PLATFORM)'; expected android or ios"; \
+			exit 1; \
+			;; \
+	esac
 
 # ============================================================================
 # ANDROID TARGETS

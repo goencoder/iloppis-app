@@ -1,6 +1,6 @@
 # iLoppis Mobile App
 
-Svensk loppis-app för köpare och säljare.
+Arbetsapp för loppisarrangörer och deras funktionärer.
 
 <img src=".github/images/home.png" alt="Home page" width=150>
 <img src=".github/images/code input.png" alt="Code input" width=150>
@@ -26,8 +26,11 @@ Svensk loppis-app för köpare och säljare.
 # Android på fysisk enhet (anslut via USB, aktivera utvecklarläge)
 make android-device
 
-# Android i emulator
-make android-emulator
+# Valfri Android-emulator
+make start PLATFORM=android DEVICE_NAME=Pixel_6_API_34
+
+# Valfri iOS-simulator
+make start PLATFORM=ios DEVICE_NAME="iPhone 17"
 
 # iOS i simulator
 make ios
